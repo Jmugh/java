@@ -1,0 +1,16 @@
+106.12.86.185  端口22
+root  sz@12345
+svn://106.12.86.185/szrepository  tiger tigers
+
+
+
+
+
+
+
+
+
+
+
+
+
