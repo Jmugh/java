@@ -117,7 +117,49 @@ git checkout -- filename  //这个命令还是有点危险的，相当于用之�
 git commit -m "xxx"  //提交数据到本地仓库
 ```
 
+### 撤退提交:git reset和git revert
 
+首先用git log查看想要恢复的版本，可以看到提交时对应的id xxx
+
+- git reset xxx 会撤销之前的commit，重新查看git log时候发现这个id后面提交的  都没了，但是工作目录没有任何变化。中间的记录（提交对象）都没了，丢失数据
+- git reset xxx --hard 会撤销之前的commit，重新查看git log时候发现这个id后面提交的  都没了，但是工作目录恢复到了xxx提交之后的状态。中间的记录（提交对象）都没了，丢失数据
+- git revert xxx  会回到这次提交之前的状态，但是这是创建新的提交树，不会丢失数据。
+
+举例：
+
+1. 分别写三次文件，分别提交三次
+
+![image-20230516000703632](images/image-20230516000703632.png)
+
+2. 查看日志
+
+![image-20230516000751217](images/image-20230516000751217.png)
+
+此时的文件数据：
+
+<img src="images/image-20230516001154592.png" alt="image-20230516001154592" style="zoom: 67%;" />
+
+
+
+2. git reset 201d09ba6496f8fa3b3492cc1d79baed8baddea1 恢复到第一次提交之后的状态：日志可以看到，第一次提交之后的丢了，但是本地文件没变
+
+![image-20230516001506696](images/image-20230516001506696.png)
+
+2. git reset 201d09ba6496f8fa3b3492cc1d79baed8baddea1  --hard
+
+![image-20230516001749176](images/image-20230516001749176.png)
+
+3. git revert 201d09ba6496f8fa3b3492cc1d79baed8baddea1  出现冲突...
+
+<img src="images/image-20230516002438461.png" alt="image-20230516002438461" style="zoom:50%;" />
+
+### 何时使用 git reset 和 git revert
+
+当你在本地仓库上工作时，如果变化尚未被远程推送，你应该使用 `git reset`。这是因为在从远程仓库拉取修改后运行该命令会改变项目的 commit 历史，导致在该项目上工作的每个人发生合并冲突。
+
+当你意识到对某一本地分支所做的修改应该在其他地方时，`git reset` 是一个不错的选择。你可以重置并移动到想要的分支，而不会丢失你的文件修改。
+
+对于恢复推送到远程仓库的改动，`git revert` 是一个很好的选项。因为这个命令会创建一个新的提交，而不会改变其他人的提交历史。
 
 ## 查看文件状态
 
