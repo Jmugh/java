@@ -164,7 +164,7 @@ v2ray bbr
 
 
 
-安装执行记录：
+# 安装执行记录
 
 ........... V2Ray script by 233boy ..........
 
@@ -199,20 +199,9 @@ vmess://eyJ2IjoyLCJwcyI6IjIzM2JveS10Y3AtMTA3LjE3Mi4xOTYuMTc5IiwiYWRkIjoiMTA3LjE3
 
 
 
-root@racknerd-bd745e:~# v2ray add kcpd
+ v2ray add kcpd
 
-使用协议: VMess-mKCP-dynamic-port
--------------- VMess-mKCP-dynamic-port-54034.json -------------
-协议 (protocol)         = vmess
-地址 (address)          = 107.172.196.179
-端口 (port)             = 54034 & 动态端口: 55882-56351
-用户ID (id)             = c6dc9cb0-8a7c-4dec-84f7-f02e2d63c8df
-传输协议 (network)      = kcp
-伪装类型 (type)         = dtls
-mKCP seed               = c6dc9cb0-8a7c-4dec-84f7-f02e2d63c8df
-------------- 链接 (URL) -------------
-vmess://eyJ2IjoyLCJwcyI6IjIzM2JveS1rY3AtMTA3LjE3Mi4xOTYuMTc5IiwiYWRkIjoiMTA3LjE3Mi4xOTYuMTc5IiwicG9ydCI6IjU0MDM0IiwiaWQiOiJjNmRjOWNiMC04YTdjLTRkZWMtODRmNy1mMDJlMmQ2M2M4ZGYiLCJuZXQiOiJrY3AiLCJ0eXBlIjoiZHRscyIsInBhdGgiOiJjNmRjOWNiMC04YTdjLTRkZWMtODRmNy1mMDJlMmQ2M2M4ZGYifQ==
-------------- END -------------
-关注(tg): https://t.me/tg2333
-文档(doc): https://233boy.com/v2ray/v2ray-script/
-推广(ads): 机场推荐(V2Ray services): https://getjms.com/
+vmess://eyJ2IjoyLCJwcyI6IjIzM2JveS1rY3AtMTA3LjE3Mi4xOTYuMTc5IiwiYWRkIjoiMTA3LjE3Mi4xOTYuMTc5IiwicG9ydCI6IjI1ODczIiwiaWQiOiJkODJhOWM5Zi1jZjliLTRhMjktOTRkNi0wNjNhZDYzZWQ5OTkiLCJuZXQiOiJrY3AiLCJ0eXBlIjoid2VjaGF0LXZpZGVvIiwicGF0aCI6ImQ4MmE5YzlmLWNmOWItNGEyOS05NGQ2LTA2M2FkNjNlZDk5OSJ9
+
+
+
