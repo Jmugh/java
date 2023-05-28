@@ -1,4 +1,0 @@
-docker run --name mysql57 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=sz@mysql -d mysql:5.7.27
-
-# 安装 启动nginx  
-docker run --name nginx-1.12.2 -p 8000:8000 -v /home/sz/Desktop/nginx-1.12.2/html:/usr/share/nginx/html -v /home/sz/Desktop/nginx-1.12.2/conf:/etc/nginx/conf -d nginx:1.12.2

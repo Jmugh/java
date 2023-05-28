@@ -21,19 +21,19 @@
 
 # Ubuntu安装Docker
 
-#### 使用官方的脚本安装
+## 使用官方的脚本安装
 
 ```linux
 curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 ```
 
-#### 使用国内 daocloud 一键安装命令
+### 使用国内 daocloud 一键安装命令
 
 ```linux
 curl -sSL https://get.daocloud.io/docker | sh
 ```
 
-#### 设置仓库
+### 设置仓库
 
 ```java
 sudo apt-get install \
@@ -44,13 +44,13 @@ sudo apt-get install \
     software-properties-common
 ```
 
-#### 安装 Docker Engine-Community
+### 安装 Docker Engine-Community
 
 ```java
 sudo apt-get install docker-ce docker-ce-cli containerd.io
 ```
 
-#### 测试安装成功
+### 测试安装成功
 
 ```java
  sudo docker run hello-world
@@ -58,7 +58,7 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io
 
 
 
-#### 卸载
+### 卸载
 
 Docker 的旧版本被称为 docker，docker.io 或 docker-engine 
 
@@ -72,6 +72,31 @@ sudo rm -rf /var/lib/docker
 ```
 
 
+
+# 亲测有效的卸载
+
+```shell
+#将docker相关应用容器杀死：
+docker kill $(docker ps -a -q)
+#删除所有docker容器：
+docker rm $(docker ps -a -q)
+#删除所有docker镜像：
+docker rmi $(docker images -q)
+#停止 docker 服务：
+systemctl stop docker
+#进行umount操作：
+umount /var/lib/docker/devicemapper
+#删除docker相关存储目录：
+rm -rf /etc/docker
+rm -rf /run/docker
+rm -rf /var/lib/dockershim
+rm -rf /var/lib/docker
+#删除docker、卸载相关包：
+sudo apt-get purge docker-ce docker-ce-cli containerd.io
+#检查卸载结果：返回空则为成功卸载
+docker version
+
+```
 
 
 
