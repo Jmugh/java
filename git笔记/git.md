@@ -335,16 +335,6 @@ git chckout -b branchname //创建并切换分支
 
 ## 新建分支无法推送
 
-直接git push出现问题，无法推送
-
-![image-20230513200057204](images/image-20230513200057204.png)
-
-如何解决呢？
-
-![image-20230513200443180](images/image-20230513200443180.png)
-
-
-
 
 
 
