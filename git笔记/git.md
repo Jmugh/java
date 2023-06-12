@@ -2,11 +2,15 @@
 
 ## 直接快照，而非比较差异
 
-![image-20230513155728944](images/image-20230513155728944.png)
+![image-20230612211654006](images/image-20230612211654006.png)
 
 
 
-![image-20230513155740615](images/image-20230513155740615.png)
+![image-20230612211705498](images/image-20230612211705498.png)
+
+
+
+
 
 ## 三种状态
 
@@ -174,7 +178,7 @@ git status
 
 
 
-<img src="images/image-20230513173237047.png" alt="image-20230513173237047" style="zoom:67%;" />
+![image-20230612211912708](images/image-20230612211912708.png)
 
 <font color="red">举例：比如一个文件在add之后，没有commit提交，我又修改了这个文件，git status显示这个文件modified，但是是红色的，表示修改了文件，但是没有放到暂存区。可以使用git add filename 来重新跟踪 放到暂存区。这时候会变成绿色的modified</font>
 
@@ -228,7 +232,9 @@ git rm --cached filename  //想要加回来，使用git add filename
 
 查看每次提交的日志
 
-![image-20230513190541639](images/image-20230513190541639.png)
+![image-20230612211942715](images/image-20230612211942715.png)
+
+
 
 
 
@@ -242,7 +248,7 @@ git reflog // 查看每次提交日志  可以看到commit id,
 
 
 
-#### 
+
 
 # 远程仓库的使用
 
@@ -250,7 +256,7 @@ git reflog // 查看每次提交日志  可以看到commit id,
 
 可以用 git remote 命令，它会列出每个远程库的简短名字（如果需要看具体地址，可以加-v参数）。在克隆完某个项目后，至少可以看到一个名为 origin 的远程库，Git 默认使用这个名字来标识你所克隆的原始仓库。
 
-![image-20230513193503167](images/image-20230513193503167.png)
+![image-20230612212009742](images/image-20230612212009742.png)
 
 
 
@@ -262,15 +268,7 @@ git remote -v
 git remote rm origin
 ```
 
-![image-20230513194145019](images/image-20230513194145019.png)
 
-
-
-现在可以用字串 newRepo 指代对应的仓库地址了。但本地仓库没有的信息，可以运行 git fetch newRepo ：
-
-![image-20230513194325041](images/image-20230513194325041.png)
-
-暂时没懂有什么用，仿佛还是同一项目不同分支的，可以用来合并分支。
 
 
 
@@ -284,9 +282,17 @@ git remote rm origin
 
 提交对象的关系：每次后提交的指向之前提交创建的提交对象
 
-<img src="images/image-20230513201753613.png" alt="image-20230513201753613" style="zoom:80%;" />
+![image-20230612212202436](images/image-20230612212202436.png)
+
+
 
 如图：在f30ab提交对象上，创建了testing分支，切换testing,并提交，创建了c2b9e对象
+
+![image-20230612212508583](images/image-20230612212508583.png)
+
+
+
+![image-20230612212520056](images/image-20230612212520056.png)
 
 **master和testing表示分支，指向提交对象，<font color="red">并且始终指向该分支创建的最后一个提交对象。</font>**
 
@@ -294,9 +300,7 @@ git remote rm origin
 
 比如master也进行一次提交，就是这样：
 
-<img src="images/image-20230513202345733.png" alt="image-20230513202345733" style="zoom:80%;" />
-
-
+![image-20230612212544715](images/image-20230612212544715.png)
 
 
 
@@ -306,10 +310,8 @@ git remote rm origin
 git branch   //仅仅创建分支，行为如下图。
 git checkout branchname  //切换分支
 git chckout -b branchname //创建并切换分支
- git branch -d branchname //删除分支
+git branch -d branchname //删除分支
 ```
-
-<img src="images/image-20230513202019202.png" alt="image-20230513202019202" style="zoom:50%;" />
 
 
 
@@ -319,13 +321,11 @@ git chckout -b branchname //创建并切换分支
 
 1 只有一个祖先时候的合并
 
-![image-20230513203626904](images/image-20230513203626904.png)
+![image-20230612213405307](images/image-20230612213405307.png)
 
 2 有不同祖先时候的合并
 
-![image-20230513203449925](images/image-20230513203449925.png)
-
-
+![image-20230612212949687](images/image-20230612212949687.png)
 
 
 
