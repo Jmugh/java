@@ -134,13 +134,13 @@ Password: 9a94c429d5
 
 # 远程连接
 
-IP Address: 107.172.196.152
+IP Address: 107.172.196.179
 
 Extra IP Address:
 
 Username: root
 
-Root Password: 4V47uNqF7u5YPyBnl4
+Root Password: QBR7t69U2mi2jYbV4d
 
 SSH Port 22
 

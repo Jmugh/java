@@ -363,7 +363,9 @@ git config --global https.sslVerify "false"
 # 使用命令时，注意是http还是https
 ```
 
+## port 443 after 21117 ms: Timed out
 
+fatal: unable to access 'https://github.com/Jmugh/java.git/': Failed to connect to github.com port 443 after 21117 ms: Timed out
 
-
+等待  重试就行
 
