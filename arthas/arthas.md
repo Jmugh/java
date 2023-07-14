@@ -33,7 +33,7 @@ thread 1 | grep 'main('
 
 
 
-## 通过 jad 来反编译 Main Class
+## jad 反编译
 
 ```java
 jad demo.MathGame
@@ -52,6 +52,12 @@ watch demo.MathGame primeFactors returnObj
 如果只是退出当前的连接，可以用`quit`或者`exit`命令。Attach 到目标进程上的 arthas 还会继续运行，端口会保持开放，下次连接时可以直接连接上。
 
 如果想完全退出 arthas，可以执行`stop`命令。
+
+
+
+## retransform热部署
+
+
 
 
 
@@ -536,6 +542,22 @@ Affect(class-cnt:1 , method-cnt:1) cost in 72 ms.
 ## ognl的特殊用法
 
 https://github.com/alibaba/arthas/issues/71
+
+
+
+
+
+
+
+# 经验
+
+有时候不知道为什么，arthas会断开或者链接容器断开，重新执行java -jar arthas-boot.jar，进入选进程之后提示端口被占用。这是因为上一次的进程没有正确退出导致的（应该执行stop退出），想要杀掉之前的进程使用如下命令：
+
+```shell
+java -jar arthas-client.jar 127.0.0.1 3658 -c "stop"  # 停掉之前的arthas进程
+```
+
+3658是上次选进程后面的端口。
 
 
 
