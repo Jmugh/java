@@ -151,6 +151,7 @@ install_redis(){
 }
 
 
+
 read -p "是否安装chrome浏览器?y/n" to_install
 if [ $to_install =="y" ];then
 	install_chrome
