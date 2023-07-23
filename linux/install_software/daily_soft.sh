@@ -16,7 +16,6 @@ install_chrome(){
 		if [ -f "google-chrome-stable_current_amd64.deb" ];then
 			sudo dpkg -i google-chrome-stable_current_amd64.deb
 		else
-
 			wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 			sudo dpkg -i google-chrome-stable_current_amd64.deb 
 		fi
@@ -110,6 +109,13 @@ install_docker(){
 		sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
 		#安装docker engine-community
 		sudo apt-get install docker-ce docker-ce-cli containerd.io
+		
+		# 更换国内镜像源
+		if [ ! -f "/etc/docker/daemon.json" ];then
+			cp ./daemon.json /etc/docker/
+			systemctl daemon-reload
+			systemctl restart docker
+		fi
 	fi
 }
 
