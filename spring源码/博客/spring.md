@@ -1088,17 +1088,336 @@ public static void invokeBeanFactoryPostProcessors(
 
 
 
+# Spring 源码分析三 ：bean的加载① - doGetBean概述
+
+在 Spring源码分析一：容器的刷新 - refresh() 文章中分析了Spring容器的刷新过程。我们知道了 Spring 在容器刷新的后期 通过调用AbstractApplicationContext#finishBeanFactoryInitialization 方法来实例化了所有的非惰性bean。在这里面就通过 beanFactory.preInstantiateSingletons(); 调用了一个非常关键的方法 AbstractBeanFactory#getBean(java.lang.String)，而其实际上调用的是 AbstractBeanFactory#doGetBean 方法
+
+![image-20230820171825300](images/image-20230820171825300.png)
+
+如果说，Spring中，Bean 的发现是在 ConfigurationClassPostProcessor 中进行的。那么Bean的创建就是在 doGetBean方法中进行的。 doGetBean 完成了单例Bean的完整创建过程，包括bean的创建，BeanPostProcessor 的方法调用、init-method等方法的调用、Aware 等接口的实现。
+下面，我们开始来分析这个 doGetBean。
+
+关于Bean 的加载过程，AbstractApplicationContext#finishBeanFactoryInitialization 经过几次跳转，最终会跳转到 AbstractBeanFactory#doGetBean 方法。每个bean的创建都会经历此方法，所以本文的主要内容是分析 AbstractBeanFactory#doGetBean 。
+
+## DefaultListableBeanFactory
+
+需要强调的是，本文中调用 `doGetBean` 方法的是 `AbstractBeanFactory` 的子类`DefaultListableBeanFactory`。如下图
+
+![image-20230820172000856](images/image-20230820172000856.png)
+
+`DefaultListableBeanFactory` 结构图如下：
+
+![image-20230820172023835](images/image-20230820172023835.png)
+
+DefaultListableBeanFactory 在之前介绍 Spring 源码分析零：Springboot的启动流程也可以得知，这是 Springboot默认的BeanFactory类型。
+
+注意这里说的 BeanFactory 并不是指 ApplicationContext，而是 ApplicationContext 内部的一个BeanFactory 。对 Springboot 来说，Springboot 默认的上下文是 AnnotationConfigServletWebServerApplicationContext，AnnotationConfigServletWebServerApplicationContext 内部还有一个单独的BeanFactory对象(DefaultListableBeanFactory)。虽然 AnnotationConfigServletWebServerApplicationContext 也实现了 BeanFactory接口，但是实际上对于一般的BeanFactory 请求是AnnotationConfigServletWebServerApplicationContext 直接委托给内部的 BeanFactory来解决。 而这里所说的BeanFactory实际上是 AnnotationConfigServletWebServerApplicationContext 内部的 DefaultListableBeanFactory。
+
+1. DefaultSingletonBeanRegistry
+在这里我们只需要知道DefaultListableBeanFactory 继承了 DefaultSingletonBeanRegistry类，拥有了 DefaultSingletonBeanRegistry 一系列的 集合类型来保存Bean相关信息。
+
+​		大体如下，其中我们主要只需要关注前四个即可：
+
+```java
+/** Cache of singleton objects: bean name to bean instance. */
+//	用于保存BeanName和创建bean实例之间的关系，即缓存bean。 beanname -> instance 
+private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
+
+/** Cache of singleton factories: bean name to ObjectFactory. */
+// 用于保存BeanName和常见bean的工厂之间的关系。beanname-> ObjectFactory
+private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
+
+/** Cache of early singleton objects: bean name to bean instance. */
+// 也是保存BeanName和创建bean实例之间的关系，与singletonObjects 不同的是，如果一个单例bean被保存在此，则当bean还在创建过程中(比如 A类中有B类属性，当创建A类时发现需要先创建B类，这时候Spring又跑去创建B类，A类就会添加到该集合中，表示正在创建)，就可以通过getBean方法获取到了，其目的是用来检测循环引用。
+private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
+
+/** Set of registered singletons, containing the bean names in registration order. */
+// 用来保存当前所有已经注册的bean
+private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
+
+/** Names of beans that are currently in creation. */
+// 用来保存当前正在创建的Bean。也是为了解决循环依赖的问题
+private final Set<String> singletonsCurrentlyInCreation =
+		Collections.newSetFromMap(new ConcurrentHashMap<>(16));
+
+/** Names of beans currently excluded from in creation checks. */
+// 用来保存当前从创建检查中排除的bean名称
+private final Set<String> inCreationCheckExclusions =
+		Collections.newSetFromMap(new ConcurrentHashMap<>(16));
+
+/** List of suppressed Exceptions, available for associating related causes. */
+// 初始化过程中的异常列表
+@Nullable
+private Set<Exception> suppressedExceptions;
+
+/** Flag that indicates whether we're currently within destroySingletons. */
+// 标志是否在销毁BeanFactory过程中
+private boolean singletonsCurrentlyInDestruction = false;
+
+/** Disposable bean instances: bean name to disposable instance. */
+// 一次性bean实例：beanName -> 一次性实例。暂未明白
+private final Map<String, Object> disposableBeans = new LinkedHashMap<>();
+
+/** Map between containing bean names: bean name to Set of bean names that the bean contains. */
+// 包含的Bean名称之间的映射：BeanName  -> Bean包含的BeanName集合
+private final Map<String, Set<String>> containedBeanMap = new ConcurrentHashMap<>(16);
+
+/** Map between dependent bean names: bean name to Set of dependent bean names. */
+// bean dependent(依赖的集合) : beanName -> 依赖该beanName 的 bean，即 key代表的bean 被value 所依赖
+private final Map<String, Set<String>> dependentBeanMap = new ConcurrentHashMap<>(64);
+
+/** Map between depending bean names: bean name to Set of bean names for the bean's dependencies. */
+// bean 被哪些bean依赖 ：  beanName -> beanName 所依赖的 bean。即 key 依赖于value这些bean
+private final Map<String, Set<String>> dependenciesForBeanMap = new ConcurrentHashMap<>(64);
+```
+
+### 关键缓存
+
+下面挑出来几个关键缓存集合来描述：
+
+- singletonObjects ：ConcurrentHashMap。最简单最重要的缓存Map。保存关系是 beanName ：bean实例关系。单例的bean在创建完成后都会保存在 singletonObjects 中，后续使用直接从singletonObjects 中获取。
+- singletonFactories ：HashMap。这是为了解决循环依赖问题，用于提前暴露对象，保存形式是 beanName : ObjectFactory<?>。
+- earlySingletonObjects ：HashMap。这也是为了解决循环依赖问题。和 singletonFactories 互斥。因为 singletonFactories 保存的是 ObjectFactory。而earlySingletonObjects 个人认为是 singletonFactories 更进一步的缓存，保存的是 ObjectFactory#getObject的结果。
+- registeredSingletons ：LinkedHashSet，用于保存注册过的beanName，
+- singletonsCurrentlyInCreation ： 保存当前正在创建的bean。当一个bean开始创建时将保存其beanName，创建完成后将其移除
+- dependentBeanMap ：保存bean的依赖关系，比如A对象依赖于 B对象，会出现 B ：A。即保存的是key 被value依赖
+- dependenciesForBeanMap ：保存bean的依赖关系，不过和dependentBeanMap 反了过来。A对象依赖于 B对象，会出现 A ：B。保存的是key 依赖于 value
+
+我们拿一个简单的场景解释一下 singletonFactories 和 earlySingletonObjects 的关系 。
+下面的代码是 DefaultSingletonBeanRegistry#getSingleton(java.lang.String, boolean) 。我们可以看到其判断逻辑，
+
+1. 锁定 singletonObjects，毕竟要操作 singletonObjects
+
+2. 从 singletonFactories 中获取 ObjectFactory 缓存
+
+3. 如果存在 ObjectFactory 缓存，则更进一步提取ObjectFactory#getObject 的singletonObject 对象。将singletonObject 保存到 earlySingletonObjects 缓存中，同时从 singletonFactories 中移除。
 
 
 
+```java
+@Nullable
+protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+	Object singletonObject = this.singletonObjects.get(beanName);
+	if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+		synchronized (this.singletonObjects) {
+			singletonObject = this.earlySingletonObjects.get(beanName);
+			if (singletonObject == null && allowEarlyReference) {
+				ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+				if (singletonFactory != null) {
+					singletonObject = singletonFactory.getObject();
+					this.earlySingletonObjects.put(beanName, singletonObject);
+					this.singletonFactories.remove(beanName);
+				}
+			}
+		}
+	}
+	return singletonObject;
+}
+```
 
+### 图解
 
+补上一张图，来看一看 A,B循环依赖 `singletonFactories` 和 `earlySingletonObjects` 的变化
 
+![image-20230820172358435](images/image-20230820172358435.png)
 
+**个人推测 ： 在创建过程中会被添加到 `singletonFactories` 中，但当bean被循环依赖时会被添加到 `earlySingletonObjects` 中。也即是说 `earlySingletonObjects` 中的bean都是被循环依赖的。**
 
+## BeanDefinition
 
+这里简单介绍一下，顾名思义，BeanDefinition是bean的信息，一个BeanDefinition 描述和定义了创建一个bean需要的所有信息，属性，构造函数参数以及访问它们的方法。还有其他一些信息，比如这些定义来源自哪个类等等。
 
+对于XML 配置方式的Spring方式来说， BeanDefinition 是配置文件 < bean > 元素标签在容器中的内容表示形式。<bean> 元素标签拥有class、scope、lazy-init等配置属性，BeanDefinition 则提供了相应的beanClass、scope、lazyinit属性，BeanDefinition 和 <bean> 中的属性是一一对应的。其中RootBeanDefinition 是最常用的实现类，一般对应< bean > 元素标签。
 
+类似下图的定义：
 
+![image-20230820172434109](images/image-20230820172434109.png)
 
+需要注意的是 BeanDefinition 是一个接口，在Spring 中存在多种实现，
 
+具体请参考：
+
+https://blog.csdn.net/andy_zhang2007/article/details/85381148
+https://www.cnblogs.com/loongk/p/12262101.html。
+
+## doGetBean 概述
+
+下面我们开始进入正题，进行 `AbstractBeanFactory#doGetBean`的内容分析。这个方法是一切的核心(Bean的创建过程也是在这个方法中完成)。首先我们先来整体过一遍方法代码。后面将会对一些关键点进行详细解释。
+
+```java
+protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
+		@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
+	// 1. 提取出对应的beanName。会去除一些特殊的修饰符比如 "&"
+	final String beanName = transformedBeanName(name);
+	Object bean;
+
+	// Eagerly check singleton cache for manually registered singletons.
+	// 2. 尝试从缓存获取或者singletonFacotries中的ObjectFactory中获取。后续细讲
+	Object sharedInstance = getSingleton(beanName);
+	if (sharedInstance != null && args == null) {
+		... 打印日志
+		// 3. 返回对应的实例，有时候存在诸如BeanFactory的情况并不直接返回实例本身，而是返回指定方法返回的实例。这一步主要还是针对FactoryBean的处理。
+		bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
+	}
+	else {
+		// 4. 只有单例情况才会尝试解决循环依赖，原型模式直接抛出异常。因为原型模式无法解决循环依赖问题。参考衍生篇关于循环依赖的内容
+		if (isPrototypeCurrentlyInCreation(beanName)) {
+			throw new BeanCurrentlyInCreationException(beanName);
+		}
+
+		// Check if bean definition exists in this factory.
+		// 获取父级的 BeanFactory
+		BeanFactory parentBeanFactory = getParentBeanFactory();
+		// 5. 如果 beanDefinitionMap 中也就是在所有已经加载的类中不包含beanName，则尝试从parentBeanFactory中检测
+		if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
+			// Not found -> check parent.
+			// 递归到BeanFactory中检测
+			String nameToLookup = originalBeanName(name);
+			if (parentBeanFactory instanceof AbstractBeanFactory) {
+				return ((AbstractBeanFactory) parentBeanFactory).doGetBean(
+						nameToLookup, requiredType, args, typeCheckOnly);
+			}
+			else if (args != null) {
+				// Delegation to parent with explicit args.
+				return (T) parentBeanFactory.getBean(nameToLookup, args);
+			}
+			else if (requiredType != null) {
+				// No args -> delegate to standard getBean method.
+				return parentBeanFactory.getBean(nameToLookup, requiredType);
+			}
+			else {
+				return (T) parentBeanFactory.getBean(nameToLookup);
+			}
+		}
+		// 如果不仅仅做类型检查则是创建bean，这里需要记录
+		if (!typeCheckOnly) {
+			// 这里是将 当前创建的beanName 保存到 alreadyCreated 集合中。alreadyCreated 中的bean表示当前bean已经创建了，在进行循环依赖判断的时候会使用
+			markBeanAsCreated(beanName);
+		}
+
+		try {
+			// 6. 将当前 beanName 的 BeanDefinition 和父类BeanDefinition 属性进行一个整合
+			final RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
+			checkMergedBeanDefinition(mbd, beanName, args);
+
+			// Guarantee initialization of beans that the current bean depends on.
+			// 7. 寻找bean的依赖
+            // 获取初始化的依赖项
+			String[] dependsOn = mbd.getDependsOn();
+			// 如果需要依赖，则递归实例化依赖bean
+			if (dependsOn != null) {
+				for (String dep : dependsOn) {
+					if (isDependent(beanName, dep)) {
+						throw new BeanCreationException(mbd.getResourceDescription(), beanName,
+								"Circular depends-on relationship between '" + beanName + "' and '" + dep + "'");
+					}
+					// 缓存依赖调用
+					registerDependentBean(dep, beanName);
+					try {
+						getBean(dep);
+					}
+					catch (NoSuchBeanDefinitionException ex) {
+						throw new BeanCreationException(mbd.getResourceDescription(), beanName,
+								"'" + beanName + "' depends on missing bean '" + dep + "'", ex);
+					}
+				}
+			}
+
+			// Create bean instance.
+            // 8 针对不同的Scope 进行bean的创建
+			// 实例化依赖的bean便可以实例化mdb本身了
+			// singleton 模式的创建
+			if (mbd.isSingleton()) {
+				sharedInstance = getSingleton(beanName, () -> {
+					try {
+						return createBean(beanName, mbd, args);
+					}
+					catch (BeansException ex) {
+						destroySingleton(beanName);
+						throw ex;
+					}
+				});
+				bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
+			}
+
+			else if (mbd.isPrototype()) {
+				// Prototype 模式的创建
+				// It's a prototype -> create a new instance.
+				Object prototypeInstance = null;
+				try {
+					beforePrototypeCreation(beanName);
+					prototypeInstance = createBean(beanName, mbd, args);
+				}
+				finally {
+					afterPrototypeCreation(beanName);
+				}
+				bean = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
+			}
+
+			else {
+				String scopeName = mbd.getScope();
+				// 指定scope上实例化bean
+				final Scope scope = this.scopes.get(scopeName);
+				if (scope == null) {
+					throw new IllegalStateException("No Scope registered for scope name '" + scopeName + "'");
+				}
+				try {
+					Object scopedInstance = scope.get(beanName, () -> {
+						beforePrototypeCreation(beanName);
+						try {
+							return createBean(beanName, mbd, args);
+						}
+						finally {
+							afterPrototypeCreation(beanName);
+						}
+					});
+					bean = getObjectForBeanInstance(scopedInstance, name, beanName, mbd);
+				}
+				catch (IllegalStateException ex) {
+					throw new BeanCreationException(beanName,
+							"Scope '" + scopeName + "' is not active for the current thread; consider " +
+							"defining a scoped proxy for this bean if you intend to refer to it from a singleton",
+							ex);
+				}
+			}
+		}
+		catch (BeansException ex) {
+			cleanupAfterBeanCreationFailure(beanName);
+			throw ex;
+		}
+	}
+
+	// Check if required type matches the type of the actual bean instance.
+    // 9 类型转换
+	// 检查需要的类型是否符合bean 的实际类型
+	if (requiredType != null && !requiredType.isInstance(bean)) {
+		try {
+			T convertedBean = getTypeConverter().convertIfNecessary(bean, requiredType);
+			if (convertedBean == null) {
+				throw new BeanNotOfRequiredTypeException(name, requiredType, bean.getClass());
+			}
+			return convertedBean;
+		}
+		catch (TypeMismatchException ex) {
+			if (logger.isTraceEnabled()) {
+				logger.trace("Failed to convert bean '" + name + "' to required type '" +
+						ClassUtils.getQualifiedName(requiredType) + "'", ex);
+			}
+			throw new BeanNotOfRequiredTypeException(name, requiredType, bean.getClass());
+		}
+	}
+	return (T) bean;
+}
+```
+
+综上所属，doGetBean的 大体流程如下：
+
+1. 将传入的beanName 转化为合适的beanName。因为这里可能传入bean的别名，比如 FactoryBean 这里就是传入 “&beanName” ， 这一步就会将其转化为 “beanName”
+2. 尝试从单例缓存中获取 bean，主要是尝试从 singletonObjects 和 singletonFactories 中获取实例。（这一步中还使用了 earlySingletonObjects 来判断循环依赖的问题）
+3. 如果第二步获取到了bean，则会针对处理 FactoryBean 这种特殊情况，以获取到正确的bean。（因为Factorybean 的话可能需要将其 getObject 方法的返回值作为bean注入到容器中）。
+4. 如果第二步没有获取到bean，则会检测其原型模式下的循环依赖情况，如果原型模式下有循环依赖，则直接抛出异常，因为原型模式下无法解决循环依赖。
+5. 如果第四步没有抛出异常，则会判断 当前BeanFactory 中是否包含该beanName 的定义信息，如果不包含，则会递归去 parentBeanFactory 中去寻找beanName的定义信息.
+6. 随后查询beanName 的 BeanDefinition 是否具有 父类的BeanDefinition， 如果有，则将 父类的一些属性和子类合并，形成一个新的BeanDefinition ： mdb
+7. 获取mdb中的 depends-on 属性，优先将依赖的bean创建，随后再创建当前bean。
+8. 到这一步，则说明当前bean尚未创建，则会根据 singleton 或者 prototype 或其他逻辑，走不同的流程来创建bean
+9. 创建bean结束后，根据调用者需要的类型进行一个类型转换。比如调用者希望返回一个Integer，这里得到的结果却是String，则会进行一个类型的转换。
