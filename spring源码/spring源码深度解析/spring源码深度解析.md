@@ -18,7 +18,7 @@
 
 ​		Spring框架是一个分层架构,它包含一系列的功能要素，并被分为大约20个模块，如图1-1所示。
 
-<img src="images/image-20230910172931311.png" alt="image-20230910172931311" style="zoom:67%;" />
+![img](images/spring-overview.png)
 
 ​		这些模块被总结为以下几部分。
 
@@ -37,13 +37,13 @@
 		Data Access/Integration层包含有JDBC、ORM、OXM、JMS 和 Transaction模块，其中:
 
 - JDBC模块提供了一个JDBC抽象层，它可以消除冗长的JDBC编码和解析数据库厂商特有的错误代码。这个模块包含了Spring对JDBC 数据访问进行封装的所有类。
-- ORM模块为流行的对象-关系映射API，如JPA、JDO、Hibernate、iBatis等，提供了一个交互层。利用ORM封装包，可以混合使用所有Spring 提供的特性进行O/R映射。如前边提到的简单声明性事物管理。
+- ORM模块为流行的对象-关系映射API，如JPA、JDO、Hibernate、iBatis等，提供了一个交互层。利用ORM封装包，可以混合使用所有Spring 提供的特性进行O/R映射。如前边提到的简单声明事务管理。
 
 ​		Spring框架插入了若干个ORM框架，从而提供了ORM的对象关系工具，其中包括JDO、Hibernate和 iBatisSQL Map。所有这些都遵从Spring的通用事务和DAO异常层次结构
 
 - OXM模块提供了一个对Object/XML映射实现的抽象层Object/XML映射实现包括JAXB、Castor、XMLBeans、JiBX和XStream。
 - JMS (Java Messaging Service)模块主要包含了一些制造和消费消息的特性。
-- Transaction模块支持编程和声明性的事物管理，这些事物类必须实现特定的接口，并且对所有的POJO都适用。
+- Transaction模块支持编程和声明性的事务管理，这些事务类必须实现特定的接口，并且对所有的POJO都适用。
 
 ( 3 ） Web。
 		Web上下文模块建立在应用程序上下文模块之上,为基于Web的应用程序提供了上下文。所以，Spring框架支持与Jakarta Struts的集成。Web模块还简化了处理多部分请求以及将请求参数绑定到域对象的工作。Web层包含了Web、Web-Servlet、Web-Struts和 Web-Porlet模块，具体说明如下。
@@ -104,7 +104,7 @@ public class MyTestBean {
     public string getTeststr() {
         return testStr;
         public void setTeststr(String teststr){
-            this.testStr = testStr;
+            this.testStr = teststr;
         }
     }
 }
@@ -113,7 +113,7 @@ public class MyTestBean {
 ​		很普通，bean没有任何特别之处，的确，Spring 的目的就是让我们的bean能成粹的POJO，这也是Spring所追求的。接下来看看配置文件:
 ```xml
 <?xml version=" 1.0" encoding="UTF-8"?>
-<beans xmins="http://www.Springframework.org/schema/beans"
+<beans xmlns="http://www.Springframework.org/schema/beans"
 xmlns:xsi="http://www.w3.org/2001/xMLSchema-instance"
 xsi:schemaLocation="http://ww.Springframework.org/schema/beans/http://www.Springframework.org/schema/beans/Spring-beans.xsd">
 	<bean id="myTestBean" class="bean.MyTestBean"/ >
@@ -127,15 +127,14 @@ xsi:schemaLocation="http://ww.Springframework.org/schema/beans/http://www.Spring
 public class BeanFactoryTest {
     @Test
     public void testsimpleLoad() {
-        BeanFactorybf = new XmlBeanFactory(new ClassPathResource("beanFactoryTest.xml");
+        BeanFactory bf = new XmlBeanFactory(new ClassPathResource("beanFactoryTest.xml");
         MyTestBean bean = (MyTestBean) bf.getBean("myTestBean");
-        assertEquals("testStr", bean.getTestStr(O));
+        assertEquals("testStr", bean.getTeststr());
     }
 }
 ```
 
-​		相信聪明的读者会很快看到我们期望的结果:在 Eclipse中显示了 Green Baro直接使用BeanFactory作为容器对于Spring的使用来说并不多见,甚至是甚少使用,因为
-在企业级的应用中大多数都会使用的是ApplicationContext，后续章节我们会介绍它们之间的区别，这里只是用于测试，让读者更快更好地分析Spring 的内部原理。
+​		相信聪明的读者会很快看到我们期望的结果:在 Eclipse中显示了 Green Baro直接使用BeanFactory作为容器对于Spring的使用来说并不多见,甚至是甚少使用,因为在企业级的应用中大多数都会使用的是ApplicationContext，后续章节我们会介绍它们之间的区别，这里只是用于测试，让读者更快更好地分析Spring 的内部原理。
 
 ## 2.2 功能分析
 
@@ -214,14 +213,15 @@ beans包中的各个源码包的功能如下。
 ​		XML配置文件的读取是Spring中重要的功能，因为Spring 的大部分功能都是以配置作为切人点的,那么我们可以从XmlBeanDefinitionReader中梳理一下资源文件读取、解析及注册的大致脉络，首先我们看看各个类的功能。
 
 - ResourceLoader:定义资源加载器，主要应用于根据给定的资源文件地址返回对应的Resource.
-- BeanDefinitionReader:主要定义资源文件读取并转换为BeanDefinition的各个功能。EnvironmentCapable:定义获取Environment方法。
+- BeanDefinitionReader:主要定义资源文件读取并转换为BeanDefinition的各个功能。
+- EnvironmentCapable:定义获取Environment方法。
 - DocumentLoader:定义从资源文件加载到转换为Document的功能。
 - AbstractBeanDefinitionReader:对 EnvironmentCapable、BeanDefinitionReader类定义的功能进行实现。
 - BeanDefinitionDocumentReader:定义读取Docuemnt 并注册BeanDefinition 功能。BeanDefinitionParserDelegate:定义解析Element 的各种方法。
 
-​		经过以上分析，我们可以梳理出整个XML 配置文件读取的大致流程，如图2-6所示在XmlBeanDifinitionReader中主要包含以下几步的处理。
+​		经过以上分析，我们可以梳理出整个XML 配置文件读取的大致流程，如图2-6所示在	中主要包含以下几步的处理。
 
-![image-20230910193036833](images/image-20230910193036833.png)
+![img](images/1354412-20200621115431488-1840509424.png)
 
 
 
@@ -1119,7 +1119,7 @@ public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable Be
     if (containingBean == null) {
         checkNameUniqueness(beanName, aliases, ele);
     }
-    // 解析bean节点为GenericBeanDefinition
+    // 解析bean节点为GenericBeanDefinition================重点====================
     AbstractBeanDefinition beanDefinition = parseBeanDefinitionElement(ele, beanName, containingBean);//解析bean的各种属性内容（重点）
     if (beanDefinition != null) {
         if (!StringUtils.hasText(beanName)) {
@@ -1159,8 +1159,12 @@ public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable Be
 
 ​		以上便是对默认标签解析的全过程了。当然，对Spring的解析犹如洋葱剥皮一样，一层一层地进行，尽管现在只能看到对属性id以及name 的解析，但是很庆幸,思路我们已经了解了。在开始对属性展开全面解析前，Spring在外层又做了一个当前层的功能架构，在当前层完成的主要工作包括如下内容。
 (1）提取元素中的id以及name属性。
+
 (2）进一步解析其他所有属性并统一封装至GenericBeanDefinition类型的实例中。
-(3）如果检测到bean没有指定beanName，那么使用默认规则为此 Bean生成 beanNameo(4）将获取到的信息封装到BeanDefinitionHolder的实例中。
+
+(3）如果检测到bean没有指定beanName，那么使用默认规则为此 Bean生成 beanName
+
+(4）将获取到的信息封装到BeanDefinitionHolder的实例中。
 我们进一步地查看步骤（2）中对标签其他属性的解析过程。
 
 BeanDefinitionParserDelegate.java
@@ -1475,7 +1479,7 @@ i am Teacher
 当我们的业务变更或者在其他情况下，teacher 里面的业务逻辑已经不再符合我们的业务要求，需要进行替换怎么办呢?这是我们需要增加新的逻辑类:
 
 ```java
-package test . lookup.bean;
+package test.lookup.bean;
 public class student extends User {
     public void showMe () {
         System.out.println ("i am student") ;
@@ -1521,33 +1525,871 @@ public void parseLookupOverrideSubElements(Element beanEle，MethodOverrides ove
 
 
 
+#### 5．解析子元素replaced-method
+
+​		这个方法主要是对bean中 replaced-method子元素的提取，在开始提取分析之前我们还是预先介绍下这个元素的用法。
+​		方法替换:可以在运行时用新的方法替换现有的方法。与之前的look-up 不同的是，replaced-method不但可以动态地替换返回实体 bean，而且还能动态地更改原有方法的逻辑。我们来看看使用示例。
+(1）在changeMe中完成某个业务逻辑。
+
+```java
+public class TestChangeMethod {
+    public void changeMe(){
+        System.out.println("changeMe");
+    }
+}
+```
+
+(2)在运营一段时间后需要改变原有的业务逻辑。
+```java
+public class TestMethodReplacer implements MethodReplacer{
+    @override
+    public 0bject reimplement(Object obj，Method method，0bject[] args) throws Throwable {
+	    System.out.println("我替换了原有的方法");
+        return null;
+    }
+}
+```
+
+(3）使替换后的类生效。
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.Springframework.org/schema/beans"
+    	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    	xsi:schemaLocation="http://wwa.Springframework.org/schema/beans http://www.Springframework.org/schema/beans/Spring-beans.xsd">
+    <bean id="testChangeMethod" class="test.replacemethod.TestChangeMethod">
+	    <replaced-method name="changeMe" replacer="replacer"/>
+    </bean>
+    <bean id="replacer" class="test.replacemethod.TestMethodReplacer"/>
+</beans>
+```
+
+(4）测试。
+```java
+public static void main (String[]args) {
+	ApplicationContext bf = new ClassPathXmlApplicationContext("test/replacemethod/replaceMethodTest.xml");
+	TestChangeMethod test=(TestChangeMethod) bf.getBean ("testChangeMethod");
+	test.changeMe();
+}
+```
+
+​		好了,运行测试类就可以看到预期的结果了,控制台成功打印出“我替换了原有的方法”，也就是说我们做到了动态替换原有方法，知道了这个元素的用法，我们再次来看元素的提取过程:
+
+BeanDefinitionParserDelegate.java
+
+```java
+/**
+ * Parse replaced-method sub-elements of the given bean element.
+ */
+public void parseReplacedMethodSubElements(Element beanEle, MethodOverrides overrides) {
+   NodeList nl = beanEle.getChildNodes();
+   for (int i = 0; i < nl.getLength(); i++) {
+      Node node = nl.item(i);
+       //仅当在spring默认bean的子元素下且为replace-method时有效
+      if (isCandidateElement(node) && nodeNameEquals(node, REPLACED_METHOD_ELEMENT)) {
+         Element replacedMethodEle = (Element) node;
+          //要替换的旧的方法
+         String name = replacedMethodEle.getAttribute(NAME_ATTRIBUTE);
+          //用来替换的新的方法
+         String callback = replacedMethodEle.getAttribute(REPLACER_ATTRIBUTE);
+         ReplaceOverride replaceOverride = new ReplaceOverride(name, callback);
+         // Look for arg-type match elements.
+         List<Element> argTypeEles = DomUtils.getChildElementsByTagName(replacedMethodEle, ARG_TYPE_ELEMENT);
+         for (Element argTypeEle : argTypeEles) {
+             //记录参数
+            String match = argTypeEle.getAttribute(ARG_TYPE_MATCH_ATTRIBUTE);
+            match = (StringUtils.hasText(match) ? match : DomUtils.getTextValue(argTypeEle));
+            if (StringUtils.hasText(match)) {
+               replaceOverride.addTypeIdentifier(match);
+            }
+         }
+         replaceOverride.setSource(extractSource(replacedMethodEle));
+         overrides.addOverride(replaceOverride);
+      }
+   }
+}
+```
+
+​		我们可以看到无论是look-up还是replaced-method都是构造了一个MethodOverride，并最终记录在了AbstractBeanDefinition中的 methodOverrides属性中。而这个属性如何使用以完成它所提供的功能我们会在后续的章节进行详细地介绍。
 
 
 
+#### 6．解析子元素constructor-arg
 
+对构造函数的解析是非常常用的，同时也是非常复杂的，也相信大家对构造函数的配置都不陌生,举个简单的小例子:
+```xml
+<beans>
+<!--默认的情况下是按照参数的顺序注人，当指定index索引后就可以改变注人参数的顺序-->
+    <bean id="helloBean" class="com.HelloBean">
+        <constructor-arg index="0">
+        	<value>郝佳</value>
+        </constructor-arg>
+        <constructor-arg index="1">
+            <value>你好</value>
+        </constructor-arg>
+    </bean>
+    ...
+</beans>
+```
 
+​		上面的配置是Spring构造函数配置中最基础的配置，实现的功能就是对HelloBean自动寻找对应的构造函数，并在初始化的时候将设置的参数传入进去。那么让我们来看看具体的XML解析过程。
+​		对于constructor-arg子元素的解析，Spring是通过parseConstructorArgElements 函数来实现的，具体的代码如下:
 
+BeanDefinitionParserDelegate.java
 
+```java
+/**
+ * Parse constructor-arg sub-elements of the given bean element.
+ */
+public void parseConstructorArgElements(Element beanEle, BeanDefinition bd) {
+    NodeList nl = beanEle.getChildNodes();
+    for (int i = 0; i < nl.getLength(); i++) {
+        Node node = nl.item(i);
+        if (isCandidateElement(node) && nodeNameEquals(node, CONSTRUCTOR_ARG_ELEMENT)) {
+            //真正的解析construct-arg
+            parseConstructorArgElement((Element) node, bd);
+        }
+    }
+}
+```
 
+这个结构似乎我们可以想象得到，遍历所有子元素，也就是提取所有constructor-arg，然后进行解析，但是具体的解析却被放置在了另个函数 parseConstructorArgElement中，具体代码如下:
 
+BeanDefinitionParserDelegate.java
 
+```java
+/**
+ * Parse a constructor-arg element.
+ */
+public void parseConstructorArgElement(Element ele, BeanDefinition bd) {
+    //提取index属性
+   String indexAttr = ele.getAttribute(INDEX_ATTRIBUTE);
+    //提取type属性
+   String typeAttr = ele.getAttribute(TYPE_ATTRIBUTE);
+    //提取name属性
+   String nameAttr = ele.getAttribute(NAME_ATTRIBUTE);
+   if (StringUtils.hasLength(indexAttr)) {
+      try {
+         int index = Integer.parseInt(indexAttr);
+         if (index < 0) {
+            error("'index' cannot be lower than 0", ele);
+         }
+         else {
+            try {
+               this.parseState.push(new ConstructorArgumentEntry(index));
+                //解析element对应的属性元素
+               Object value = parsePropertyValue(ele, bd, null);
+               ConstructorArgumentValues.ValueHolder valueHolder = new ConstructorArgumentValues.ValueHolder(value);
+               if (StringUtils.hasLength(typeAttr)) {
+                  valueHolder.setType(typeAttr);
+               }
+               if (StringUtils.hasLength(nameAttr)) {
+                  valueHolder.setName(nameAttr);
+               }
+               valueHolder.setSource(extractSource(ele));
+                //不允许重复指定相同的参数
+               if (bd.getConstructorArgumentValues().hasIndexedArgumentValue(index)) {
+                  error("Ambiguous constructor-arg entries for index " + index, ele);
+               }
+               else {
+                  bd.getConstructorArgumentValues().addIndexedArgumentValue(index, valueHolder);
+               }
+            }
+            finally {
+               this.parseState.pop();
+            }
+         }
+      }
+      catch (NumberFormatException ex) {
+         error("Attribute 'index' of tag 'constructor-arg' must be an integer", ele);
+      }
+   }
+   else {//没有index属性，则忽略属性，自动寻找
+      try {
+         this.parseState.push(new ConstructorArgumentEntry());
+         Object value = parsePropertyValue(ele, bd, null);
+         ConstructorArgumentValues.ValueHolder valueHolder = new ConstructorArgumentValues.ValueHolder(value);
+         if (StringUtils.hasLength(typeAttr)) {
+            valueHolder.setType(typeAttr);
+         }
+         if (StringUtils.hasLength(nameAttr)) {
+            valueHolder.setName(nameAttr);
+         }
+         valueHolder.setSource(extractSource(ele));
+         bd.getConstructorArgumentValues().addGenericArgumentValue(valueHolder);
+      }
+      finally {
+         this.parseState.pop();
+      }
+   }
+}
+```
 
+上面一段看似复杂的代码让很多人失去了耐心，但是，涉及的逻辑其实并不复杂，首先是提取constructor-arg 上必要的属性( index、type、name )。
+如果配置中指定了index属性，那么操作步骤如下。
 
+(1)解析constructor-arg 的子元素。
+(2)使用ConstructorArgumentValues.ValueHolder类型来封装解析出来的元素。
+(3)将type、name 和 index属性一并封装在ConstructorArgumentValues.ValueHolder类型中并添加至当前BeanDefinition的constructorArgumentValues的indexedArgumentValues属性中。
 
+如果没有指定index属性,那么操作步骤如下。
+(1) 解析constructor-arg 的子元素。
+(2)使用ConstructorArgumentValues.ValueHolder类型来封装解析出来的元素。
+(3)将type、name和index属性一并封装在ConstructorArgumentValues.ValueHolder类型中并添加至当前BeanDefinition的constructorArgumentValues的genericArgumentValues属性中。
+可以看到，对于是否制定index属性来讲，Spring 的处理流程是不同的，关键在于属性信息被保存的位置。
+那么了解了整个流程后，我们尝试着进一步了解解析构造函数配置中子元素的过程，进人parsePropertyValue:
 
+```java
+/**
+ * Get the value of a property element. May be a list etc.
+ * Also used for constructor arguments, "propertyName" being null in this case.
+ */
+@Nullable
+public Object parsePropertyValue(Element ele, BeanDefinition bd, @Nullable String propertyName) {
+   String elementName = (propertyName != null ?
+         "<property> element for property '" + propertyName + "'" :
+         "<constructor-arg> element");
 
+   // Should only have one child element: ref, value, list, etc.
+    //一个属性只能对应一种类型 ref, value, list等
+   NodeList nl = ele.getChildNodes();
+   Element subElement = null;
+   for (int i = 0; i < nl.getLength(); i++) {
+      Node node = nl.item(i);
+       // description和meta类型的元素不处理
+      if (node instanceof Element && !nodeNameEquals(node, DESCRIPTION_ELEMENT) &&
+            !nodeNameEquals(node, META_ELEMENT)) {
+         // Child element is what we're looking for.
+         if (subElement != null) {
+            error(elementName + " must not contain more than one sub-element", ele);
+         }
+         else {
+            subElement = (Element) node;
+         }
+      }
+   }
+	//解析constructor-arg上的ref属性
+   boolean hasRefAttribute = ele.hasAttribute(REF_ATTRIBUTE);
+	//解析constructor-arg上的value属性
+   boolean hasValueAttribute = ele.hasAttribute(VALUE_ATTRIBUTE);
+   if ((hasRefAttribute && hasValueAttribute) ||
+         ((hasRefAttribute || hasValueAttribute) && subElement != null)) {
+      error(elementName +
+            " is only allowed to contain either 'ref' attribute OR 'value' attribute OR sub-element", ele);
+   }
 
+   if (hasRefAttribute) {
+      String refName = ele.getAttribute(REF_ATTRIBUTE);
+      if (!StringUtils.hasText(refName)) {
+         error(elementName + " contains empty 'ref' attribute", ele);
+      }
+      RuntimeBeanReference ref = new RuntimeBeanReference(refName);
+      ref.setSource(extractSource(ele));
+      return ref;
+   }
+   else if (hasValueAttribute) {
+      TypedStringValue valueHolder = new TypedStringValue(ele.getAttribute(VALUE_ATTRIBUTE));
+      valueHolder.setSource(extractSource(ele));
+      return valueHolder;
+   }
+   else if (subElement != null) {
+      return parsePropertySubElement(subElement, bd);
+   }
+   else {
+      // Neither child element nor "ref" or "value" attribute found.
+      error(elementName + " must specify a ref or value", ele);
+      return null;
+   }
+}
+```
 
+从代码上来看，对构造函数中属性元素的解析，经历了以下几个过程。
 
+(1)略过description或者meta。
+(2)提取constructor-arg上的ref和 value属性，以便于根据规则验证正确性，其规则为在constructor-arg上不存在以下情况。同时既有ref属性又有value属性。
+存在ref属性或者value属性且又有子元素。
+(3) ref属性的处理。使用RuntimeBeanReference封装对应的ref名称，如:
 
+```xml
+<constructor-arg ref="a" >
+```
 
+(4 ) value属性的处理。使用TypedStringValue封装，例如:
+```xml
+<constructor-arg value="a" >
+```
 
+(5)子元素的处理。例如:
+```xml
+<constructor-arg>
+    <map>
+		<entry key="key" value="value"/>
+    </map>
+</constructor-arg>
+```
 
+而对于子元素的处理，例如这里提到的在构造函数中又嵌入了子元素map是怎么实现的呢? parsePropertySubElement中实现了对各种子元素的分类处理。
 
+BeanDefinitionParserDelegate.java
 
+```java
+/**
+ * Parse a value, ref or collection sub-element of a property or
+ * constructor-arg element.
+ * @param ele subelement of property element; we don't know which yet
+ * @param bd the current bean definition (if any)
+ */
+@Nullable
+public Object parsePropertySubElement(Element ele, @Nullable BeanDefinition bd) {
+   return parsePropertySubElement(ele, bd, null);
+}
 
+/**
+ * Parse a value, ref or collection sub-element of a property or
+ * constructor-arg element.
+ * @param ele subelement of property element; we don't know which yet
+ * @param bd the current bean definition (if any)
+ * @param defaultValueType the default type (class name) for any
+ * {@code <value>} tag that might be created
+ */
+@Nullable
+public Object parsePropertySubElement(Element ele, @Nullable BeanDefinition bd, @Nullable String defaultValueType) {
+   if (!isDefaultNamespace(ele)) {
+      return parseNestedCustomElement(ele, bd);
+   }
+   else if (nodeNameEquals(ele, BEAN_ELEMENT)) {
+      BeanDefinitionHolder nestedBd = parseBeanDefinitionElement(ele, bd);
+      if (nestedBd != null) {
+         nestedBd = decorateBeanDefinitionIfRequired(ele, nestedBd, bd);
+      }
+      return nestedBd;
+   }
+   else if (nodeNameEquals(ele, REF_ELEMENT)) {
+      // A generic reference to any name of any bean.
+      String refName = ele.getAttribute(BEAN_REF_ATTRIBUTE);
+      boolean toParent = false;
+      if (!StringUtils.hasLength(refName)) {
+         // A reference to the id of another bean in a parent context.
+         //解析parent
+         refName = ele.getAttribute(PARENT_REF_ATTRIBUTE);
+         toParent = true;
+         if (!StringUtils.hasLength(refName)) {
+            error("'bean' or 'parent' is required for <ref> element", ele);
+            return null;
+         }
+      }
+      if (!StringUtils.hasText(refName)) {
+         error("<ref> element contains empty target attribute", ele);
+         return null;
+      }
+      RuntimeBeanReference ref = new RuntimeBeanReference(refName, toParent);
+      ref.setSource(extractSource(ele));
+      return ref;
+   }
+    //解析id-ref
+   else if (nodeNameEquals(ele, IDREF_ELEMENT)) {
+      return parseIdRefElement(ele);
+   }
+    //解析value
+   else if (nodeNameEquals(ele, VALUE_ELEMENT)) {
+      return parseValueElement(ele, defaultValueType);
+   }
+    //解析null
+   else if (nodeNameEquals(ele, NULL_ELEMENT)) {
+      // It's a distinguished null value. Let's wrap it in a TypedStringValue
+      // object in order to preserve the source location.
+      TypedStringValue nullHolder = new TypedStringValue(null);
+      nullHolder.setSource(extractSource(ele));
+      return nullHolder;
+   }
+    //解析array
+   else if (nodeNameEquals(ele, ARRAY_ELEMENT)) {
+      return parseArrayElement(ele, bd);
+   }
+    //解析list
+   else if (nodeNameEquals(ele, LIST_ELEMENT)) {
+      return parseListElement(ele, bd);
+   }
+    //解析set
+   else if (nodeNameEquals(ele, SET_ELEMENT)) {
+      return parseSetElement(ele, bd);
+   }
+    //解析map
+   else if (nodeNameEquals(ele, MAP_ELEMENT)) {
+      return parseMapElement(ele, bd);
+   }
+    //解析props
+   else if (nodeNameEquals(ele, PROPS_ELEMENT)) {
+      return parsePropsElement(ele);
+   }
+   else {
+      error("Unknown property sub-element: [" + ele.getNodeName() + "]", ele);
+      return null;
+   }
+}
+```
 
+​		可以看到，在上面的函数中实现了所有可支持的子类的分类处理，到这里，我们已经大致理清构造函数的解析流程，至于再深入的解析读者有兴趣可以自己去探索。
 
+#### 7．解析子元素property
 
+parsePropertyElement函数完成了对property属性的提取，property使用方式如下:
 
+```xml
+<bean id="test" class="test.Testclass">
+	<property name="testStr" value="aaa"/>
+</bean>
+```
 
+或者
+
+```xml
+<bean id="a">
+	<property name="p">
+        <list>
+            <value>aa</value><value>bb</value>
+        </list>
+	</property>
+</bean>
+```
+
+而具体的解析过程如下:
+
+BeanDefinitionParserDelegate.java
+
+```java
+/**
+ * Parse property sub-elements of the given bean element.
+ */
+public void parsePropertyElements(Element beanEle, BeanDefinition bd) {
+   NodeList nl = beanEle.getChildNodes();
+   for (int i = 0; i < nl.getLength(); i++) {
+      Node node = nl.item(i);
+      if (isCandidateElement(node) && nodeNameEquals(node, PROPERTY_ELEMENT)) {
+         parsePropertyElement((Element) node, bd);
+      }
+   }
+}
+```
+
+有了之前分析构造函数的经验，这个函数我们并不难理解，无非是提取所有property 的子元素，然后调用parsePropertyElement处理，parsePropertyElement代码如下:
+
+```java
+/**
+ * Parse a property element.
+ */
+public void parsePropertyElement(Element ele, BeanDefinition bd) {
+    //获取name
+   String propertyName = ele.getAttribute(NAME_ATTRIBUTE);
+   if (!StringUtils.hasLength(propertyName)) {
+      error("Tag 'property' must have a 'name' attribute", ele);
+      return;
+   }
+   this.parseState.push(new PropertyEntry(propertyName));
+   try {
+       //不许多次对同一属性配置
+      if (bd.getPropertyValues().contains(propertyName)) {
+         error("Multiple 'property' definitions for property '" + propertyName + "'", ele);
+         return;
+      }
+      Object val = parsePropertyValue(ele, bd, propertyName);
+      PropertyValue pv = new PropertyValue(propertyName, val);
+      parseMetaElements(ele, pv);
+      pv.setSource(extractSource(ele));
+      bd.getPropertyValues().addPropertyValue(pv);
+   }
+   finally {
+      this.parseState.pop();
+   }
+}
+```
+
+可以看到上面函数与构造函数注入方式不同的是将返回值使用PropertyValue进行封装,并记录在了BeanDefinition中的propertyValues属性中。
+
+#### 8．解析子元素qualifier
+
+对于qualifier元素的获取，我们接触更多的是注解的形式，在使用Spring框架中进行自动注入时，Spring容器中匹配的候选Bean数目必须有且仅有一个。当找不到一个匹配的Bean时，Spring容器将抛出 BeanCreationException异常，并指出必须至少拥有一个匹配的 Bean, Spring 允许我们通过Qualifier指定注入 Bean 的名称，这样歧义就消除了，而对于配置方式使用如:
+```xml
+<bean id="myTestBean" class="bean.MyTestBean">
+	<qualifier type="org.Springframework.beans.factory.annotation.Qualifier" value="qf"/>
+</bean>
+```
+
+其解析过程与之前大同小异，这里不再重复叙述。
+
+### 3.1.2 AbstractBeanDefinition属性
+
+​		至此我们便完成了对XML文档到GenericBeanDefinition的转换，也就是说到这里XML中所有的配置都可以在GenericBeanDefinition的实例类中找到对应的配置。
+
+​		GenericBeanDefinition只是子类实现，而大部分的通用属性都保存在了AbstractBeanDefinition中，那么我们再次通过AbstractBeanDefinition 的属性来回顾一下我们都解析了哪些对应的配置。
+
+```java
+public class GenericBeanDefinition extends AbstractBeanDefinition {}
+
+public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccessor
+      implements BeanDefinition, Cloneable {
+	...
+    //bean的作用范围，对应scope属性  singleton  prototype
+   @Nullable
+   private String scope = SCOPE_DEFAULT;
+   private boolean abstractFlag = false;
+	//是否懒加载
+   @Nullable
+   private Boolean lazyInit;
+   private int autowireMode = AUTOWIRE_NO;
+   private int dependencyCheck = DEPENDENCY_CHECK_NONE;
+   @Nullable
+   private String[] dependsOn;
+   private boolean autowireCandidate = true;
+   private boolean primary = false;
+   private final Map<String, AutowireCandidateQualifier> qualifiers = new LinkedHashMap<>();
+   @Nullable
+   private Supplier<?> instanceSupplier;
+   private boolean nonPublicAccessAllowed = true;
+   private boolean lenientConstructorResolution = true;
+   @Nullable
+   private String factoryBeanName;
+   @Nullable
+   private String factoryMethodName;
+   @Nullable
+   private ConstructorArgumentValues constructorArgumentValues;
+   @Nullable
+   private MutablePropertyValues propertyValues;
+   private MethodOverrides methodOverrides = new MethodOverrides();
+    //init-method
+   @Nullable
+   private String initMethodName;
+    //destroy-method
+   @Nullable
+   private String destroyMethodName;
+   private boolean enforceInitMethod = true;
+   private boolean enforceDestroyMethod = true;
+    //是否用户定义的而不是程序本身定义的，创建aop时候为true.程序设置
+   private boolean synthetic = false;
+   private int role = BeanDefinition.ROLE_APPLICATION;
+    //bean的描述
+   @Nullable
+   private String description;
+    //bean定义的资源
+   @Nullable
+   private Resource resource;
+}
+```
+
+### 3.1.3 解析默认标签中的自定义标签元素
+
+​		到这里我们已经完成了分析默认标签的解析与提取过程，或许涉及的内容太多，我们已经忘了我们从哪个函数开始的了，我们再次回顾下默认标签解析函数的起始函数:DefaultBeanDefinitionDocumentReader.java
+
+```java
+/**
+ * Process the given bean element, parsing the bean definition
+ * and registering it with the registry.
+ */
+protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate delegate) {
+   /**
+    * 解析Element为BeanDefinition，这是重点
+    */
+   BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele);
+   if (bdHolder != null) {
+      bdHolder = delegate.decorateBeanDefinitionIfRequired(ele, bdHolder);
+      try {
+         // Register the final decorated instance.
+         /**
+          * 将BeanDefinition注册到BeanDefinitionMap中，key为beanName
+          */
+         BeanDefinitionReaderUtils.registerBeanDefinition(bdHolder, getReaderContext().getRegistry());
+      }
+      catch (BeanDefinitionStoreException ex) {
+         getReaderContext().error("Failed to register bean definition with name '" +
+               bdHolder.getBeanName() + "'", ele, ex);
+      }
+      // Send registration event.
+      getReaderContext().fireComponentRegistered(new BeanComponentDefinition(bdHolder));
+   }
+}
+```
+
+​		我们已经用了大量的篇幅分析了BeanDefinitionHolder bdHolder = delegate.parseBeanDefinitionElement(ele)这句代码，接下来，我们要进行bdHolder=delegate.decorateBeanDefinitionIfRequired(ele,bdHolder)代码的分析，首先大致了解下这句代码的作用，其实我们可以从语义上分析:如果需要的话就对beanDefinition 进行装饰,那这句代码到底什么功能呢？其实这句代码适用于这样的场景，如:
+```xml
+<bean id="test" class="test.MyClass">
+	<mybean : user username="aaa"/>
+</bean>
+```
+
+​		当Spring 中的 bean使用的是默认的标签配置，但是其中的子元素却使用了自定义的配置时，这句代码便会起作用了。可能有人会有疑问，之前讲过，对bean 的解析分为两种类型，一种是默认类型的解析，另一种是自定义类型的解析，这不正是自定义类型的解析吗?为什么会在默认类型解析中单独添加一个方法处理呢?确实，这个问题很让人迷惑，但是，不知道聪明的读者是否有发现，这个自定义类型并不是以 Bean的形式出现的呢?我们之前讲过的两种类型的不同处理只是针对 Bean的，这里我们看到，这个自定义类型其实是属性。我们继续分析下这段代码的逻辑。
+
+BeanDefinitionParserDelegate.java
+
+```java
+public BeanDefinitionHolder decorateBeanDefinitionIfRequired(Element ele,BeanDefinitionHolderdefinitionHolder) {
+	return decorateBeanDefinitionIfRequired(ele，definitionHolder，null);
+)
+```
+
+​		这里将函数中第三个参数设置为空，那么第三个参数是做什么用的呢?什么情况下不为空呢?其实这第三个参数是父类bean，当对某个嵌套配置进行分析时，这里需要传递父类beanDefinition。分析源码得知这里传递的参数其实是为了使用父类的scope属性，以备子类若没有设置scope 时默认使用父类的属性，这里分析的是顶层配置，所以传递null。将第三个参数设置为空后进一步跟踪函数:
+
+BeanDefinitionParserDelegate.java
+
+```java
+/**
+ * Decorate the given bean definition through a namespace handler, if applicable.
+ * @param ele the current element
+ * @param originalDef the current bean definition
+ * @param containingBd the containing bean definition (if any)
+ * @return the decorated bean definition
+ */
+public BeanDefinitionHolder decorateBeanDefinitionIfRequired(
+      Element ele, BeanDefinitionHolder originalDef, @Nullable BeanDefinition containingBd) {
+
+   BeanDefinitionHolder finalDefinition = originalDef;
+
+   // Decorate based on custom attributes first.
+   NamedNodeMap attributes = ele.getAttributes();
+    //遍历所有的属性，看是否有适用于修饰的属性
+   for (int i = 0; i < attributes.getLength(); i++) {
+      Node node = attributes.item(i);
+      finalDefinition = decorateIfRequired(node, finalDefinition, containingBd);
+   }
+
+   // Decorate based on custom nested elements.
+   NodeList children = ele.getChildNodes();
+     //遍历所有子节点，看是否有适用于修饰的子元素
+   for (int i = 0; i < children.getLength(); i++) {
+      Node node = children.item(i);
+      if (node.getNodeType() == Node.ELEMENT_NODE) {
+         finalDefinition = decorateIfRequired(node, finalDefinition, containingBd);
+      }
+   }
+   return finalDefinition;
+}
+```
+
+上面的代码，我们看到函数分别对元素的所有属性以及子节点进行了decoratelfRequired函数的调用,我们继续跟踪代码:
+
+BeanDefinitionParserDelegate.java
+
+```java
+/**
+ * Decorate the given bean definition through a namespace handler,
+ * if applicable.
+ * @param node the current child node
+ * @param originalDef the current bean definition
+ * @param containingBd the containing bean definition (if any)
+ * @return the decorated bean definition
+ */
+public BeanDefinitionHolder decorateIfRequired(
+      Node node, BeanDefinitionHolder originalDef, @Nullable BeanDefinition containingBd) {
+	//获取自定义标签的命名空间
+   String namespaceUri = getNamespaceURI(node);
+   if (namespaceUri != null && !isDefaultNamespace(namespaceUri)) {
+       //根据命名空间找到对应的处理器
+      NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().resolve(namespaceUri);
+      if (handler != null) {
+         BeanDefinitionHolder decorated =
+               handler.decorate(node, originalDef, new ParserContext(this.readerContext, this, containingBd));
+         if (decorated != null) {
+            return decorated;
+         }
+      }
+      else if (namespaceUri.startsWith("http://www.springframework.org/schema/")) {
+         error("Unable to locate Spring NamespaceHandler for XML schema namespace [" + namespaceUri + "]", node);
+      }
+      else {
+         // A custom namespace, not to be handled by Spring - maybe "xml:...".
+         if (logger.isDebugEnabled()) {
+            logger.debug("No Spring NamespaceHandler found for XML schema namespace [" + namespaceUri + "]");
+         }
+      }
+   }
+   return originalDef;
+}
+```
+
+​		程序走到这里，条理其实已经非常清楚了，首先获取属性或者元素的命名空间,以此来判断该元素或者属性是否适用于自定义标签的解析条件，找出自定义类型所对应的NamespaceHandler并进行进一步解析。在自定义标签解析的章节我们会重点讲解，这里暂时先略过。
+​		我们总结下 decorateBeanDefinitionIfRequired方法的作用，在decorateBeanDefinitionIfRequired中我们可以看到对于程序默认的标签的处理其实是直接略过的，因为默认的标签到这里已经被处理完了，这里只对自定义的标签或者说对bean 的自定义属性感兴趣。在方法中实现了寻找自定义标签并根据自定义标签寻找命名空间处理器，并进行进一步的解析。
+
+### 3.1.4 注册解析的 BeanDefinition
+
+​		对于配置文件，解析也解析完了，装饰也装饰完了，对于得到的beanDinition已经可以满足后续的使用要求了，唯一还剩下的工作就是注册了，也就是processBeanDefinition函数中的BeanDefinitionReaderUtils.registerBeanDefinition(bdHolder，getReaderContext().getRegistry))代码的解析了。
+
+BeanDefinitionReaderUtils.java
+
+```java
+public static void registerBeanDefinition(
+      BeanDefinitionHolder definitionHolder, BeanDefinitionRegistry registry)
+      throws BeanDefinitionStoreException {
+
+   // Register bean definition under primary name.
+    //使用beanName作为唯一标识注册
+   String beanName = definitionHolder.getBeanName();
+   registry.registerBeanDefinition(beanName, definitionHolder.getBeanDefinition());
+
+   // Register aliases for bean name, if any.
+    //注册所有的别名
+   String[] aliases = definitionHolder.getAliases();
+   if (aliases != null) {
+      for (String alias : aliases) {
+         registry.registerAlias(beanName, alias);
+      }
+   }
+}
+```
+
+从上面的代码可以看出，解析的 beanDefinition都会被注册到 BeanDefinitionRegistry类型的实例registry中，而对于beanDefinition的注册分成了两部分:通过beanName的注册以及通过别名的注册。
+
+#### 1．通过beanName 注册 BeanDefinition
+
+​		对于beanDefinition 的注册，或许很多人认为的方式就是将beanDefinition直接放入 map中就好了，使用beanName作为key。确实，Spring 就是这么做的，只不过除此之外，它还做了点别的事情。
+
+DefaultListableBeanFactory.java
+
+```java
+@Override
+public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition)
+      throws BeanDefinitionStoreException {
+
+   Assert.hasText(beanName, "Bean name must not be empty");
+   Assert.notNull(beanDefinition, "BeanDefinition must not be null");
+
+   if (beanDefinition instanceof AbstractBeanDefinition) {
+      try {
+           /*
+			*注册前的最后一次校验，这里的校验不同于之前的XML文件校验，
+			*主要是对于AbstractBeanDefinition属性中的methodOverrides校验，
+			*校验methodOverrides是否与工厂方法并存或者methodOverrides对应的方法根本不存在
+			*/
+         ((AbstractBeanDefinition) beanDefinition).validate();
+      }
+      catch (BeanDefinitionValidationException ex) {
+         throw new BeanDefinitionStoreException(beanDefinition.getResourceDescription(), beanName,
+               "Validation of bean definition failed", ex);
+      }
+   }
+
+   BeanDefinition existingDefinition = this.beanDefinitionMap.get(beanName);
+   if (existingDefinition != null) {
+      if (!isAllowBeanDefinitionOverriding()) {
+         throw new BeanDefinitionOverrideException(beanName, beanDefinition, existingDefinition);
+      }
+      else if (existingDefinition.getRole() < beanDefinition.getRole()) {
+         // e.g. was ROLE_APPLICATION, now overriding with ROLE_SUPPORT or ROLE_INFRASTRUCTURE
+         if (logger.isInfoEnabled()) {
+            logger.info("Overriding user-defined bean definition for bean '" + beanName +
+                  "' with a framework-generated bean definition: replacing [" +
+                  existingDefinition + "] with [" + beanDefinition + "]");
+         }
+      }
+      else if (!beanDefinition.equals(existingDefinition)) {
+         if (logger.isDebugEnabled()) {
+            logger.debug("Overriding bean definition for bean '" + beanName +
+                  "' with a different definition: replacing [" + existingDefinition +
+                  "] with [" + beanDefinition + "]");
+         }
+      }
+      else {
+         if (logger.isTraceEnabled()) {
+            logger.trace("Overriding bean definition for bean '" + beanName +
+                  "' with an equivalent definition: replacing [" + existingDefinition +
+                  "] with [" + beanDefinition + "]");
+         }
+      }
+      this.beanDefinitionMap.put(beanName, beanDefinition);//ConcurrentHashMap::beanDefinitionMap
+   }
+   else {
+      if (hasBeanCreationStarted()) {
+         // Cannot modify startup-time collection elements anymore (for stable iteration)
+          //因为beanDefinitionMap是全局变量，这里定会存在并发访问的情况
+          
+          /*
+      		//Map of bean definition objects, keyed by bean name.
+      		这不是ConcurrentHashMap吗 为啥还要加锁?锁住的是这个块儿，块内同步
+			private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(256);
+          */
+         synchronized (this.beanDefinitionMap) {
+            this.beanDefinitionMap.put(beanName, beanDefinition);
+            List<String> updatedDefinitions = new ArrayList<>(this.beanDefinitionNames.size() + 1);
+            updatedDefinitions.addAll(this.beanDefinitionNames);
+            updatedDefinitions.add(beanName);
+            this.beanDefinitionNames = updatedDefinitions;
+            removeManualSingletonName(beanName);
+         }
+      }
+      else {
+         // Still in startup registration phase
+         this.beanDefinitionMap.put(beanName, beanDefinition);
+         this.beanDefinitionNames.add(beanName);
+         removeManualSingletonName(beanName);
+      }
+      this.frozenBeanDefinitionNames = null;
+   }
+
+   if (existingDefinition != null || containsSingleton(beanName)) {
+      resetBeanDefinition(beanName);
+   }
+   else if (isConfigurationFrozen()) {
+      clearByTypeCache();
+   }
+}
+```
+
+上面的代码中我们看到，在对于bean 的注册处理方式上，主要进行了几个步骤。
+(1)对AbstractBeanDefinition的校验。在解析XML文件的时候我们提过校验，但是此校验非彼校验，之前的校验时针对于XML格式的校验，而此时的校验时针是对于 AbstractBeanDefinition的methodOverrides属性的。
+(2)对beanName已经注册的情况的处理。如果设置了不允许bean的覆盖，则需要抛出异常，否则直接覆盖。
+(3）加入map缓存。
+(4）清除解析之前留下的对应beanName 的缓存。
+
+#### 2．通过别名注册BeanDefinition
+
+在理解了注册bean的原理后，理解注册别名的原理就容易多了。
+
+SimpleAliasRegistry.java
+
+```java
+@Override
+public void registerAlias(String name, String alias) {
+   Assert.hasText(name, "'name' must not be empty");
+   Assert.hasText(alias, "'alias' must not be empty");
+   synchronized (this.aliasMap) {
+      if (alias.equals(name)) {
+         this.aliasMap.remove(alias);
+         if (logger.isDebugEnabled()) {
+            logger.debug("Alias definition '" + alias + "' ignored since it points to same name");
+         }
+      }
+      else {
+         String registeredName = this.aliasMap.get(alias);
+         if (registeredName != null) {
+            if (registeredName.equals(name)) {
+               // An existing alias - no need to re-register
+               return;
+            }
+            if (!allowAliasOverriding()) {
+               throw new IllegalStateException("Cannot define alias '" + alias + "' for name '" +
+                     name + "': It is already registered for name '" + registeredName + "'.");
+            }
+            if (logger.isDebugEnabled()) {
+               logger.debug("Overriding alias '" + alias + "' definition for registered name '" +
+                     registeredName + "' with new target name '" + name + "'");
+            }
+         }
+         checkForAliasCircle(name, alias);
+         this.aliasMap.put(alias, name);
+         if (logger.isTraceEnabled()) {
+            logger.trace("Alias definition '" + alias + "' registered for name '" + name + "'");
+         }
+      }
+   }
+}
+```
+
+由以上代码中可以得知注册alias 的步骤如下。
+(1) alias与beanName相同情况处理。若alias与 beanName并名称相同则不需要处理并删除掉原有alias。
+
+(2) alias覆盖处理。若aliasName已经使用并已经指向了另一beanName则需要用户的设置进行处理。
+
+(3) alias循环检查。当A->B存在时，若再次出现A->C->B时候则会抛出异常
+
+(4）注册alias。
+
+### 3.1.5通知监听器解析及注册完成
+
+通过代码getReaderContext().fireComponentRegistered(new BeanComponentDefinition(bdHolder))完成此工作，这里的实现只为扩展，当程序开发人员需要对注册BeanDefinition 事件进行监听时可以通过注册监听器的方式并将处理逻辑写入监听器中，目前在 Spring 中并没有对此事件做任何逻辑处理。
