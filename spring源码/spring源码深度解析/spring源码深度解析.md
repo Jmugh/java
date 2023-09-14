@@ -1231,8 +1231,7 @@ public AbstractBeanDefinition parseBeanDefinitionElement(
 
 #### 1．创建用于属性承载的BeanDefinition
 
-​		BeanDefinition是一个接口，在 Spring中存在三种实现:RootBeanDefinition、ChildBeanDefinition以及GenericBeanDefinition。三种实现均继承了		AbstractBeanDefiniton其中BeanDefinition是配置文件<bean>元素标签在容器中的内部表示形式。<bean>元素标class、scope、lazy-init等配置属性，BeanDefinition则提供了相应的beanClass、scope、lazyInit属性，BeanDefinition和<bean>中的属性是一一对应的。其中RootBeanDefinition是最常用的实现类，它对应一般性的<bean>元素标签，GenericBeanDefinition是自2.5版本以后新加入的bean文件配置属性定义类,是一站式服务类。在配置文件中可以定义父<bean>和子<bean>，父<bean>用 RootBeanDefinition表示，而子<bean>用ChildBeanDefiniton表示，而没有父<bean>的<bean>就使用RootBeanDefinitiot
-表示。AbstractBeanDefinition对两者共同的类信息进行抽象。Spring通过 BeanDefinition 将配置文件中的<bean>配置信息转换为容器的内部表示，并将这些BeanDefiniton注册到BeanDefinitonRegistry中。Spring容器的BeanDefinitionRegistry就像是Spring配置信息的内存数据库，主要是以map的形式保存，后续操作直接从 BeanDefinitionRegistry中读取配置信息。它们之间的关系如图3-2所示。
+​		BeanDefinition是一个接口，在 Spring中存在三种实现:RootBeanDefinition、ChildBeanDefinition以及GenericBeanDefinition。三种实现均继承了		AbstractBeanDefiniton其中BeanDefinition是配置文件<bean>元素标签在容器中的内部表示形式。<bean>元素标class、scope、lazy-init等配置属性，BeanDefinition则提供了相应的beanClass、scope、lazyInit属性，BeanDefinition和<bean>中的属性是一一对应的。其中RootBeanDefinition是最常用的实现类，它对应一般性的<bean>元素标签，GenericBeanDefinition是自2.5版本以后新加入的bean文件配置属性定义类,是一站式服务类。在配置文件中可以定义父<bean>和子<bean>，父<bean>用 RootBeanDefinition表示，而子<bean>用ChildBeanDefiniton表示，而没有父<bean>的<bean>就使用RootBeanDefinitiot表示。AbstractBeanDefinition对两者共同的类信息进行抽象。Spring通过 BeanDefinition 将配置文件中的<bean>配置信息转换为容器的内部表示，并将这些BeanDefiniton注册到BeanDefinitonRegistry中。Spring容器的BeanDefinitionRegistry就像是Spring配置信息的内存数据库，主要是以map的形式保存，后续操作直接从 BeanDefinitionRegistry中读取配置信息。它们之间的关系如图3-2所示。
 
 <img src="images/image-20230911234735320.png" alt="image-20230911234735320" style="zoom:50%;" />
 
@@ -1413,7 +1412,7 @@ public void parseMetaElements(Element ele, BeanMetadataAttributeAccessor attribu
 
 #### 4．解析子元素lookup-method
 
-​		同样，子元素lookup-method 似乎并不是很常用，但是在呆些时候匕的佣定非N月BP属性，通常我们称它为获取器注入。引用《Spring in Action》中的一句话:获取器注入是一种特殊的方法注入，它是把一个方法声明为返回某种类型的 bean，但实际要返回的 bean是在配置文件里面配置的，此方法可用在设计有些可插拔的功能上，解除程序依赖。我们看看具体的应用。
+​		同样，子元素lookup-method 似乎并不是很常用，但是在有些时候它确实非常有用的属性，通常我们称它为获取器注入。引用《Spring in Action》中的一句话:获取器注入是一种特殊的方法注入，它是把一个方法声明为返回某种类型的 bean，但实际要返回的 bean是在配置文件里面配置的，此方法可用在设计有些可插拔的功能上，解除程序依赖。我们看看具体的应用。
 
 (1)首先我们创建一个父类。
 ```java
@@ -2077,7 +2076,9 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 
 ### 3.1.3 解析默认标签中的自定义标签元素
 
-​		到这里我们已经完成了分析默认标签的解析与提取过程，或许涉及的内容太多，我们已经忘了我们从哪个函数开始的了，我们再次回顾下默认标签解析函数的起始函数:DefaultBeanDefinitionDocumentReader.java
+​		到这里我们已经完成了分析默认标签的解析与提取过程，或许涉及的内容太多，我们已经忘了我们从哪个函数开始的了，我们再次回顾下默认标签解析函数的起始函数:
+
+DefaultBeanDefinitionDocumentReader.java
 
 ```java
 /**
@@ -2120,7 +2121,7 @@ protected void processBeanDefinition(Element ele, BeanDefinitionParserDelegate d
 BeanDefinitionParserDelegate.java
 
 ```java
-public BeanDefinitionHolder decorateBeanDefinitionIfRequired(Element ele,BeanDefinitionHolderdefinitionHolder) {
+public BeanDefinitionHolder decorateBeanDefinitionIfRequired(Element ele,BeanDefinitionHolder definitionHolder) {
 	return decorateBeanDefinitionIfRequired(ele，definitionHolder，null);
 )
 ```
@@ -2392,4 +2393,425 @@ public void registerAlias(String name, String alias) {
 
 ### 3.1.5通知监听器解析及注册完成
 
-通过代码getReaderContext().fireComponentRegistered(new BeanComponentDefinition(bdHolder))完成此工作，这里的实现只为扩展，当程序开发人员需要对注册BeanDefinition 事件进行监听时可以通过注册监听器的方式并将处理逻辑写入监听器中，目前在 Spring 中并没有对此事件做任何逻辑处理。
+​		通过代码getReaderContext().fireComponentRegistered(new BeanComponentDefinition(bdHolder))完成此工作，这里的实现只为扩展，当程序开发人员需要对注册BeanDefinition 事件进行监听时可以通过注册监听器的方式并将处理逻辑写入监听器中，目前在 Spring 中并没有对此事件做任何逻辑处理。
+
+
+
+## 3.2 alias标签的解析
+
+​		通过上面较长的篇幅我们终于分析完了默认标签中对bean标签的处理，那么我们之前提到过，对配置文件的解析包括对import标签、alias标签、bean标签、beans标签的处理，现在我们已经完成了最重要也是最核心的功能，其他的解析步骤也都是围绕第3个解析而进行的。在分析了第3个解析步骤后，再回过头来看看对alias标签的解析。
+​		在对bean进行定义时，除了使用 id属性来指定名称之外，为了提供多个名称，可以使用alias标签来指定。而所有的这些名称都指向同一个bean，在某些情况下提供别名非常有用，比如为了让应用的每一个组件能更容易地对公共组件进行引用。然而，在定义 bean 时就指定所有的别名并不是总是恰当的。有时我们期望能在当前位置为那些在别处定义的bean引人别名。在 XML配置文件中，可用单独的<alias/>元素来完成bean别名的定义。如配置文件中定义了一个JavaBean:
+
+```xml
+<bean id="testBean" class="com.test.TestBean"/>
+```
+
+​		要给这个 JavaBean增加别名，以方便不同对象来调用。我们就可以直接使用bean标签中的name属性:
+```xml
+<bean id="testBean" name="testBean,testBean2" class="com.test.TestBean" />
+```
+
+​		同样，Spring 还有另外一种声明别名的方式:
+```xml
+<bean id="testBean" class="com.test.TestBean"/>
+<alias name="testBean" alias="testBean,testBean2"/>
+```
+
+​		考虑一个更为具体的例子，组件A在 XML配置文件中定义了一个名为componentA 的DataSource类型的 bean，但组件B却想在其XML文件中以componentB命名来引用此 bean而且在主程序MyApp的XML配置文件中，希望以myApp 的名字来引用此 bean。最后容器加载3个XML文件来生成最终的ApplicationContext。在此情形下，可通过在配置文件中添加下列alias元素来实现:
+
+```xml
+<alias name="componentA" alias="componentB"/>
+<alias name="componentA" alias="myApp"/>
+```
+
+​		这样一来，每个组件及主程序就可通过唯一名字来引用同一个数据源而互不干扰。
+​		在之前的章节已经讲过了对于bean中 name元素的解析,那么我们现在再来深入分析下对于alias标签的解析过程。
+
+DefaultBeanDefinitionDocumentReader.java
+
+```java
+/**
+ * Process the given alias element, registering the alias with the registry.
+ */
+protected void processAliasRegistration(Element ele) {
+    //获取beanName
+   String name = ele.getAttribute(NAME_ATTRIBUTE);
+    //获取alias
+   String alias = ele.getAttribute(ALIAS_ATTRIBUTE);
+   boolean valid = true;
+   if (!StringUtils.hasText(name)) {
+      getReaderContext().error("Name must not be empty", ele);
+      valid = false;
+   }
+   if (!StringUtils.hasText(alias)) {
+      getReaderContext().error("Alias must not be empty", ele);
+      valid = false;
+   }
+   if (valid) {
+      try {
+          //注册alias
+         getReaderContext().getRegistry().registerAlias(name, alias);
+      }
+      catch (Exception ex) {
+         getReaderContext().error("Failed to register alias '" + alias +
+               "' for bean with name '" + name + "'", ele, ex);
+      }
+       //通知监听器做响应处理
+      getReaderContext().fireAliasRegistered(name, alias, extractSource(ele));
+   }
+}
+```
+
+​		可以发现，跟之前讲过的 bean 中的 alias解析大同小异，都是将别名与beanName组成一对注册至registry 中。这里不再赘述。
+
+## 3.3 import标签的解析
+
+​		对于Spring配置文件的编写，经力过大项目的人，都有那种恐惧心里，通过分模块是个好的方法，但是怎么分那就仁者见仁，智者见智了。使用import是个好办法，例如我们可以构造这样的Spring 配置文件:
+applicationContext.xml
+
+```xml
+<?xml version="1.0"encoding="gb2312">
+<!DOCTYPE beans PUBLIc "-//Spring//DrD BEAN//EN""http://www.Springframework.org/dtd/Spring-beans.dtd">
+<beans>
+	<import resource="customerContext.xml"/>
+	<import resource="systemContext.xml"/>
+</beans>
+```
+
+​		applicationContext.xml文件中使用import 的方式导入别的模块的配置文件，有新模块加入的时候，那就可以简单修改这个文件进行导入就行了。这样大大简化了配置后期维护的复杂度，并使配置模块化，易于管理。我们来看看Spring 是如何解析import 配置文件的呢?
+
+DefaultBeanDefinitionDocumentReader.java
+
+```java
+/**
+ * Parse an "import" element and load the bean definitions
+ * from the given resource into the bean factory.
+ */
+protected void importBeanDefinitionResource(Element ele) {
+    //获取resource
+   String location = ele.getAttribute(RESOURCE_ATTRIBUTE);
+    //如果不存在resource 就返回 
+   if (!StringUtils.hasText(location)) {
+      getReaderContext().error("Resource location must not be empty", ele);
+      return;
+   }
+   // Resolve system properties: e.g. "${user.dir}"
+    //解析系统属性，格式如：${user.dir}
+   location = getReaderContext().getEnvironment().resolveRequiredPlaceholders(location);
+   Set<Resource> actualResources = new LinkedHashSet<>(4);
+   // Discover whether the location is an absolute or relative URI
+   boolean absoluteLocation = false;
+   try {
+       //判断uri是相对还是绝对路径
+      absoluteLocation = ResourcePatternUtils.isUrl(location) || ResourceUtils.toURI(location).isAbsolute();
+   }
+   catch (URISyntaxException ex) {
+      // cannot convert to an URI, considering the location relative
+      // unless it is the well-known Spring prefix "classpath*:"
+   }
+   // Absolute or relative?
+   if (absoluteLocation) {
+      try {
+          //如果是绝对路径就直接加载配置文件
+         int importCount = getReaderContext().getReader().loadBeanDefinitions(location, actualResources);
+         if (logger.isTraceEnabled()) {
+            logger.trace("Imported " + importCount + " bean definitions from URL location [" + location + "]");
+         }
+      }
+      catch (BeanDefinitionStoreException ex) {
+         getReaderContext().error(
+               "Failed to import bean definitions from URL location [" + location + "]", ele, ex);
+      }
+   }
+   else {
+      // No URL -> considering resource location as relative to the current file.
+      try {
+         int importCount;
+          //如果是相对路径，就计算出它的绝对路径
+          //Resource存在多个子实现类，如VfsResource、FileSystemResource等，
+		  //而每个resource的createRelative方式实现都不一样，所以这里先使用子类的方法尝试解析
+         Resource relativeResource = getReaderContext().getResource().createRelative(location);
+         if (relativeResource.exists()) {
+            importCount = getReaderContext().getReader().loadBeanDefinitions(relativeResource);
+            actualResources.add(relativeResource);
+         }
+         else {
+             //如果解析不成功，则使用默认的解析器ResourcePatternResolver进行解析
+            String baseLocation = getReaderContext().getResource().getURL().toString();
+            importCount = getReaderContext().getReader().loadBeanDefinitions(
+                  StringUtils.applyRelativePath(baseLocation, location), actualResources);
+         }
+         if (logger.isTraceEnabled()) {
+            logger.trace("Imported " + importCount + " bean definitions from relative location [" + location + "]");
+         }
+      }
+      catch (IOException ex) {
+         getReaderContext().error("Failed to resolve current resource location", ele, ex);
+      }
+      catch (BeanDefinitionStoreException ex) {
+         getReaderContext().error(
+               "Failed to import bean definitions from relative location [" + location + "]", ele, ex);
+      }
+   }
+    //析后进行监听器激活处理
+   Resource[] actResArray = actualResources.toArray(new Resource[0]);
+   getReaderContext().fireImportProcessed(location, actResArray, extractSource(ele));
+}
+```
+
+上面的代码不难，相信配合注释会很好理解，我们总结一下大致流程便于读者更好地梳理,在解析<import>标签时，Spring进行解析的步骤大致如下。
+(1）获取resource属性所表示的路径。
+
+(2）解析路径中的系统属性,格式如“${user.dir}”。( 3)判定location是绝对路径还是相对路径。
+
+(4）如果是绝对路径则递归调用bean的解析过程，进行另一次的解析。
+
+(5）如果是相对路径则计算出绝对路径并进行解析。
+
+(6）通知监听器，解析完成。
+
+
+
+3.4嵌入式lbeans标签的解析
+对于嵌入式的beans标签，相信大家使用过或者至少接触过，非常类似于 import标签所提供的功能，使用如下:
+
+```xml
+<?xml version="1.0"encoding="UTF-8"?>
+<beans xmlns="http://www.Springframework.org/schema/beans"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.Springframework.org/schema/beans http://ww.Springframework.org/schema/beans/Spring-beans.xsd">
+	<bean id="aa" class="test.aa"/>
+    <beans></beans>
+</ beans>
+```
+
+​		对于嵌入式beans标签来讲，并没有太多可讲，与单独的配置文件并没有太大的差别，无非是递归调用beans的解析过程，相信读者根据之前讲解过的内容已经有能力理解其中的奥秘了。
+
+
+
+
+
+# 第4章 自定义标签的解析
+
+​		在之前的章节中，我们提到了在Spring中存在默认标签与自定义标签两种，而在上一章节中我们分析了Spring中对默认标签的解析过程，相信大家一定已经有所感悟。那么，现在将开始新的里程，分析Spring中自定义标签的加载过程。同样，我们还是先再次回顾一下，当完成从配置文件到Document 的转换并提取对应的root后，将开始了所有元素的解析，而在这一过程中便开始了默认标签与自定义标签两种格式的区分，函数如下:
+
+
+
+DefaultBeanDefinitionDocumentReader.java
+
+```java
+// doRegisterBeanDefinitions->parseBeanDefinitions
+/**
+ * Parse the elements at the root level in the document:
+ * "import", "alias", "bean".
+ * @param root the DOM root element of the document
+ */
+protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate delegate) {
+   if (delegate.isDefaultNamespace(root)) {
+      NodeList nl = root.getChildNodes();
+      for (int i = 0; i < nl.getLength(); i++) {
+         Node node = nl.item(i);
+         if (node instanceof Element) {
+            Element ele = (Element) node;
+            if (delegate.isDefaultNamespace(ele)) {
+                //处理默认标签
+               parseDefaultElement(ele, delegate);
+            }
+            else {
+                //处理自定义标签
+               delegate.parseCustomElement(ele);
+            }
+         }
+      }
+   }
+   else {
+      delegate.parseCustomElement(root);
+   }
+}
+```
+
+​		在本章中，所有的功能都是围绕其中的一句代码delegate.parseCustomElement(root)开展的。从上面的函数我们可以看出，当Spring 拿到一个尤系时自无女武的斯h不类在用narseCurtom如果是默认的命名空间，则使用parseDefaultElement方法进行元素解析，否则使用parseCustomElement方法进行解析。在分析自定义标签的解析过程前，我们先了解一下自定义标签的使用过程。
+
+## 4.1 自定义标签使用
+
+​		在很多情况下，我们需要为系统提供可配置化支持，简单的做法可以直接基于Spring 的标准bean来配置，但配置较为复杂或者需要更多丰富控制的时候，会显得非常笨拙。一般的做法会用原生态的方式去解析定义好的XML文件，然后转化为配置对象。这种方式当然可以解决所有问题，但实现起来比较繁琐，特别是在配置非常复杂的时候，解析工作是一个不得不考虑的负担。Spring提供了可扩展Schema的支持，这是一个不错的折中方案，扩展Spring 自定义标签配置大致需要以下几个步骤（前提是要把 Spring 的Core包加入项目中)。
+
+- 创建一个需要扩展的组件。
+- 定义一个XSD文件描述组件内容。
+- 创建一个文件，实现 BeanDefinitionParser 接口，用来解析XSD文件中的定义和组件定义。
+- 创建一个Handler文件，扩展自NamespaceHandlerSupport，目的是将组件注册到Spring容器。
+- 编写Spring.handlers和Spring.schemas文件。
+
+​		现在我们就按照上面的步骤带领读者一步步地体验自定义标签的过程。
+(1)首先我们创建一个普通的 POJO，这个POJO 没有任何特别之处，只是用来接收配置文件。
+
+```java
+package test.customtag;
+public class User {
+    private string userName;
+    private string email;
+    //省略set/get方法
+}
+```
+
+(2）定义一个XSD文件描述组件内容。
+
+```xml
+<?xml version="1.o”encoding="UTF一8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.lexueba.com/schema/user"
+        xmlns:tns="http://www.lexueba.com/schema/user" elementFormDefault="qualified">
+    <element name="user">
+        <complexType>
+            <attribute name="id" type="string" / >
+            <attribute name-"userName" type="string"/><attribute name= "email" type="string" />
+        </complexType>
+    </element>
+</schema>
+```
+
+​		在上面的XSD文件中描述了一个新的targetNamespace，并在这个空间中定义了一个name为user的element，user有3个属性id、userName和 email，其中 email 的类型为string。这3个类主要用于验证 Spring 配置文件中自定义格式。XSD文件是XML DTD 的替代者，使用XML Schema语言进行编写，这里对XSD Schema不做太多解释，有兴趣的读者可以参考相关的资料。
+(3)创建一个文件，实现 BeanDefinitionParser接口，用来解析XSD 文件中的定义和组件定义。
+
+```java
+package test.customtag;
+import org.Springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.Springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
+import org.Springframework.util.StringUtils;
+import org.w3c.dom.Element;
+public class UserBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
+    //Element对应的类
+    protected Class getBeanClass (Element element) {
+        return User.class;
+    }
+    //从element中解析并提取对应的元素
+    protected void doParse (Element element,BeanDefinitionBuilder bean){
+	    string userName = element.getAttribute ( "userName");
+    	String email =element.getAttribute ( "email");
+	    //将提取的数据放入到BeanDefinitionBuilder中，待到完成所有bean 的解析后统一注册到beanFactory中
+        if(StringUtils.hasText(userName)){
+            bean.addPropertyvalue("userName", userName) ;
+            if (StringUtils.hasText (email)) {
+                bean . addPropertyValue ( "email",email);
+            }
+        }
+    }
+}
+```
+
+(4）创建一个 Handler 文件，扩展自 NamespaceHandlerSupport，目的是将组件注册到Spring容器。
+```java
+package test.customtag;
+import org.Springframework.beans.factory.xml.NamespaceHandlerSupport;
+public class MyNamespaceHandler extends NamespaceHandlerSupport {
+    public void init(){
+	    registerBeanDefinitionParser ("user",new UserBeanDefinitionParser());
+    }
+}
+```
+
+以上代码很简单，无非是当遇到自定义标签<user:aaa 这样类似于以user 开头的元素,就会把这个元素扔给对应的UserBeanDefinitionParser去解析。
+(5）编写Spring.handlers和 Spring.schemas文件，默认位置是在工程的/META-INF/文件夹下,当然，你可以通过Spring 的扩展或者修改源码的方式改变路径。
+
+- Spring.handlers。
+  http://www.lexueba.com/schema/user=test.customtag.MyNamespaceHandler
+- Spring.schemas。
+  http://www.lexueba.com/schema/user.xsd=META-INF/Spring-test.xsd
+
+​		到这里，自定义的配置就结束了，而Spring 加载自定义的大致流程是遇到自定义标签然后就去Spring.handlers和 Spring.schemas中去找对应的handler和 XSD默认位置是/META-INF/下，进而有找到对应的handler 以及解析元素的Parser，从而完成了整个自定义元素的解析，也就是说自定义与Spring 中默认的标准配置不同在于Spring将自定义标签解析的工作委托给了用户去实现。
+(6）创建测试配置文件,在配置文件中引人对应的命名空间以及XSD后,便可以直接使用自定义标签了。
+
+```xml
+<beans xmlns="http://www.Springframework.org/schema/bean
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:myname="http://www.lexueba.com/schema/user"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.Springframework.org/schema /beans/Spring-beans-2.0.xsd http://www.lexueba.com/schema/user http://www.lexueba.com/schema/user.xsd">
+	<myname:user id="testbean" userName="aaa" email="bbb"/>
+</beans>
+```
+
+(7）测试。
+```java
+public static void main (String [] args) {
+ApplicationContext bf = new ClassPathXmlApplicationContext("test/customtag/test.xml");
+	User user= (User) bf.getBean("testbean");
+	System.out.println (user.getUserName() +"," +user.getEmail());
+}
+```
+
+​		不出意外的话,你应该看到了我们期待的结果，控制台上打印出了:aaa , bbb
+​		在上面的例子中，我们实现了通过自定义标签实现了通过属性的方式将user类型的 Bean赋值，在Spring中自定义标签非常常用，例如我们熟知的事务标签:tx(<tx:annotation-driven>)。
+
+## 4.2自定义标签解析
+
+​		了解了自定义标签的使用后，我们带着强烈的好奇心来探究一下自定义标签的解析过程。
+
+BeanDefinitionParserDelegate.java
+
+```java
+/**
+ * Parse a custom element (outside of the default namespace).
+ * @param ele the element to parse
+ * @return the resulting bean definition
+ */
+@Nullable
+public BeanDefinition parseCustomElement(Element ele) {
+   return parseCustomElement(ele, null);
+}
+
+/**
+ * Parse a custom element (outside of the default namespace).
+ * @param ele the element to parse
+ * @param containingBd the containing bean definition (if any)
+ * @return the resulting bean definition
+ */
+@Nullable
+public BeanDefinition parseCustomElement(Element ele, @Nullable BeanDefinition containingBd) {
+   String namespaceUri = getNamespaceURI(ele);
+   if (namespaceUri == null) {
+      return null;
+   }
+   NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().resolve(namespaceUri);
+   if (handler == null) {
+      error("Unable to locate Spring NamespaceHandler for XML schema namespace [" + namespaceUri + "]", ele);
+      return null;
+   }
+   return handler.parse(ele, new ParserContext(this.readerContext, this, containingBd));
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
