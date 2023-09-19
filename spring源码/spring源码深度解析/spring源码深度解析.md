@@ -115,7 +115,7 @@ public class MyTestBean {
 <?xml version=" 1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.Springframework.org/schema/beans"
 xmlns:xsi="http://www.w3.org/2001/xMLSchema-instance"
-xsi:schemaLocation="http://ww.Springframework.org/schema/beans/http://www.Springframework.org/schema/beans/Spring-beans.xsd">
+xsi:schemaLocation="http://ww.Springframework.org/schema/beans http://www.Springframework.org/schema/beans/Spring-beans.xsd">
 	<bean id="myTestBean" class="bean.MyTestBean"/ >
 </beans>
 ```
@@ -145,10 +145,10 @@ public class BeanFactoryTest {
 (3）调用实例化后的实例。
 为了更清楚地描述,笔者临时画了设计类图，如图2-1所示,如果想完成我们预想的功能,至少需要3个类。
 
-<img src="images/image-20230910181458634.png" alt="image-20230910181458634" style="zoom:67%;" />
+<img src="images/image-20230915231034507.png" alt="image-20230915231034507" style="zoom:67%;" />
 
 - ConfigReader: 用于读取及验证配置文件。我们要用配置文件里面的东西，当然首先要做的就是读取，然后放置在内存中。
-- ReflectionUtil:用于根据配置文件中的配置进行反射实例化。比如在上例中beanFactoryTest.xml出现的<bean id="myTestBean" class="bean.MyTestBean">，我们就可以根据bean.MyTestBean进行实例化。
+- ReflectionUtils:用于根据配置文件中的配置进行反射实例化。比如在上例中beanFactoryTest.xml出现的<bean id="myTestBean" class="bean.MyTestBean">，我们就可以根据bean.MyTestBean进行实例化。
 - App:用于完成整个逻辑的串联。
   按照最原始的思维方式，整个过程无非如此，但是作为一个风靡世界的优秀源码真的就这么简单吗?
 
@@ -217,7 +217,8 @@ beans包中的各个源码包的功能如下。
 - EnvironmentCapable:定义获取Environment方法。
 - DocumentLoader:定义从资源文件加载到转换为Document的功能。
 - AbstractBeanDefinitionReader:对 EnvironmentCapable、BeanDefinitionReader类定义的功能进行实现。
-- BeanDefinitionDocumentReader:定义读取Docuemnt 并注册BeanDefinition 功能。BeanDefinitionParserDelegate:定义解析Element 的各种方法。
+- BeanDefinitionDocumentReader:定义读取Docuemnt 并注册BeanDefinition 功能。
+- BeanDefinitionParserDelegate:定义解析Element 的各种方法。
 
 ​		经过以上分析，我们可以梳理出整个XML 配置文件读取的大致流程，如图2-6所示在	中主要包含以下几步的处理。
 
@@ -424,7 +425,7 @@ public int loadBeanDefinitions(EncodedResource encodedResource) throws BeanDefin
     if (!currentResources.add(encodedResource)) {
         throw new BeanDefinitionStoreException(
             "Detected cyclic loading of " + encodedResource + " - check your import definitions!");
-    }
+    }//解析import的时候应该会对引用的文件进行加载
     //从encodedResource中获取已经封装的Resource对象并再次从Resource中获取其中的inpPutStream
     try (InputStream inputStream = encodedResource.getResource().getInputStream()) {
         //InputSource这个类并不来自于Spring，它的全路径是org.xml.sax.InputSource
@@ -448,7 +449,7 @@ public int loadBeanDefinitions(EncodedResource encodedResource) throws BeanDefin
 }
 ```
 
-​		我们再次整理一下数据准备阶段的逻辑，首先对传入的resource参数做封装，目的是考虑到Resource可能存在编码要求的情况,其次,通过SAX读取XML文件的方式来准备InputSourc对象,最后将准备的数据通过参数传人真正的核心处理部分doLoadBeanDefinitions(inputSourceencodedResource.getResource())。
+​		我们再次整理一下数据准备阶段的逻辑，首先对传入的resource参数做封装，目的是考虑到Resource可能存在编码要求的情况,其次,通过SAX读取XML文件的方式来准备InputSource对象,最后将准备的数据通过参数传人真正的核心处理部分doLoadBeanDefinitions(inputSourceencodedResource.getResource())。
 
 ```java
 /**
@@ -474,8 +475,11 @@ protected int doLoadBeanDefinitions(InputSource inputSource, Resource resource)
    catch ...
 }
 protected Document doLoadDocument(InputSource inputSource, Resource resource) throws Exception {// 1 获取xml验证模式
-    return this.documentLoader.loadDocument(inputSource, getEntityResolver(), this.errorHandler,
-                                            getValidationModeForResource(resource), isNamespaceAware());
+    return this.documentLoader.loadDocument(inputSource, 
+                                            getEntityResolver(), 
+                                            this.errorHandler,
+                                            getValidationModeForResource(resource), 
+                                            isNamespaceAware());
 }
 protected int getValidationModeForResource(Resource resource) {
     int validationModeToUse = getValidationMode();
@@ -542,8 +546,8 @@ spring-beans.dtd
 ```xml
 <?xml version="1.0"encoding="UTF-8"?>
 <beans xmlns="http:/ /www.Springframework.org/schema/beans"
-xmlns:xsi="http: //www .w3.org/2001/xMLSchema-instance"
-xsi:schemaLocation="http://www.springframework.org/schema/beanshttp://www.springframework.org/schema/beans/Spring-beans.xsd">
+	xmlns:xsi="http: //www .w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/Spring-beans.xsd">
 </beans>
 ```
 
@@ -659,9 +663,11 @@ DefaultDocumentLoader.java
 
 ```java
 @Override
-public Document loadDocument(InputSource inputSource, EntityResolver entityResolver,
-      ErrorHandler errorHandler, int validationMode, boolean namespaceAware) throws Exception {
-
+public Document loadDocument(InputSource inputSource, 
+                             EntityResolver entityResolver,
+                             ErrorHandler errorHandler, 
+                             int validationMode, 
+                             boolean namespaceAware) throws Exception {
    DocumentBuilderFactory factory = createDocumentBuilderFactory(validationMode, namespaceAware);
    if (logger.isTraceEnabled()) {
       logger.trace("Using JAXP provider [" + factory.getClass().getName() + "]");
@@ -677,8 +683,11 @@ XmlBeanDefinitionReader.java
 
 ```java
 protected Document doLoadDocument(InputSource inputSource, Resource resource) throws Exception {
-   return this.documentLoader.loadDocument(inputSource, getEntityResolver(), this.errorHandler,
-         getValidationModeForResource(resource), isNamespaceAware());
+   return this.documentLoader.loadDocument(inputSource, 
+                                           getEntityResolver(), 
+                                           this.errorHandler,
+                                           getValidationModeForResource(resource), 
+                                           isNamespaceAware());
 }
 /**
  * Return the EntityResolver to use, building a default resolver
@@ -829,7 +838,7 @@ public int registerBeanDefinitions(Document doc, Resource resource) throws BeanD
 }
 ```
 
-​		其中的参数 doc是通过上一节 loadDocument 加载转换出来的。在这个方法中很好地应用了面向对象中单一职责的原则，将逻辑处理委托给单一的类进行处理，而这个逻辑处理类就是BeanDefinitionDocumentReader。BeanDefinitionDocumentReader是一个接口，而实例化的工作是在createBeanDefinitionDocumentReader()中完成的，而通过此方法，BeanDefinitionDocumentReader真正的类型其实已经是DefaultBeanDefinitionDocumentReader了，进入DefaultBeanDefinition DocumentReader后，发现这个方法的重要目的之一就是提取root，以便于再次将root作为参数继续BeanDefinition的注册。
+​		其中的参数 doc是通过上一节 loadDocument 加载转换出来的。在这个方法中很好地应用了面向对象中单一职责的原则，将逻辑处理委托给单一的类进行处理，而这个逻辑处理类就是BeanDefinitionDocumentReader。BeanDefinitionDocumentReader是一个接口，而实例化的工作是在createBeanDefinitionDocumentReader()中完成的，而通过此方法，BeanDefinitionDocumentReader真正的类型其实已经是DefaultBeanDefinitionDocumentReader了，进入DefaultBeanDefinitionDocumentReader后，发现这个方法的重要目的之一就是提取root，以便于再次将root作为参数继续BeanDefinition的注册。
 
 DefaultBeanDefinitionDocumentReader.java
 
@@ -837,11 +846,11 @@ DefaultBeanDefinitionDocumentReader.java
 @Override
 public void registerBeanDefinitions(Document doc, XmlReaderContext readerContext) {
    this.readerContext = readerContext;
-   doRegisterBeanDefinitions(doc.getDocumentElement());//root=doc.getDocumentElement()
+   doRegisterBeanDefinitions(doc.getDocumentElement());//root=doc.getDocumentElement()， 并且root应该指的是<beans>标签
 }
 ```
 
-经过艰难险阻，磕磕绊绊，我们终于到了核心逻辑的底部doRegisterBeanDefinitions(root)至少我们在这个方法中看到了希望。
+​		经过艰难险阻，磕磕绊绊，我们终于到了核心逻辑的底部doRegisterBeanDefinitions(root)至少我们在这个方法中看到了希望。
 如果说以前一直是XML加载解析的准备阶段,那么doRegisterBeanDefinitions算是真正地开始进行解析了，我们期待的核心部分真正开始了。
 
 DefaultBeanDefinitionDocumentReader.java
@@ -858,12 +867,12 @@ protected void doRegisterBeanDefinitions(Element root) {
    // the new (child) delegate with a reference to the parent for fallback purposes,
    // then ultimately reset this.delegate back to its original (parent) reference.
    // this behavior emulates a stack of delegates without actually necessitating one.
-   BeanDefinitionParserDelegate parent = this.delegate;
+   BeanDefinitionParserDelegate parent = this.delegate;//后面this.delegate=parent恢复过来
     //专门处理解析
    this.delegate = createDelegate(getReaderContext(), root, parent);
 
    if (this.delegate.isDefaultNamespace(root)) {
-      String profileSpec = root.getAttribute(PROFILE_ATTRIBUTE);
+      String profileSpec = root.getAttribute(PROFILE_ATTRIBUTE);//PROFILE_ATTRIBUTE = "profile"
       if (StringUtils.hasText(profileSpec)) {
          String[] specifiedProfiles = StringUtils.tokenizeToStringArray(
                profileSpec, BeanDefinitionParserDelegate.MULTI_VALUE_ATTRIBUTE_DELIMITERS);
@@ -880,7 +889,7 @@ protected void doRegisterBeanDefinitions(Element root) {
    }
     //解析前置处理，交给子类实现  模板方法，可以进行自定义
    preProcessXml(root);
-   parseBeanDefinitions(root, this.delegate);
+   parseBeanDefinitions(root, this.delegate);// 核心部分，解析注册beanDefinition,然后又分为默认标签和自定义标签
     //解析后置处理，交给子类实现  模板方法，可以进行自定义
    postProcessXml(root);
    this.delegate = parent;
@@ -896,11 +905,11 @@ protected void doRegisterBeanDefinitions(Element root) {
 
 ```xml
 <beans xmlns="http://www.Springframework.org/schema/beans"
-	xmlns :xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jdbc="http://www.Springframework.org/ schema/jdbc"
+	xmlns :xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jdbc="http://www.Springframework.org/schema/jdbc"
 	xmlns:jee="http://www.Springframework.org/schema/jee" xsi:schemaLocation="...">
     <beans profile="dev" >
     </beans>
-    <beans profile="production" >
+    <beans profile="production">
     </beans>
 </beans>
 ```
@@ -918,7 +927,7 @@ protected void doRegisterBeanDefinitions(Element root) {
 
 ### 2.8.2解析并注册BeanDefinition
 
-处理了 profile后就可以进行XML的读取了，跟踪代码进入 parseBeanDefinitions(root,this.delegate)。
+​		处理了 profile后就可以进行XML的读取了，跟踪代码进入 parseBeanDefinitions(root,this.delegate)。
 
 DefaultBeanDefinitionDocumentReader.java
 
@@ -929,17 +938,17 @@ DefaultBeanDefinitionDocumentReader.java
  * @param root the DOM root element of the document
  */
 protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate delegate) {
-   if (delegate.isDefaultNamespace(root)) {
-      NodeList nl = root.getChildNodes();
+   if (delegate.isDefaultNamespace(root)) {//tag1
+      NodeList nl = root.getChildNodes();//处理root的子节点  (root不需要处理吗)
       for (int i = 0; i < nl.getLength(); i++) {
          Node node = nl.item(i);
          if (node instanceof Element) {
             Element ele = (Element) node;
-            if (delegate.isDefaultNamespace(ele)) {
-               parseDefaultElement(ele, delegate);
+            if (delegate.isDefaultNamespace(ele)) {//tag2 //默认标签比如bean import等，是处于默认的命名空间defaultNameSpace
+               parseDefaultElement(ele, delegate);//解析注册默认标签
             }
             else {
-               delegate.parseCustomElement(ele);
+               delegate.parseCustomElement(ele);//解析注册自定义标签
             }
          }
       }
@@ -948,6 +957,8 @@ protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate d
       delegate.parseCustomElement(root);
    }
 }
+// Element是父接口，root为根的，每个节点有具体Element子类的类型，构成一个树，属于组合模式。
+// tag1 tag2两次都进行判断 是因为父标签是默认类型，子元素可以是自定义的
 
 private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate delegate) {
    /**
@@ -972,25 +983,25 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
     * nested<beans>
     */
    else if (delegate.nodeNameEquals(ele, NESTED_BEANS_ELEMENT)) {
-      // recurse
+      // recurse，  如果<beans>xx   <beans>yy</beans>  </beans>,beans内部还有beans, 就可以将内部视为root 递归的解析
       doRegisterBeanDefinitions(ele);
    }
 }
 ```
 
-上面的代码看起来逻辑还是蛮清晰的，因为在Spring 的 XML 配置里面有两大类Bean声明，一个是默认的，如:
+​		上面的代码看起来逻辑还是蛮清晰的，因为在Spring 的 XML 配置里面有两大类Bean声明，一个是默认的，如:
 
 ```xml
 <bean id="test" class="test.TestBean"/>
 ```
 
-另一类就是自定义的，如:
+​		另一类就是自定义的，如:
 
 ```xml
 <tx:annotation-driven/>
 ```
 
-而两种方式的读取及解析差别是非常大的，如果采用Spring默认的配置，Spring当然知道该怎么做，但是如果是自定义的，那么就需要用户实现一些接口及配置了。对于根节点或者子节点如果是默认命名空间的话则采用parseDefaultElement方法进行解析，否则使用delegate.parseCustomElement方法对自定义命名空间进行解析。而判断是否默认命名空间还是自定义命名空间的办法其实是使用node.getNamespaceURI()获取命名空间,并与Spring 中固定的命名空间http://www.Springframework.org/schema/beans进行比对。如果一致则认为是默认，否则就认为是自定义。而对于默认标签解析与自定义标签解析我们将会在下一章中进行讨论。
+​		而两种方式的读取及解析差别是非常大的，如果采用Spring默认的配置，Spring当然知道该怎么做，但是如果是自定义的，那么就需要用户实现一些接口及配置了。对于根节点或者子节点如果是默认命名空间的话则采用parseDefaultElement方法进行解析，否则使用delegate.parseCustomElement方法对自定义命名空间进行解析。而判断是否默认命名空间还是自定义命名空间的办法其实是使用node.getNamespaceURI()获取命名空间,并与Spring 中固定的命名空间http://www.Springframework.org/schema/beans进行比对。如果一致则认为是默认，否则就认为是自定义。而对于默认标签解析与自定义标签解析我们将会在下一章中进行讨论。
 
 
 
@@ -1033,7 +1044,7 @@ private void parseDefaultElement(Element ele, BeanDefinitionParserDelegate deleg
 
 ## 3.1 bean标签的解析及注册
 
-在4种标签的解析中，对 bean标签的解析最为复杂也最为重要，所以我们从此标签开始深入分析，如果能理解此标签的解析过程，其他标签的解析自然会迎刃而解。首先我们进入函数processBeanDefinition(ele, delegate)。
+​		在4种标签的解析中，对 bean标签的解析最为复杂也最为重要，所以我们从此标签开始深入分析，如果能理解此标签的解析过程，其他标签的解析自然会迎刃而解。首先我们进入函数processBeanDefinition(ele, delegate)。
 
 DefaultBeanDefinitionDocumentReader.java
 
@@ -1135,7 +1146,8 @@ public BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable Be
                     // This is expected for Spring 1.2/2.0 backwards compatibility.
                     String beanClassName = beanDefinition.getBeanClassName();
                     if (beanClassName != null &&
-                        beanName.startsWith(beanClassName) && beanName.length() > beanClassName.length() &&
+                        beanName.startsWith(beanClassName) && 
+                        beanName.length() > beanClassName.length() &&
                         !this.readerContext.getRegistry().isBeanNameInUse(beanClassName)) {
                         aliases.add(beanClassName);
                     }
@@ -1190,9 +1202,14 @@ public AbstractBeanDefinition parseBeanDefinitionElement(
     }
     try {
         //创建用于承载属性的abstractBeanDefinition类型的GenericBeanDefinition
-        AbstractBeanDefinition bd = createBeanDefinition(className, parent);
+        AbstractBeanDefinition bd = createBeanDefinition(className, parent);//设置了className
         // 解析<bean>中的各种属性，比如scope，lazy-init等
-        parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);
+        parseBeanDefinitionAttributes(ele, beanName, containingBean, bd);//<bean id="" name="" scope="" init-method=""></bean>
+        
+        
+        /*
+         *以下其它都是<bean>的子标签<bean><xxx></xxx></bean>
+         */
         //提取description
         bd.setDescription(DomUtils.getChildElementValueByTagName(ele, DESCRIPTION_ELEMENT));
         //解析元数据
@@ -1278,7 +1295,7 @@ public static AbstractBeanDefinition createBeanDefinition(
 
 #### 2．解析各种属性
 
-当我们创建了bean信息的承载实例后，便可以进行bean信息的各种属性解析了，首先我们进入parseBeanDefinitionAttributes方法。parseBeanDefinitionAttributes方法是对element所有元素属性进行解析:
+​		当我们创建了bean信息的承载实例后，便可以进行bean信息的各种属性解析了，首先我们进入parseBeanDefinitionAttributes方法。parseBeanDefinitionAttributes方法是对element所有元素属性进行解析:
 
 BeanDefinitionParserDelegate.java
 
@@ -1416,7 +1433,7 @@ public void parseMetaElements(Element ele, BeanMetadataAttributeAccessor attribu
 
 (1)首先我们创建一个父类。
 ```java
-package test. lookup.bean;
+package test.lookup.bean;
 public class User{
 	public void showMe (){
 		System.out.println("i am user" );
@@ -1473,7 +1490,7 @@ public class Main {
 </beans>
 ```
 
-在配置文件中，我们看到了源码解析中提到的 lookup-method子元素，这个配置完成的功能是动态地将teacher所代表的bean作为getBean的返回值，运行测试方法我们会看到控制台上的输出:
+​		在配置文件中，我们看到了源码解析中提到的 lookup-method子元素，这个配置完成的功能是动态地将teacher所代表的bean作为getBean的返回值，运行测试方法我们会看到控制台上的输出:
 i am Teacher
 当我们的业务变更或者在其他情况下，teacher 里面的业务逻辑已经不再符合我们的业务要求，需要进行替换怎么办呢?这是我们需要增加新的逻辑类:
 
@@ -2408,7 +2425,7 @@ public void registerAlias(String name, String alias) {
 
 ​		要给这个 JavaBean增加别名，以方便不同对象来调用。我们就可以直接使用bean标签中的name属性:
 ```xml
-<bean id="testBean" name="testBean,testBean2" class="com.test.TestBean" />
+<bean id="testBean" name="testBean,testBean2" class="com.test.TestBean"/>
 ```
 
 ​		同样，Spring 还有另外一种声明别名的方式:
@@ -2595,8 +2612,6 @@ xsi:schemaLocation="http://www.Springframework.org/schema/beans http://ww.Spring
 
 ​		在之前的章节中，我们提到了在Spring中存在默认标签与自定义标签两种，而在上一章节中我们分析了Spring中对默认标签的解析过程，相信大家一定已经有所感悟。那么，现在将开始新的里程，分析Spring中自定义标签的加载过程。同样，我们还是先再次回顾一下，当完成从配置文件到Document 的转换并提取对应的root后，将开始了所有元素的解析，而在这一过程中便开始了默认标签与自定义标签两种格式的区分，函数如下:
 
-
-
 DefaultBeanDefinitionDocumentReader.java
 
 ```java
@@ -2630,7 +2645,7 @@ protected void parseBeanDefinitions(Element root, BeanDefinitionParserDelegate d
 }
 ```
 
-​		在本章中，所有的功能都是围绕其中的一句代码delegate.parseCustomElement(root)开展的。从上面的函数我们可以看出，当Spring 拿到一个尤系时自无女武的斯h不类在用narseCurtom如果是默认的命名空间，则使用parseDefaultElement方法进行元素解析，否则使用parseCustomElement方法进行解析。在分析自定义标签的解析过程前，我们先了解一下自定义标签的使用过程。
+​		在本章中，所有的功能都是围绕其中的一句代码delegate.parseCustomElement(root)开展的。从上面的函数我们可以看出，当Spring 拿到一个元素时，首先要做的是根据命名空间解析，如果是默认的命名空间，则使用parseDefaultElement方法进行元素解析，否则使用parseCustomElement方法进行解析。在分析自定义标签的解析过程前，我们先了解一下自定义标签的使用过程。
 
 ## 4.1 自定义标签使用
 
@@ -2662,8 +2677,9 @@ public class User {
         xmlns:tns="http://www.lexueba.com/schema/user" elementFormDefault="qualified">
     <element name="user">
         <complexType>
-            <attribute name="id" type="string" / >
-            <attribute name-"userName" type="string"/><attribute name= "email" type="string" />
+            <attribute name="id" type="string"/ >
+            <attribute name-"userName" type="string"/>
+            <attribute name= "email" type="string"/>
         </complexType>
     </element>
 </schema>
@@ -2689,10 +2705,10 @@ public class UserBeanDefinitionParser extends AbstractSingleBeanDefinitionParser
     	String email =element.getAttribute ( "email");
 	    //将提取的数据放入到BeanDefinitionBuilder中，待到完成所有bean 的解析后统一注册到beanFactory中
         if(StringUtils.hasText(userName)){
-            bean.addPropertyvalue("userName", userName) ;
-            if (StringUtils.hasText (email)) {
-                bean . addPropertyValue ( "email",email);
-            }
+            bean.addPropertyvalue("userName", userName);
+        }
+        if (StringUtils.hasText (email)) {
+            bean.addPropertyValue("email",email);
         }
     }
 }
@@ -2741,7 +2757,7 @@ ApplicationContext bf = new ClassPathXmlApplicationContext("test/customtag/test.
 ​		不出意外的话,你应该看到了我们期待的结果，控制台上打印出了:aaa , bbb
 ​		在上面的例子中，我们实现了通过自定义标签实现了通过属性的方式将user类型的 Bean赋值，在Spring中自定义标签非常常用，例如我们熟知的事务标签:tx(<tx:annotation-driven>)。
 
-## 4.2自定义标签解析
+## 4.2 自定义标签解析
 
 ​		了解了自定义标签的使用后，我们带着强烈的好奇心来探究一下自定义标签的解析过程。
 
@@ -2764,54 +2780,1258 @@ public BeanDefinition parseCustomElement(Element ele) {
  * @param containingBd the containing bean definition (if any)
  * @return the resulting bean definition
  */
+//containingBd 为父类bean，对顶层元素的解析应该设置为null
 @Nullable
 public BeanDefinition parseCustomElement(Element ele, @Nullable BeanDefinition containingBd) {
+    //获取命名空间
    String namespaceUri = getNamespaceURI(ele);
    if (namespaceUri == null) {
       return null;
    }
+    //根据命名空间找到对应的namespacehandler
    NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver().resolve(namespaceUri);
    if (handler == null) {
       error("Unable to locate Spring NamespaceHandler for XML schema namespace [" + namespaceUri + "]", ele);
       return null;
    }
+    //调用自定义的namespacehandler进行解析
    return handler.parse(ele, new ParserContext(this.readerContext, this, containingBd));
 }
 ```
 
+​		相信了解了自定义标签的使用方法后,或多或少会对自定义标签的实现过程有一个自己的想法。其实思路非常的简单，无非是根据对应的 bean获取对应的命名空间,根据命名空间解析对应的处理器，然后根据用户自定义的处理器进行解析。可是有些事情说起来简单做起来难,我们先看看如何获取命名空间吧。
+
+### 4.2.1 获取标签的命名空间
+
+​		标签的解析是从命名空间的提起开始的，无论是区分Spring 中默认标签和自定义标签还是区分自定义标签中不同标签的处理器都是以标签所提供的命名空间为基础的，而至于如何提取对应元素的命名空间其实并不需要我们亲自去实现，在 org.w3c.dom.Node 中已经提供了方法供我们直接调用:
+
+```java
+public string getNamespaceURI (Node node) {
+	return node.getNamespaceURI();
+)
+```
 
 
 
+### 4.2.2 提取自定义标签处理器
+
+​		有了命名空间，就可以进行NamespaceHandler 的提取了，继续之前的parseCustomElement函数的跟踪，分析 NamespaceHandler handler = this.readerContext.getNamespaceHandlerResolver).resolve(namespaceUri),在 readerContext初始化的时候其属性namespaceHandlerResolver已经被初始
+化为了DefaultNamespaceHandlerResolver 的实例，所以，这里调用的 resolve方法其实调用的是DefaultNamespaceHandlerResolver类中的方法。我们进入DefaultNamespaceHandlerResolver 的resolve方法进行查看。
+
+DefaultNamespaceHandlerResolver .java
+
+```java
+/**
+ * Locate the {@link NamespaceHandler} for the supplied namespace URI
+ * from the configured mappings.
+ * @param namespaceUri the relevant namespace URI
+ * @return the located {@link NamespaceHandler}, or {@code null} if none found
+ */
+@Override
+@Nullable
+public NamespaceHandler resolve(String namespaceUri) {
+    //获得已配置的handler映射
+   Map<String, Object> handlerMappings = getHandlerMappings();
+    //根据命名空间找到handler
+   Object handlerOrClassName = handlerMappings.get(namespaceUri);
+   if (handlerOrClassName == null) {
+      return null;
+   }
+    //已经做过解析的情况，保存在缓存中的就是具体的handler, 
+   else if (handlerOrClassName instanceof NamespaceHandler) {
+      return (NamespaceHandler) handlerOrClassName;
+   }
+   else {
+       //如果没有解析过，在缓存中的 就是字符串，是对应的类路径（那什么时候加入类路径到缓存中的呢?可能是配置文件）
+      String className = (String) handlerOrClassName;
+      try {
+          //类路径反射得到类
+         Class<?> handlerClass = ClassUtils.forName(className, this.classLoader);
+         if (!NamespaceHandler.class.isAssignableFrom(handlerClass)) {
+            throw new FatalBeanException("Class [" + className + "] for namespace [" + namespaceUri +
+                  "] does not implement the [" + NamespaceHandler.class.getName() + "] interface");
+         }
+          //根据类，实例化得到handler对象
+         NamespaceHandler namespaceHandler = (NamespaceHandler) BeanUtils.instantiateClass(handlerClass);
+         namespaceHandler.init();
+          //放到缓存中
+         handlerMappings.put(namespaceUri, namespaceHandler);
+         return namespaceHandler;
+      }
+      catch (ClassNotFoundException ex) {
+         throw new FatalBeanException("Could not find NamespaceHandler class [" + className +
+               "] for namespace [" + namespaceUri + "]", ex);
+      }
+      catch (LinkageError err) {
+         throw new FatalBeanException("Unresolvable class definition for NamespaceHandler class [" +
+               className + "] for namespace [" + namespaceUri + "]", err);
+      }
+   }
+}
+```
+
+​		上面的函数清晰地阐述了解析自定义 NamespaceHandler 的过程，通过之前的示例程序我们了解到如果要使用自定义标签,那么其中一项必不可少的操作就是在Spring.handlers文件中配置命名空间与命名空间处理器的映射关系。只有这样，Spring 才能根据映射关系找到匹配的处理器,而寻找匹配的处理器就是在上面函数中实现的，当获取到自定义的 NamespaceHandler之后就可以进行处理器初始化并解析了。我们不妨再次回忆一下示例中对于命名空间处理器的内容:
+```java
+public class MyNamespaceHandler extends NamespaceHandlerSupport{
+    public void init(){
+        registerBeanDefinitionParser ("user",new UserBeanDefinitionParser());
+    }
+}
+```
+
+​		当得到自定义命名空间处理后会马上执行 namespaceHandler.init()来进行自定义 BeanDefinitionParser 的注册。在这里，你可以注册多个标签解析器，当前示例中只有支持<myname:user的写法，你也可以在这里注册多个解析器，如<myname:A、<myname:B等，使得 myname的命名空间中可以支持多种标签解析。注册后，命名空间处理器就可以根据标签的不同来调用不同的解析器进行解析。那么，根据上面的函数与之前介绍过的例子，我们基本上可以推断getHandlerMappings 的主要功能就是读取Spring.handlers配置文件并将配置文件缓存在map 中。
+
+DefaultNamespaceHandlerResolver .java
+
+```java
+/**
+ * Load the specified NamespaceHandler mappings lazily.
+ */
+private Map<String, Object> getHandlerMappings() {
+   Map<String, Object> handlerMappings = this.handlerMappings;
+    //如果没有缓存，就加入缓存
+   if (handlerMappings == null) {
+      synchronized (this) {
+         handlerMappings = this.handlerMappings;
+         if (handlerMappings == null) {
+            if (logger.isTraceEnabled()) {
+               logger.trace("Loading NamespaceHandler mappings from [" + this.handlerMappingsLocation + "]");
+            }
+            try {
+                //this.handlerMappingsLocation在初始化时候已经初始化为了META-INF/Spring.handlers
+               Properties mappings =
+                     PropertiesLoaderUtils.loadAllProperties(this.handlerMappingsLocation, this.classLoader);
+               if (logger.isTraceEnabled()) {
+                  logger.trace("Loaded NamespaceHandler mappings: " + mappings);
+               }
+               handlerMappings = new ConcurrentHashMap<>(mappings.size());
+                //将properties格式文件合并到map格式的handlerMappings
+               CollectionUtils.mergePropertiesIntoMap(mappings, handlerMappings);
+               this.handlerMappings = handlerMappings;
+            }
+            catch (IOException ex) {
+               throw new IllegalStateException(
+                     "Unable to load NamespaceHandler mappings from location [" + this.handlerMappingsLocation + "]", ex);
+            }
+         }
+      }
+   }
+   return handlerMappings;
+}
+```
+
+​		同我们想象的一样，借助了工具类PropertiesLoaderUtils对属性 handlerMappingsLocation进行了配置文件的读取，handlerMappingsLocation被默认初始化为“META-INF/Spring.handlers"。
+
+### 4.2.3 标签解析
+
+​		得到了解析器以及要分析的元素后，Spring就可以将解析工作委托给自定义解析器去解析了。在 Spring 中的代码为:
+
+```java
+return handler.parse(ele, new ParserContext(this.readerContext, this, containingBd));
+```
+
+​		以之前提到的示例进行分析，此时的handler已经被实例化成为了我们自定义的MyNamespaceHandler了,而MyNamespaceHandler也已经完成了初始化的工作，但是在我们实现的自定义命名空间处理器中并没有实现 parse方法，所以推断，这个方法是父类中的实现,查看父类NamespaceHandlerSupport中的parse方法。
+NamespaceHandlerSupport.java
+
+```java
+public BeanDefinition parse(Element element，ParserContext parserContext) {
+	//寻找解析器并进行解析操作
+	return findParserForBlement(element, parserContext).parse(element, parserContext);
+}
+```
+
+​		解析过程中首先是寻找元素对应的解析器，进而调用解析器中的 parse方法，那么结合示例来讲，其实就是首先获取在MyNameSpaceHandler类中的 init方法中注册的对应的UserBeanDefinitionParser实例，并调用parse方法进一步解析。
+
+NamespaceHandlerSupport.java
+
+```java
+/**
+ * Locates the {@link BeanDefinitionParser} from the register implementations using
+ * the local name of the supplied {@link Element}.
+ */
+@Nullable
+private BeanDefinitionParser findParserForElement(Element element, ParserContext parserContext) {
+    //获取元素名称，也就是<myname:user中的user,若在示例中，此时localName为user
+   String localName = parserContext.getDelegate().getLocalName(element);
+    //根据user找到对应的解析器，也就是在registerBeanDefinitionParser("user",new UserBeanDefinitionParser());注册的解析器
+   BeanDefinitionParser parser = this.parsers.get(localName);
+   if (parser == null) {
+      parserContext.getReaderContext().fatal(
+            "Cannot locate BeanDefinitionParser for element [" + localName + "]", element);
+   }
+   return parser;
+}
+```
+
+对于parse的方法的处理
+
+AbstractBeanDefinitionParser.java
+
+```java
+@Override
+@Nullable
+public final BeanDefinition parse(Element element, ParserContext parserContext) {
+   AbstractBeanDefinition definition = parseInternal(element, parserContext);
+   if (definition != null && !parserContext.isNested()) {
+      try {
+         String id = resolveId(element, definition, parserContext);
+         if (!StringUtils.hasText(id)) {
+            parserContext.getReaderContext().error(
+                  "Id is required for element '" + parserContext.getDelegate().getLocalName(element)
+                        + "' when used as a top-level tag", element);
+         }
+         String[] aliases = null;
+         if (shouldParseNameAsAliases()) {
+            String name = element.getAttribute(NAME_ATTRIBUTE);
+            if (StringUtils.hasLength(name)) {
+               aliases = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(name));
+            }
+         }
+          //将AbstractBeanDefinition转换为BeanDefinitionHolder并注册
+         BeanDefinitionHolder holder = new BeanDefinitionHolder(definition, id, aliases);
+         registerBeanDefinition(holder, parserContext.getRegistry());
+         if (shouldFireEvents()) {
+             //需要通知监听器则进行处理
+            BeanComponentDefinition componentDefinition = new BeanComponentDefinition(holder);
+            postProcessComponentDefinition(componentDefinition);
+            parserContext.registerComponent(componentDefinition);
+         }
+      }
+      catch (BeanDefinitionStoreException ex) {
+         String msg = ex.getMessage();
+         parserContext.getReaderContext().error((msg != null ? msg : ex.toString()), element);
+         return null;
+      }
+   }
+   return definition;
+}
+```
+
+​		虽说是对自定义配置文件的解析，但是，我们可以看到，在这个函数中大部分的代码是用来处理将解析后的AbstractBeanDefinition 转化为BeanDefinitionHolder 并注册的功能，而真正去做解析的事情委托给了函数parseInternal，正是这句代码调用了我们自定义的解析函数。在parseInternal 中并不是直接调用自定义的doParse函数，而是进行了一系列的数据准备，包括对beanClass、scope、lazyInit等属性的准备。			
+
+AbstractSingleBeanDefinitionParser.java
+
+```java
+/**
+ * Creates a {@link BeanDefinitionBuilder} instance for the
+ * {@link #getBeanClass bean Class} and passes it to the
+ * {@link #doParse} strategy method.
+ * @param element the element that is to be parsed into a single BeanDefinition
+ * @param parserContext the object encapsulating the current state of the parsing process
+ * @return the BeanDefinition resulting from the parsing of the supplied {@link Element}
+ * @throws IllegalStateException if the bean {@link Class} returned from
+ * {@link #getBeanClass(org.w3c.dom.Element)} is {@code null}
+ * @see #doParse
+ */
+@Override
+protected final AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
+   BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition();
+   String parentName = getParentName(element);
+   if (parentName != null) {
+      builder.getRawBeanDefinition().setParentName(parentName);
+   }
+    //获取自定义标签中的class ,此时会调用自定义解析器如UserBeanDefinitionParser中的getBeanClass方法。
+   Class<?> beanClass = getBeanClass(element);
+   if (beanClass != null) {
+      builder.getRawBeanDefinition().setBeanClass(beanClass);
+   }
+   else {
+       //若子类没有重写getBeanclass方法则尝试检查子类是否重写getBeanClassName方法
+      String beanClassName = getBeanClassName(element);
+      if (beanClassName != null) {
+         builder.getRawBeanDefinition().setBeanClassName(beanClassName);
+      }
+   }
+   builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
+   BeanDefinition containingBd = parserContext.getContainingBeanDefinition();
+    //若存在父类则使用父类的scope属性
+   if (containingBd != null) {
+      // Inner bean definition must receive same scope as containing bean.
+      builder.setScope(containingBd.getScope());
+   }
+    //配置延迟加载
+   if (parserContext.isDefaultLazyInit()) {
+      // Default-lazy-init applies to custom bean definitions as well.
+      builder.setLazyInit(true);
+   }
+    //调用子类重写的doParse方法进行解析
+   doParse(element, parserContext, builder);
+   return builder.getBeanDefinition();
+}
+
+protected void doParse(Element element,ParserContext parserContext，BeanDefinitionBuilder builder) {
+	doParse (element, builder);
+}
+```
+
+​		回顾一下全部的自定义标签处理过程，虽然在实例中我们定义UserBeanDefinitionParser,但是在其中我们只是做了与自己业务逻辑相关的部分。不过我们没做但是并不代表没有，在这个处理过程中同样也是按照Spring 中默认标签的处理方式进行，包括创建BeanDefinition 以及进行相应默认属性的设置，对于这些工作Spring 都默默地帮我们实现了，只是暴露出一些接口来供用户实现个性化的业务。通过对本章的了解，相信读者对Spring 中自定义标签的使用以及在解析自定义标签过程中Spn也就是说到现在为止我们已经理解了Spring 将beanIAhean完成了Spring 中全部的解析工作，也就是说到现在为止我们已经文件到加载到内存中的全过程，而接下来的任务便是如何使用这些bean,下一章将介绍 bean的加载。
 
 
 
+# 第5章 bean 的加载
+
+​		经过前面的分析,我们终于结束了对XML配置文件的解析,接下来将会面临更大的挑战,就是对bean加载的探索。bean加载的功能实现远比 bean的解析要复杂得多，同样，我们还是以本书开篇的示例为基础，对于加载bean的功能，在Spring 中的调用方式为:
+```java
+MyTestBean bean=(MyTestBean)bf.getBean("myTestBean")
+```
+
+这句代码实现了什么样的功能呢?我们可以先快速体验一下Spring中代码是如何实现的。
+
+AbstractBeanFactory.java
+
+继承关系：XMLBeanFactory -> DefaultListableBeanFactory -> AbstractAutowireCapableBeanFactory -> AbstractBeanFactory
+
+```java
+@Override
+public Object getBean(String name) throws BeansException {
+    return doGetBean(name, null, null, false);
+}
+/**
+ * Return an instance, which may be shared or independent, of the specified bean.
+ * @param name the name of the bean to retrieve
+ * @param requiredType the required type of the bean to retrieve
+ * @param args arguments to use when creating a bean instance using explicit arguments
+ * (only applied when creating a new instance as opposed to retrieving an existing one)
+ * @param typeCheckOnly whether the instance is obtained for a type check,
+ * not for actual use
+ * @return an instance of the bean
+ * @throws BeansException if the bean could not be created
+ */
+protected <T> T doGetBean(
+      String name, @Nullable Class<T> requiredType, @Nullable Object[] args, boolean typeCheckOnly)
+      throws BeansException {
+	//获取对应的beanName
+   String beanName = transformedBeanName(name);
+   Object bean;
+
+   // Eagerly check singleton cache for manually registered singletons.
+    /**
+      * 检查缓存中或实例工厂中是否有对应的实例，
+      * 因为在创建单例bean的时候会存在依赖注入的情况，而创建依赖的时候为了避免循环依赖，
+      * Spring创建bean的原则是不等bean创建完成就会将创建bean的ObjectFactory提早曝光，也就是加入到ObjectFactory加入到缓存中，
+      * 一旦下个bean创建的时候需要依赖上个bean则直接使用ObjectFactory
+      */ 
+    //直接尝试从缓存获取或者singletonFactories中的ObjectFactory中获取
+   Object sharedInstance = getSingleton(beanName);
+   if (sharedInstance != null && args == null) {
+      if (logger.isTraceEnabled()) {
+         if (isSingletonCurrentlyInCreation(beanName)) {
+            logger.trace("Returning eagerly cached instance of singleton bean '" + beanName +
+                  "' that is not fully initialized yet - a consequence of a circular reference");
+         }
+         else {
+            logger.trace("Returning cached instance of singleton bean '" + beanName + "'");
+         }
+      }
+       //返回对应的实例，有时候存在诸如BeanFactory 的情况并不是直接返回实例本身而是返回指定方法返回的实例
+      bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
+   }else {
+      // Fail if we're already creating this bean instance:
+      // We're assumably within a circular reference.
+        //只有在单例情况才会尝试解决循环依赖，原型模式情况下，如果存在
+		//A中有B的属性,B中有A的属性，那么当依赖注入的时候，就会产生当A还未创建完的时候因为
+        //对于B的创建再次返回创建A，造成循环依赖，也就是下面的情况
+		//isPrototypeCurrentlyInCreation (beanName)为true
+      if (isPrototypeCurrentlyInCreation(beanName)) {//获取bean的时候，如果发现这个bean正在被创建，并且是prototype 就抛异常
+         throw new BeanCurrentlyInCreationException(beanName);
+      }
+
+      // Check if bean definition exists in this factory.
+       //如果 beanDefinitionMap中也就是在所有已经加载的类中不包括 beanName则尝试从parentBeanFactory中检测
+      BeanFactory parentBeanFactory = getParentBeanFactory();
+      if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
+         // Not found -> check parent.
+         String nameToLookup = originalBeanName(name);
+         if (parentBeanFactory instanceof AbstractBeanFactory) {
+            return ((AbstractBeanFactory) parentBeanFactory).doGetBean(nameToLookup, requiredType, args, typeCheckOnly);
+         }
+         else if (args != null) {//递归到parentBeanFactory寻找
+            // Delegation to parent with explicit args.
+            return (T) parentBeanFactory.getBean(nameToLookup, args);
+         }
+         else if (requiredType != null) {
+            // No args -> delegate to standard getBean method.
+            return parentBeanFactory.getBean(nameToLookup, requiredType);
+         }
+         else {
+            return (T) parentBeanFactory.getBean(nameToLookup);
+         }
+      }
+		//如果不仅仅是类型检查，则是创建bean，需要记录
+      if (!typeCheckOnly) {
+         markBeanAsCreated(beanName);
+      }
+
+      try {
+          //将存储XML 配置文件的GernericBeanDefinition转换为RootBeanDefinition，如果指定BeanName是子Bean的话同时会合并父类的相关属性
+         RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
+         checkMergedBeanDefinition(mbd, beanName, args);
+         // Guarantee initialization of beans that the current bean depends on.
+          //如果存在依赖，则需要递归实例化依赖的bean
+         String[] dependsOn = mbd.getDependsOn();
+         if (dependsOn != null) {
+            for (String dep : dependsOn) {
+               if (isDependent(beanName, dep)) {
+                  throw new BeanCreationException(mbd.getResourceDescription(), beanName,
+                        "Circular depends-on relationship between '" + beanName + "' and '" + dep + "'");
+               }
+                //缓存依赖调用
+               registerDependentBean(dep, beanName);
+               try {
+                  getBean(dep);
+               }
+               catch (NoSuchBeanDefinitionException ex) {
+                  throw new BeanCreationException(mbd.getResourceDescription(), beanName,
+                        "'" + beanName + "' depends on missing bean '" + dep + "'", ex);
+               }
+            }
+         }
+
+         // Create bean instance.
+          //实例化以来的bean就可以实例化mbd本身了
+          //singleton模式的创建
+         if (mbd.isSingleton()) {
+            sharedInstance = getSingleton(beanName, () -> {
+               try {
+                  return createBean(beanName, mbd, args);
+               }
+               catch (BeansException ex) {
+                  // Explicitly remove instance from singleton cache: It might have been put there
+                  // eagerly by the creation process, to allow for circular reference resolution.
+                  // Also remove any beans that received a temporary reference to the bean.
+                  destroySingleton(beanName);
+                  throw ex;
+               }
+            });
+            bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
+         }
+		//prototype模式的bean
+         else if (mbd.isPrototype()) {
+            // It's a prototype -> create a new instance.
+            Object prototypeInstance = null;
+            try {
+               beforePrototypeCreation(beanName);
+               prototypeInstance = createBean(beanName, mbd, args);
+            }
+            finally {
+               afterPrototypeCreation(beanName);
+            }
+            bean = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
+         }
+		//指定scope上实例化bean
+         else {
+            String scopeName = mbd.getScope();
+            if (!StringUtils.hasLength(scopeName)) {
+               throw new IllegalStateException("No scope name defined for bean '" + beanName + "'");
+            }
+            Scope scope = this.scopes.get(scopeName);
+            if (scope == null) {
+               throw new IllegalStateException("No Scope registered for scope name '" + scopeName + "'");
+            }
+            try {
+               Object scopedInstance = scope.get(beanName, () -> {
+                  beforePrototypeCreation(beanName);
+                  try {
+                     return createBean(beanName, mbd, args);
+                  }
+                  finally {
+                     afterPrototypeCreation(beanName);
+                  }
+               });
+               bean = getObjectForBeanInstance(scopedInstance, name, beanName, mbd);
+            }
+            catch (IllegalStateException ex) {
+               throw new BeanCreationException(beanName,
+                     "Scope '" + scopeName + "' is not active for the current thread; consider " +
+                     "defining a scoped proxy for this bean if you intend to refer to it from a singleton",
+                     ex);
+            }
+         }
+      }
+      catch (BeansException ex) {
+         cleanupAfterBeanCreationFailure(beanName);
+         throw ex;
+      }
+   }
+
+   // Check if required type matches the type of the actual bean instance.
+    //检查需要的类型是否符合bean的实际类型
+   if (requiredType != null && !requiredType.isInstance(bean)) {
+      try {
+         T convertedBean = getTypeConverter().convertIfNecessary(bean, requiredType);
+         if (convertedBean == null) {
+            throw new BeanNotOfRequiredTypeException(name, requiredType, bean.getClass());
+         }
+         return convertedBean;
+      }
+      catch (TypeMismatchException ex) {
+         if (logger.isTraceEnabled()) {
+            logger.trace("Failed to convert bean '" + name + "' to required type '" +
+                  ClassUtils.getQualifiedName(requiredType) + "'", ex);
+         }
+         throw new BeanNotOfRequiredTypeException(name, requiredType, bean.getClass());
+      }
+   }
+   return (T) bean;
+}
+```
+
+​		仅从代码量上就能看出来bean 的加载经历了一个相当复杂的过程，其中涉及各种各样的考虑。相信读者细心阅读上面的代码，并参照部分代码注释，是可以粗略地了解整个Spring加载bean的过程。对于加载过程中所涉及的步骤大致如下。
+(1）转换对应beanName。
+​		或许很多人不理解转换对应beanName是什么意思，传入的参数name不就是beanName吗?其实不是，这里传入的参数可能是别名，也可能是 FactoryBean，所以需要进行一系列的解析，这些解析内容包括如下内容。
+
+- 去除FactoryBean的修饰符，也就是如果name="&aa"，那么会首先去除&而使name="aa"
+- 取指定alias 所表示的最终beanName，例如别名A指向名称为B的bean 则返回B;若别名A指向别名B,别名B又指向名称为C的bean则返回C。
+
+(2）尝试从缓存中加载单例。
+		单例在Spring 的同一个容器内只会被创建一次，后续再获取 bean,就直接从单例缓存中获取了。当然这里也只是尝试加载，首先尝试从缓存中加载，如果加载不成功则再次尝试从
+singletonFactories中加载。因为在创建单例bean的时候会存在依赖注入的情况，而在创建依赖的时候为了避免循环依赖,在Spring中创建bean 的原则是不等bean创建完成就会将创建bean的ObjectFactory 提早曝光加入到缓存中，一旦下一个bean创建时候需要依赖上一个bean则直接使用ObjectFactory（后面章节会对循环依赖重点讲解)
+ ( 3 ) bean的实例化。
+		如果从缓存中得到了bean的原始状态,则需要对bean进行实例化。这里有必要强调一下，缓存中记录的只是最原始的 bean 状态，并不一定是我们最终想要的bean。举个例于，假如找们需要对工厂bean进行处理，那么这里得到的其实是工厂bean 的初始状态，但是我们真正需要的是工厂bean中定义的factory-method方法中返回的 bean，而 getObjectForBeanInstance就是完成这个工作的，后续会详细讲解。
+
+(4）原型模式的依赖检查。
+		只有在单例情况下才会尝试解决循环依赖，如果存在A中有B的属性,B中有A的属性，那么当依赖注入的时候，就会产生当A还未创建完的时候因为对于B的创建再次返回创建A,造成循环依赖，也就是情况: isPrototypeCurrentlyInCreation(beanName)判断true,
+( 5)检测parentBeanFactory。
+		从代码上看，如果缓存没有数据的话直接转到父类工厂上去加载了，这是为什么呢?可能读者忽略了一个很重要的判断条件: parentBeanFactory != null && !containsBean Definition(beanName)，parentBeanFactory != null。parentBeanFactory 如果为空，则其他一切都是浮云，这个没什么说的，但是!containsBeanDefinition(beanName)就比较重要了，它是在检测如果当前加载的XML 配置文件中不包含beanName所对应的配置，就只能到parentBeanFactory去尝试下了，然后再去递归的调用getBean方法。
+(6）将存储XML 配置文件的GernericBeanDefinition转换为RootBeanDefinition
+		因为从XML 配置文件中读取到的Bean信息是存储在GernericBeanDefinition中的，但是所有的 Bean后续处理都是针对于 RootBeanDefinition 的，所以这里需要进行一个转换，转换的同时如果父类bean不为空的话,则会一并合并父类的属性。
+(7）寻找依赖。
+		因为bean的初始化过程中很可能会用到某些属性，而某些属性很可能是动态配置的，并且配置成依赖于其他的bean，那么这个时候就有必要先加载依赖的 bean，所以，在Spring 的加载顺序中，在初始化某一个bean的时候首先会初始化这个bean所对应的依赖。
+( 8）针对不同的scope进行bean的创建。
+		我们都知道，在Spring 中存在着不同的scope，其中默认的是singleton，但是还有些其他的配置诸如prototype、request之类的。在这个步骤中，Spring 会根据不同的配置进行不同的初始化策略。
+(9)类型转换。
+		程序到这里返回bean后已经基本结束了,通常对该方法的调用参数requiredType是为空的,但是可能会存在这样的情况，返回的 bean其实是个String，但是requiredType却传人Integer类型,那么这时候本步骤就会起作用了，它的功能是将返回的 bean转换为requiredType所指定的类型。当然，String转换为Integer是最简单的一种转换，在Spring 中提供了各种各样的转换器，用户也可以自己扩展转换器来满足需求。
+经过上面的步骤后bean 的加载就结束了，这个时候就可以返回我们所需要的 bean了,图5-1直观地反映了整个过程。其中最重要的就是步骤(8)针对不同的scope进行 bean的创建，你会看到各种常用的Spring特性在这里的实现。
+		在细化分析各个步骤提供的功能前，我们有必要先了解下FactoryBean 的用法。
+
+<img src="images/spring-bean的获取过程.svg" alt="spring-bean的获取过程" style="zoom:67%;" />
 
 
 
+## 5.1 FactoryBean的使用
 
+​		一般情况下，Spring通过反射机制利用 bean的 class 属性指定实现类来实例化bean 。在某些情况下，实例化 bean过程比较复杂，如果按照传统的方式，则需要在<bean>中提供大量的配置信息，配置方式的灵活性是受限的，这时采用编码的方式可能会得到一个简单的方案。Spring 为此提供了一个org.Springframework.bean.factory.FactoryBean的工厂类接口，用户可以通过实现该接口定制实例化 bean的逻辑。
+​		FactoryBean接口对于Spring 框架来说占有重要的地位，Spring自身就提供了70多个FactoryBean的实现。它们隐藏了实例化一些复杂bean的细节,给上层应用带来了便利。从Spring3.0开始，FactoryBean开始支持泛型，即接口声明改为FactoryBean<T>的形式:
 
+```java
+package org.Springframework.beans.factory;
+public interface FactoryBean<T> {
+	T getObject() throws Exception;
+    Class<?>getobjectType();
+	boolean isSingleton();
+}
+```
 
+在该接口中还定义了以下3个方法。
 
+- T getObject():返回由FactoryBean创建的bean实例如果isSingleton(返回 true,则该实例会放到Spring容器中单实例缓存池中。
+- boolean isSingleton():返回由FactoryBean创建的bean实例的作用域是singleton还是prototype。
+- Class<T> getObjectType():返回FactoryBean创建的bean类型。
 
+​		当配置文件中<bean>的 class属性配置的实现类是FactoryBean 时，通过 getBean()方法返回的不是 FactoryBean本身，而是 FactoryBean#getObject()方法所返回的对象，相当于FactoryBean#getObject()代理了getBean()方法。例如:如果使用传统方式配置下面Car 的<bean>时，Car的每个属性分别对应一个<property>元素标签。
 
+```java
+publicclass Car {
+	private int maxSpeed;
+    private string brand;
+    private double price;
+//    get/set方法
+}
+```
 
+如果用FactoryBean的方式实现就会灵活一些，下例通过逗号分割符的方式一次性地为Car的所有属性指定配置值:
 
+```java
+public class CarFactoryBean implements FactoryBean<Car> {
+    private string carInfo;
+    public Car getObject()throws Exception {
+        Car car =new Car();
+        String [infos = carInfo.split(",");
+        car.setBrand (infos[0]);
+        car.setMaxSpeed(Integer.valueof(infos[1]));
+        car.setPrice(Double.valueof(infos[2 ]));
+        return car;
+    }
+    public Class<car> getobjectType(){
+        returnCar.class;
+    }
+    publicboolean issingleton(){
+        return false;
+    }
+    public string getCarInfo() {
+        return this.carInfo ;
+    //接受逗号分割符设置属性信息
+    publicvoid setCarInfo (string carInfo ){
+        this.carInfo = carInfo;
+    }
+}
+```
 
+​		有了这个CarFactoryBean后，就可以在配置文件中使用下面这种自定义的配置方式配置Car Bean 了:
+```xml
+<bean id="car" class="com.test.factorybean.CarFactoryBean"carInfo="超级跑车,400,2000000"/>
+```
 
+​		当调用getBean("car")时，Spring通过反射机制发现 CarFactoryBean实现了FactoryBean的接口，这时Spring容器就调用接口方法 CarFactoryBean#getObject()方法返回。如果希望获取CarFactoryBean 的实例，则需要在使用getBean(beanName)方法时在beanName前显示的加上"&”前缀，例如 getBean("&car")。
 
+## 5.2 缓存中获取单例bean
 
+​		介绍过FactoryBean的用法后，我们就可以了解bean加载的过程了。前面已经提到过，单例在 Spring 的同一个容器内只会被创建一次,后续再获取bean直接从缓存中获取，当然这里也只是尝试加载,首先尝试从缓存中加载,然后再次尝试从singletonFactories中加载，因为在创建单例bean的时候会存在依赖注入的情况，而在创建依赖的时候为了避免循环依赖，Spring创建bean 的原则是不等bean 创建完成就将创建bean的ObjectFactory提早加入到缓存中，一旦下一个bean创建时需要依赖上个bean，则直接使用ObjectFactory。
 
+AbstractBeanFactory.java
 
+```java
+@Override
+@Nullable
+public Object getSingleton(String beanName) {
+    //参数true设置标识允许早期依赖
+   return getSingleton(beanName, true);
+}
+/**
+ * Return the (raw) singleton object registered under the given name.
+ * <p>Checks already instantiated singletons and also allows for an early
+ * reference to a currently created singleton (resolving a circular reference).
+ * @param beanName the name of the bean to look for
+ * @param allowEarlyReference whether early references should be created or not
+ * @return the registered singleton object, or {@code null} if none found
+ */
+@Nullable
+protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+    // Quick check for existing instance without full singleton lock
+    //检查缓存中是否存在实例
+    Object singletonObject = this.singletonObjects.get(beanName);
+    if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+        singletonObject = this.earlySingletonObjects.get(beanName);
+        if (singletonObject == null && allowEarlyReference) {
+            //如果为空，则锁定全局变量进行处理
+            synchronized (this.singletonObjects) {
+                // Consistent creation of early reference within full singleton lock
+                singletonObject = this.singletonObjects.get(beanName);
+                if (singletonObject == null) {
+                    //如果bean此时正在加载则不处理
+                    singletonObject = this.earlySingletonObjects.get(beanName);
+                    if (singletonObject == null) {//为空，说明不是正在加载
+				//当某些方法需要提前初始化的时候则会调用addSingletonFactory方法将对应的objectFactory初始化策略存储在singletonFactories
+                        ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+                        if (singletonFactory != null) {
+                            //调用预先设定的getobject方法
+                            singletonObject = singletonFactory.getObject();
+                            //记录在缓存中，earlySingletonobjects和singletonFactories互斥，只能同时存在于一个里面
+                            this.earlySingletonObjects.put(beanName, singletonObject);
+                            this.singletonFactories.remove(beanName);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return singletonObject;
+}
+```
 
+​		这个方法因为涉及循环依赖的检测，以及涉及很多变量的记录存取，所以让很多读者摸不着头脑。这个方法首先尝试从singletonObjects里面获取实例,如果获取不到再从 earlySingletonObjects里面获取，如果还获取不到，再尝试从 singletonFactories里面获取 beanName对应的ObjectFactory，然后调用这个ObjectFactory 的getObject 来创建bean，并放到 earlySingletonObjects里面去，并且从singletonFacotories里面remove掉这个ObjectFactory,而对于后续的所有内存操作都只为了循环依赖检测时候使用，也就是在allowEarlyReference为true的情况下才会使用。这里涉及用于存储bean的不同的map，可能让读者感到崩溃，简单解释如下。
 
+- singletonObjects:用于保存BeanName和创建bean实例之间的关系，bean name --> beaninstance。
+- singletonFactories:用于保存BeanName和创建bean的工厂之间的关系，bean name -->ObjectFactory。
+- earlySingletonObjects:也是保存BeanName和创建bean实例之间的关系，与singletonObjects 的不同之处在于，当一个单例bean被放到这里面后，那么当 bean还在创建过程中，就可以通过getBean方法获取到了，其目的是用来检测循环引用。
+- registeredSingletons:用来保存当前所有已注册的bean。
 
+## 5.3 从bean的实例中获取对象
 
+​		在getBean方法中，getObjectForBeanInstance是个高频率使用的方法，无论是从缓存中获得 bean还是根据不同的scope策略加载bean。总之，我们得到bean的实例后要做的第一步就是调用这个方法来检测一下正确性，其实就是用于检测当前bean是否是 FactoryBean类型的 bean，如果是，那么需要调用该bean对应的FactoryBean实例中的 getObject()作为返回值。
+​		无论是从缓存中获取到的bean还是通过不同的scope策略加载的bean都只是最原始的bean状态，并不一定是我们最终想要的 bean。举个例子，假如我们需要对工厂bean进行处理，那么这里得到的其实是工厂 bean 的初始状态，但是我们真正需要的是工厂 bean中定义的factory-method方法中返回的 bean。而 getObiectForBeanInstance方法就是完成这个工作的。
 
+AbstractBeanFactory.java
 
+```java
+/**
+ * Get the object for the given bean instance, either the bean
+ * instance itself or its created object in case of a FactoryBean.
+ * @param beanInstance the shared bean instance
+ * @param name the name that may include factory dereference prefix
+ * @param beanName the canonical bean name
+ * @param mbd the merged bean definition
+ * @return the object to expose for the bean
+ */
+protected Object getObjectForBeanInstance(Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd) {
+   // Don't let calling code try to dereference the factory if the bean isn't a factory.
+   if (BeanFactoryUtils.isFactoryDereference(name)) {//间接引用
+      if (beanInstance instanceof NullBean) {
+         return beanInstance;
+      }
+       //如果指定的name是工厂相关(以&为前缀)且beanInstance又不是FactoryBean类型则验证不通过
+      if (!(beanInstance instanceof FactoryBean)) {
+         throw new BeanIsNotAFactoryException(beanName, beanInstance.getClass());
+      }
+      if (mbd != null) {
+         mbd.isFactoryBean = true;
+      }
+      return beanInstance;
+   }
 
+   // Now we have the bean instance, which may be a normal bean or a FactoryBean.
+   // If it's a FactoryBean, we use it to create a bean instance, unless the
+   // caller actually wants a reference to the factory.
+    //现在我们有了个bean 的实例，这个实例可能会是正常的bean或者是FactoryBean
+	//如果是FactoryBean我们使用它创建实例，但是如果用户想要直接获取工厂实例而不是工厂的getobject方法对应的实例那么传入的name应该加入前缀&
+   if (!(beanInstance instanceof FactoryBean)) {// 不是FactoryBean直接返回，（那就是正常的bean）
+      return beanInstance;
+   }
+   //是beanfactory
+   Object object = null;
+   if (mbd != null) {
+      mbd.isFactoryBean = true;
+   }
+   else {
+      object = getCachedObjectForFactoryBean(beanName);
+   }
+   if (object == null) {
+      // Return bean instance from factory.
+      FactoryBean<?> factory = (FactoryBean<?>) beanInstance;
+      // Caches object obtained from FactoryBean if it is a singleton.
+       //containsBeanDefinition检测beanDefinitionMap 中也就是在所有已经加载的类中检测是否定义beanName
+      if (mbd == null && containsBeanDefinition(beanName)) {
+         //将存储XML配置文件的 GernericBeanDefiniti转换为RootBeanDefinition,如果指定BeanName是子Bean的话同时会合并父类的相关属性
+         mbd = getMergedLocalBeanDefinition(beanName);
+      }
+       //是否是用户定义的而不是应用程序本身定义的
+      boolean synthetic = (mbd != null && mbd.isSynthetic());
+      object = getObjectFromFactoryBean(factory, beanName, !synthetic);//重点  synthetic标记shouldPostProcess
+   }
+   return object;
+}
+```
 
+从上面的代码来看，其实这个方法并没有什么重要的信息，大多是些辅助代码以及一些功能性的判断，而真正的核心代码却委托给了getObjectFromFactoryBean，我们来看看getObjectForBeanInstance中的所做的工作。
+(1)   对 FactoryBean正确性的验证。
 
+(2)   对非FactoryBean不做任何处理。(那就是正常的bean直接返回)
 
+(3）对bean进行转换。（强制类型转换为BeanFactory类型）
 
+(4）将从Factory中解析bean 的工作委托给getObjectFromFactoryBean。
 
+FactoryBeanRegistrySupport.java （AbstractBeanFactory的父类）
+
+```java
+/**
+ * Obtain an object to expose from the given FactoryBean.
+ * @param factory the FactoryBean instance
+ * @param beanName the name of the bean
+ * @param shouldPostProcess whether the bean is subject to post-processing
+ * @return the object obtained from the FactoryBean
+ * @throws BeanCreationException if FactoryBean object creation failed
+ * @see org.springframework.beans.factory.FactoryBean#getObject()
+ */
+protected Object getObjectFromFactoryBean(FactoryBean<?> factory, String beanName, boolean shouldPostProcess) {
+    //如果是单例模式
+   if (factory.isSingleton() && containsSingleton(beanName)) {
+      synchronized (getSingletonMutex()) {
+         Object object = this.factoryBeanObjectCache.get(beanName);
+         if (object == null) {
+            object = doGetObjectFromFactoryBean(factory, beanName);//真正执行获取Object的
+            // Only post-process and store if not put there already during getObject() call above
+            // (e.g. because of circular reference processing triggered by custom getBean calls)
+            Object alreadyThere = this.factoryBeanObjectCache.get(beanName);//再判断一次，如果缓存中已经有了没
+            if (alreadyThere != null) {//已经有了，就赋值给object 返回
+               object = alreadyThere;
+            }
+            else {//没有的话，判断是否需要后置处理
+               if (shouldPostProcess) {
+                  if (isSingletonCurrentlyInCreation(beanName)) {
+                     // Temporarily return non-post-processed object, not storing it yet..
+                     return object;
+                  }
+                   //创建单例的前处理
+                  beforeSingletonCreation(beanName);
+                  try {
+                     object = postProcessObjectFromFactoryBean(object, beanName);
+                  }
+                  catch (Throwable ex) {
+                     throw new BeanCreationException(beanName,
+                           "Post-processing of FactoryBean's singleton object failed", ex);
+                  }
+                  finally {
+                     afterSingletonCreation(beanName);
+                  }
+               }
+               if (containsSingleton(beanName)) {
+                  this.factoryBeanObjectCache.put(beanName, object);//加入到缓存，下次直接获取，可以保证全局唯一（单例）
+               }
+            }
+         }
+         return object;
+      }
+   }
+   else {
+      Object object = doGetObjectFromFactoryBean(factory, beanName);
+      if (shouldPostProcess) {
+         try {
+            object = postProcessObjectFromFactoryBean(object, beanName);
+         }
+         catch (Throwable ex) {
+            throw new BeanCreationException(beanName, "Post-processing of FactoryBean's object failed", ex);
+         }
+      }
+      return object;
+   }
+}
+```
+
+​		返回的 bean 如果是单例的，那就必须要保证全局唯一，同时，也因为是单例的，所以不必重复创建，可以使用缓存来提高性能，也就是说已经加载过就要记录下来以便于下次复用，否则的话就直接获取了。在doGetObjectFromFactoryBean方法中我们终于看到了我们想要看到的方法，也就是object=factory.getObject()，是的，就是这句代码，我们的历程犹如剥洋葱一样，一层一层的直到最内部的代码实现，虽然很简单。
+
+FactoryBeanRegistrySupport.java 
+
+```java
+/**
+ * Obtain an object to expose from the given FactoryBean.
+ * @param factory the FactoryBean instance
+ * @param beanName the name of the bean
+ * @return the object obtained from the FactoryBean
+ * @throws BeanCreationException if FactoryBean object creation failed
+ * @see org.springframework.beans.factory.FactoryBean#getObject()
+ */
+private Object doGetObjectFromFactoryBean(FactoryBean<?> factory, String beanName) throws BeanCreationException {
+   Object object;
+   try {
+       //权限验证
+      if (System.getSecurityManager() != null) {
+         AccessControlContext acc = getAccessControlContext();
+         try {
+            object = AccessController.doPrivileged((PrivilegedExceptionAction<Object>) factory::getObject, acc);
+         }
+         catch (PrivilegedActionException pae) {
+            throw pae.getException();
+         }
+      }
+      else {
+          //重点方法，调用getObject
+         object = factory.getObject();
+      }
+   }
+   catch (FactoryBeanNotInitializedException ex) {
+      throw new BeanCurrentlyInCreationException(beanName, ex.toString());
+   }
+   catch (Throwable ex) {
+      throw new BeanCreationException(beanName, "FactoryBean threw exception on object creation", ex);
+   }
+
+   // Do not accept a null value for a FactoryBean that's not fully
+   // initialized yet: Many FactoryBeans just return null then.
+   if (object == null) {
+      if (isSingletonCurrentlyInCreation(beanName)) {
+         throw new BeanCurrentlyInCreationException(
+               beanName, "FactoryBean which is currently in creation returned null from getObject");
+      }
+      object = new NullBean();
+   }
+   return object;
+}
+```
+
+​		上面我们已经讲述了FactoryBean的调用方法，如果 bean声明为FactoryBean类型，则当提取 bean时提取的并不是FactoryBean，而是 FactoryBean中对应的getObject方法返回的bean,而doGetObjectFromFactoryBean 正是实现这个功能的。
+
+​		接下来看看后置处理的操作，这个又是做什么用的呢?于是我们跟踪进入 AbstractAutowireCapableBeanFactory类的postProcessObjectFromFactoryBean方法:
+
+AbstractAutowireCapableBeanFactory.java
+
+```java
+@Override
+protected Object postProcessObjectFromFactoryBean(Object object, String beanName) {
+   return applyBeanPostProcessorsAfterInitialization(object, beanName);
+}
+
+@Override
+public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName)
+    throws BeansException {
+
+    Object result = existingBean;
+    for (BeanPostProcessor processor : getBeanPostProcessors()) {
+        Object current = processor.postProcessAfterInitialization(result, beanName);
+        if (current == null) {
+            return result;
+        }
+        result = current;
+    }
+    return result;
+}
+```
+
+​		对于后处理器的使用我们还未过多接触，后续章节会使用大量篇幅介绍，这里，我们只需了解在Spring 获取 bean 的规则中有这样一条:尽可能保证所有bean初始化后都会调用注册的BeanPostProcessor 的 postProcessAfterInitialization方法进行处理，在实际开发过程中大可以针对此特性设计自己的业务逻辑。
+
+## 5.4 获取单例
+
+​		之前我们讲解了从缓存中获取单例的过程,那么，如果缓存中不存在已经加载的单例bean就需要从头开始bean的加载过程了，而Spring 中使用getSingleton 的重载方法实现 bean 的加载过程。
+
+DefaultSingletonBeanRegistry.java
+
+```java
+public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
+   Assert.notNull(beanName, "Bean name must not be null");
+    //全局变量 需要同步
+   synchronized (this.singletonObjects) {
+       //首先检查对应的bean是否已经加载过,因为singleton模式其实就是复用以创建的bean,所以这一步是必须的
+      Object singletonObject = this.singletonObjects.get(beanName);
+      if (singletonObject == null) {//如果为空才可以进行singleto的bean的初始化
+         if (this.singletonsCurrentlyInDestruction) {
+            throw new BeanCreationNotAllowedException(beanName,
+                  "Singleton bean creation not allowed while singletons of this factory are in destruction " +
+                  "(Do not request a bean from a BeanFactory in a destroy method implementation!)");
+         }
+         if (logger.isDebugEnabled()) {
+            logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
+         }
+         beforeSingletonCreation(beanName);
+         boolean newSingleton = false;
+         boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
+         if (recordSuppressedExceptions) {
+            this.suppressedExceptions = new LinkedHashSet<>();
+         }
+         try {
+             //初始化bean
+            singletonObject = singletonFactory.getObject();
+            newSingleton = true;
+         }
+         catch (IllegalStateException ex) {
+            // Has the singleton object implicitly appeared in the meantime ->
+            // if yes, proceed with it since the exception indicates that state.
+            singletonObject = this.singletonObjects.get(beanName);
+            if (singletonObject == null) {
+               throw ex;
+            }
+         }
+         catch (BeanCreationException ex) {
+            if (recordSuppressedExceptions) {
+               for (Exception suppressedException : this.suppressedExceptions) {
+                  ex.addRelatedCause(suppressedException);
+               }
+            }
+            throw ex;
+         }
+         finally {
+            if (recordSuppressedExceptions) {
+               this.suppressedExceptions = null;
+            }
+            afterSingletonCreation(beanName);
+         }
+         if (newSingleton) {
+             //加入缓存
+            addSingleton(beanName, singletonObject);
+         }
+      }
+      return singletonObject;
+   }
+}
+```
+
+​		上述代码中其实是使用了回调方法，使得程序可以在单例创建的前后做一些准备及处理操作，而真正的获取单例bean 的方法其实并不是在此方法中实现的，其实现逻辑是在ObjectFactory类型的实例singletonFactory中实现的。而这些准备及处理操作包括如下内容。
+(1) 检查缓存是否已经加载过。
+
+(2) 若没有加载,则记录beanName的正在加载状态。
+
+(3) 加载单例前记录加载状态。
+		可能你会觉得 beforeSingletonCreation方法是个空实现，里面没有任何逻辑，但其实不是,这个函数中做了一个很重要的操作:记录加载状态，也就是通过 this.singletonsCurrentlyInCreation.add(beanName)将当前正要创建的bean记录在缓存中，这样便可以对循环依赖进行检测。
+
+```java
+protected void beforeSingletonCreation(String beanName) {
+   if (!this.inCreationCheckExclusions.contains(beanName) && !this.singletonsCurrentlyInCreation.add(beanName)) {
+      throw new BeanCurrentlyInCreationException(beanName);
+   }
+}
+```
+
+(4) 通过调用参数传入的ObjectFactory 的个体 Object方法实例化beano
+
+(5) 加载单例后的处理方法调用。同步骤(3)的记录加载状态相似，当bean加载结束后需要移除缓存中对该bean的正在加载状态的记录。
+
+```java
+protected void afterSingletonCreation(String beanName) {
+   if (!this.inCreationCheckExclusions.contains(beanName) && !this.singletonsCurrentlyInCreation.remove(beanName)) {
+      throw new IllegalStateException("Singleton '" + beanName + "' isn't currently in creation");
+   }
+}
+```
+
+(6) 将结果记录至缓存并删除加载bean过程中所记录的各种辅助状态。
+
+```java
+protected void addSingleton(String beanName, Object singletonObject) {
+   synchronized (this.singletonObjects) {
+      this.singletonObjects.put(beanName, singletonObject);
+      this.singletonFactories.remove(beanName);
+      this.earlySingletonObjects.remove(beanName);
+      this.registeredSingletons.add(beanName);
+   }
+}
+```
+
+(7）返回处理结果。
+		虽然我们已经从外部了解了加载bean的逻辑架构，但现在我们还并没有开始对bean加载功能的探索，之前提到过，bean的加载逻辑其实是在传入的
+ObjectFactory类型的参数singletonFactory中定义的，我们反推参数的获取，得到如下代码:
+
+AbstractBeanFactory.java  片段
+
+```java
+if (mbd.isSingleton()) {
+   sharedInstance = getSingleton(beanName, () -> {
+      try {
+         return createBean(beanName, mbd, args);
+      }
+      catch (BeansException ex) {
+         // Explicitly remove instance from singleton cache: It might have been put there
+         // eagerly by the creation process, to allow for circular reference resolution.
+         // Also remove any beans that received a temporary reference to the bean.
+         destroySingleton(beanName);
+         throw ex;
+      }
+   });
+   bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
+}
+```
+
+ObjectFactory 的核心部分其实只是调用了createBean的方法，所以我们还需要到createBean方法中追寻真理。
+
+## 5.5 准备创建bean
+
+​		我们不可能指望在一个函数中完成一个复杂的逻辑，而且我们跟踪了这么多Spring代码，经历了这么多函数，或多或少也发现了一些规律:一个真正干活的函数其实是以do开头的,比如 doGetObjectFromFactoryBean;而给我们错觉的函数，比如getObjectFromFactoryBean,其实只是从全局角度去做些统筹的工作。这个规则对于createBean也不例外，那么让我们看看在createBean函数中做了哪些准备工作。
+
+AbstractAutowireCapableBeanFactory.java   继承关系： AbstractAutowireCapableBeanFactory->AbstractBeanFactory
+
+```java
+@Override
+protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
+    throws BeanCreationException {
+    if (logger.isTraceEnabled()) {
+        logger.trace("Creating instance of bean '" + beanName + "'");
+    }
+    RootBeanDefinition mbdToUse = mbd;
+    // Make sure bean class is actually resolved at this point, and
+    // clone the bean definition in case of a dynamically resolved Class
+    // which cannot be stored in the shared merged bean definition.
+    Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
+    if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
+        mbdToUse = new RootBeanDefinition(mbd);
+        mbdToUse.setBeanClass(resolvedClass);
+    }
+    // Prepare method overrides.
+    try {
+        //验证及准备覆盖的方法  跟replace  lookup相关
+        mbdToUse.prepareMethodOverrides();
+    }
+    catch (BeanDefinitionValidationException ex) {
+        throw new BeanDefinitionStoreException(mbdToUse.getResourceDescription(),
+                                               beanName, "Validation of method overrides failed", ex);
+    }
+    try {
+        // Give BeanPostProcessors a chance to return a proxy instead of the target bean instance.
+        //给BeanPostProcessors 一个机会来返回代理来替代真正的实例
+        Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
+        if (bean != null) {
+            return bean;
+        }
+    }
+    catch (Throwable ex) {
+        throw new BeanCreationException(mbdToUse.getResourceDescription(), beanName,
+                                        "BeanPostProcessor before instantiation of bean failed", ex);
+    }
+    try {
+        Object beanInstance = doCreateBean(beanName, mbdToUse, args);//真正创建bean的方法
+        if (logger.isTraceEnabled()) {
+            logger.trace("Finished creating instance of bean '" + beanName + "'");
+        }
+        return beanInstance;
+    }
+    catch (BeanCreationException | ImplicitlyAppearedSingletonException ex) {
+        // A previously detected exception with proper bean creation context already,
+        // or illegal singleton state to be communicated up to DefaultSingletonBeanRegistry.
+        throw ex;
+    }
+    catch (Throwable ex) {
+        throw new BeanCreationException(
+            mbdToUse.getResourceDescription(), beanName, "Unexpected exception during bean creation", ex);
+    }
+}
+```
+
+从代码中我们可以总结出函数完成的具体步骤及功能。
+
+(1) 根据设置的class属性或者根据className来解析
+(2) 对override属性进行标记及验证。
+		很多读者可能会不知道这个方法的作用，因为在Spring 的配置里面根本就没有诸如override-method之类的配置，那么这个方法到底是干什么用的呢?
+		其实在 Spring 中确实没有override-method这样的配置，但是如果读过前面的部分,可能会有所发现，在Spring配置中是存在lookup-method和 replace-method 的，而这两个配置的加载其实就是将配置统一存放在BeanDefinition中的methodOverrides属性里,而这个函数的操作其实也就是针对于这两个配置的。
+(3) 应用初始化前的后处理器，解析指定bean是否存在初始化前的短路操作。
+
+(4) 创建bean。
+我们首先查看下对override属性标记及验证的逻辑实现
+
+### 5.5.1处理ovverride属性
+
+查看源码中AbstractBeanDefinition类的 prepareMethodOverrides方法:
+
+AbstractBeanDefinition.java
+
+```java
+public void prepareMethodOverrides() throws BeanDefinitionValidationException {
+   // Check that lookup methods exist and determine their overloaded status.
+   if (hasMethodOverrides()) {
+      getMethodOverrides().getOverrides().forEach(this::prepareMethodOverride);
+   }
+}
+
+**
+ * Validate and prepare the given method override.
+ * Checks for existence of a method with the specified name,
+ * marking it as not overloaded if none found.
+ * @param mo the MethodOverride object to validate
+ * @throws BeanDefinitionValidationException in case of validation failure
+ */
+protected void prepareMethodOverride(MethodOverride mo) throws BeanDefinitionValidationException {
+     //获取对应类中对应方法名的个数
+    int count = ClassUtils.getMethodCountForName(getBeanClass(), mo.getMethodName());
+    if (count == 0) {
+        throw new BeanDefinitionValidationException(
+            "Invalid method override: no method with name '" + mo.getMethodName() +
+            "' on class [" + getBeanClassName() + "]");
+    }
+    else if (count == 1) {
+        // Mark override as not overloaded, to avoid the overhead of arg type checking.
+        //标记Methodoverride暂未被覆盖，避免参数类型检查的开销。
+        mo.setOverloaded(false);
+    }
+}
+```
+
+​		通过以上两个函数的代码你能体会到它所要实现的功能吗?之前反复提到过,在 Spring配置中存在lookup-method和 replace-method两个配置功能，而这两个配置的加载其实就是将配置统一存放在BeanDefinition中的methodOverrides属性里，这两个功能实现原理其实是在 bean实例化的时候如果检测到存在methodOverrides属性，会动态地为当前bean生成代理并使用对应的拦截器为bean做增强处理，相关逻辑实现在 bean的实例化部分详细介绍。
+​		但是，这里要提到的是，对于方法的匹配来讲，如果一个类中存在若干个重载方法,那么,在函数调用及增强的时候还需要根据参数类型进行匹配，来最终确认当前调用的到底定哪于函数。但是，Spring将一部分匹配工作在这里元成了，如果当前类的方法只有一个，那么就设置该方法没有被重载，这样在后续调用的时候便可以直接使用找到的方法，而不需要进行方法的参数匹配验证了，而且还可以提前对方法存在性进行验证，正可谓一箭双雕。
+
+### 5.5.2实例化的前置处理
+
+​		在真正调用doCreate方法创建bean的实例前使用了这样一个方法resolveBeforeInstantiation(beanNane，mbd)对 BeanDefinigiton中的属性做些前置处理。当然，无论其中是否有相应的逻辑实现我们都可以理解，因为真正逻辑实现前后留有处理函数也是可扩展的一种体现，但是，这并不是最重要的，在函数中还提供了一个短路判断，这才是最为关键的部分。
+
+```java
+if(bean != null) {
+	return bean;
+}
+```
+
+​		当经过前置处理后返回的结果如果不为空，那么会直接略过后续的 Bean 的创建而直接返回结果。这一特性虽然很容易被忽略，但是却起着至关重要的作用，我们熟知的**AOP**功能就是基于这里的判断的。
+
+AbstractAutowireCapableBeanFactory.java
+
+```java
+protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd) {
+   Object bean = null;
+    //如果没有被解析
+   if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
+      // Make sure bean class is actually resolved at this point.
+      if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+         Class<?> targetType = determineTargetType(beanName, mbd);
+         if (targetType != null) {
+            bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
+            if (bean != null) {
+               bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+            }
+         }
+      }
+      mbd.beforeInstantiationResolved = (bean != null);
+   }
+   return bean;
+}
+```
+
+​		此方法中最吸引我们的无疑是两个方法 applyBeanPostProcessorsBeforeInstantiation以及applyBeanPostProcessorsA fterInitialization。两个方法实现的非常简单，无非是对后处理器中的所有InstantiationAwareBeanPostProcessor类型的后处理器进行postProcessBeforeInstantiation方法和 BeanPostProcessor的 postProcessAfterInitialization方法的调用。
+1．实例化前的后处理器应用
+​		bean 的实例化前调用，也就是将AbsractBeanDefinition转换为BeanWrapper前的处理。给子类一个修改 BeanDefinition的机会，也就是说当程序经历过这个方法之后，bean可能已经不是我们认为的bean了，而是或许成为了一个经过处理的代理bean,可能是通过cglib生成的，也可能是通过其它技术生成的。这在第7章中会详细介绍，我们只需要知道，在 bean 的实例化前会调用后处理器的方法进行处理。
+
+```java
+@Nullable
+protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, String beanName) {
+   for (BeanPostProcessor bp : getBeanPostProcessors()) {
+      if (bp instanceof InstantiationAwareBeanPostProcessor) {
+         InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+         Object result = ibp.postProcessBeforeInstantiation(beanClass, beanName);
+         if (result != null) {
+            return result;
+         }
+      }
+   }
+   return null;
+}
+```
+
+2．实例化后的后处理器应用
+在讲解从缓存中获取单例bean 的时候就提到过，Spring 中的规则是在bean 的初始化后尽可能保证将注册的后处理器的postProcessAfterInitialization方法应用到该bean 中，因为如果返回的 bean不为空，那么便不会再次经历普通bean 的创建过程，所以只能在这里应用后处理器的postProcessAfterInitialization方法。
+
+```java
+@Override
+public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName)
+      throws BeansException {
+
+   Object result = existingBean;
+   for (BeanPostProcessor processor : getBeanPostProcessors()) {
+      Object current = processor.postProcessAfterInitialization(result, beanName);
+      if (current == null) {
+         return result;
+      }
+      result = current;
+   }
+   return result;
+}
+```
+
+## 5.6循环依赖
+
+​		实例化 bean是一个非常复杂的过程，而其中最比较难以理解的就是对循环依赖的解决，不管之前读者有没有对循环依赖方面的研究，这里有必要先对此知识点稍作回顾。
+
+### 5.6.1 什么是循环依赖
+
+​		循环依赖就是循环引用，就是两个或多个bean相互之间的持有对方，比如 CircleA 引用CircleB，CircleB引用CircleC，CircleC引用 CircleA，则它们最终反映为一个环。此处不是循环调用.循环调用是方法之间的环调用。
+
+​		循环调用是无法解决的，除非有终结条件，否则就是死循环，最终导致内存溢出错误。
+
+### 5.6.2 Spring如何解决循环依赖
+
+​		Spring容器循环依赖包括构造器循环依赖和 setter循环依赖，那 Spring容器如何解决循环依赖呢?首先让我们来定义循环引用类:
+
+```java
+public class TestA {
+    private TestB testB;
+    public void a(){
+        testB.b () ;
+    }
+    public TestB getTestB(){
+        return testB;
+    }
+    public void setTestB(TestB testB) {
+        this.testB = testB;
+    public class TestB {
+        private Testc testC;
+    public void b(){
+        testc.c();
+    }
+    public Testc getTestc() {
+        return testC;
+    }
+    public void setTestC(Testc testc) {
+        this.testC = testc;
+    }
+    public class Testc {
+        private TestA testA;
+    }
+    public void c(){
+        testA.a();
+    }
+    public TestA getTestA(){
+        return testA;
+    }
+    public void setTestA(TestA testA) {
+        this.testA = testA;
+    }
+}
+```
+
+在 Spring 中将循环依赖的处理分成了3种情况。
+
+1．构造器循环依赖
+		表示通过构造器注入构成的循环依赖，此依赖是无法解决的，只能抛出 BeanCurrentlyInCreationException异常表示循环依赖。
 
