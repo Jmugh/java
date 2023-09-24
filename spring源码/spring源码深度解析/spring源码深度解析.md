@@ -5490,7 +5490,7 @@ public ClassPathXmlApplicationContext(
 
 设置路径是必不可少的步骤，ClassPathXmlApplicationContext中可以将配置文件路径以数组的方式传入，ClassPathXmlApplicationContext可以对数组进行解析并进行加载。而对于解析及功能实现都在refresh()中实现。
 
-## 6.1设置配置路径
+## 6.1 设置配置路径
 
 ❤️ClassPathXmlApplicationContext->AbstractXmlApplicationContext->AbstractRefreshableConfigApplicationContext->AbstractRefreshableApplicationContext->AbstractApplicationContext
 
@@ -5519,11 +5519,11 @@ public void setConfigLocations(@Nullable String... locations) {
 
 此函数主要用于解析给定的路径数组，当然，如果数组中包含特殊符号，如${var}，那么在resolvePath中会搜寻匹配的系统变量并替换。
 
-## 6.2扩展功能
+## 6.2 扩展功能
 
 ​		设置了路径之后，便可以根据路径做配置文件的解析以及各种功能的实现了。可以说refresh 函数中包含了几乎 ApplicationContext中提供的全部功能，而且此函数中逻辑非常清晰明了．使我们很容易分析对应的层次及逻辑。
 
-
+AbstractApplicationContext.java
 
 ```java
 @Override
@@ -5690,4 +5690,1596 @@ public static void main (String[] args) {
 	User user=(User) bf.getBean("testbean");
 }
 ```
+
+## 6.4 加载BeanFactory
+
+​		obtainFreshBeanFactory方法从字面理解是获取 BeanFactory。之前有说过，ApplicationContext是对 BeanFactory的功能上的扩展，不但包含了BeanFactory 的全部功能更在其基础上添加了大量的扩展应用，那么obtainFreshBeanFactory 正是实现 BeanFactory的地方，也就是经过了这个函数后ApplicationContext就已经拥有了BeanFactory的全部功能。
+
+AbstractApplicationContext.java
+
+```java
+protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+   refreshBeanFactory();
+   return getBeanFactory();
+}
+```
+
+方法中将核心实现委托给了refreshBeanFactory:
+
+AbstractRefreshableApplicationContext.java
+
+```java
+@Override
+protected final void refreshBeanFactory() throws BeansException {
+   if (hasBeanFactory()) {
+      destroyBeans();
+      closeBeanFactory();
+   }
+   try {
+      //创建DefaultListableBeanFactory
+      DefaultListableBeanFactory beanFactory = createBeanFactory();
+       //为了序列化指定id，如果需要的话,让这个BeanFactory从id反序列化到BeanFactory对象
+      beanFactory.setSerializationId(getId());
+       //定制beanFactory，设置相关属性，包括是否允许覆盖同名称的不同定义的对象以及循环依赖以及
+       //设置@Autowired和@Qualifier注解解析器QualifierAnnotationAutowireCandidateResolver
+      customizeBeanFactory(beanFactory);
+       //初始化 DodumentReader，并进行XML文件读取及解析
+      loadBeanDefinitions(beanFactory);
+      this.beanFactory = beanFactory;
+   }
+   catch (IOException ex) {
+      throw new ApplicationContextException("I/O error parsing bean definition source for " + getDisplayName(), ex);
+   }
+}
+```
+
+我们详细分析上面的每个步骤。
+(1) 创建DefaultListableBeanFactory。
+在介绍BeanFactory的时候，不知道读者是否还有印象，声明方式为:BeanFactory bf =new XmlBeanFactory("beanFactory Test.xml"),其中的XmlBeanFactory继承自DefaultListableBeanFactory，并提供了XmlBeanDefinitionReader类型的reader属性，也就是说DefaultListableBeanFactory是容器的基础。必须首先要实例化，那么在这里就是实例化DefaultListableBeanFactory的步骤。
+
+(2) 指定序列化ID。
+
+(3) 定制BeanFactory。
+
+(4) 加载BeanDefinition。
+(5) 使用全局变量记录 BeanFactory类实例。因为DefaultListableBeanFactory类型的变量beanFactory是函数内的局部变量,所以要使用全局变量记录解析结果。
+
+### 6.4.1 定制BeanFactory
+
+​		这里已经开始了对 BeanFactory的扩展，在基本容器的基础上，增加了是否允许覆盖是否允许扩展的设置并提供了注解@Qualifier和@Autowired的支持。
+
+AbstractRefreshableApplicationContext.java
+
+```java
+protected void customizeBeanFactory(DefaultListableBeanFactory beanFactory) {
+    //如果属性allowBeanDefinitionOverriding不为空，设置给beanFactory对象相应属性,
+    //此属性的含义:是否允许覆盖同名称的不同定义的对象
+   if (this.allowBeanDefinitionOverriding != null) {
+      beanFactory.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
+   }
+    //如果属性allowCircularReferences不为空，设置给beanFactory对象相应属性，
+    //此属性的含义:是否允许bean之间存在循环依赖
+   if (this.allowCircularReferences != null) {
+      beanFactory.setAllowCircularReferences(this.allowCircularReferences);
+   }
+}
+```
+
+对于允许覆盖和允许依赖的设置这里只是判断了是否为空，如果不为空要进行设置，但是并没有看到这个参数在哪里进行设置，究竟这个设置是在哪里进行设置的呢?还是那句话，使用子类覆盖方法,例如:
+
+```java
+public class MyClassPathXmlApplicationContext extends ClassPathXmlApplicationContext{
+    protected void customizeBeanFactory(DefaultListableBeanFactory beanFactory) i
+        super.setAllowBeanDefinitionOverriding(false);
+        super.setAllowCircularReferences(false);
+        super.customizeBeanFactory(beanFactory);
+	}
+}
+```
+
+设置完后相信大家已经对于这两个属性的使用有所了解，或者可以回到前面的章节进行再一次查看。对于定制 BeanFactory，Spring还提供了另外一个重要的扩展，就是设置 AutowireCandidateResolver，在 bean加载部分中讲解创建 Bean时，如果采用autowireByType方式注人,那么默认会使用Spring提供的SimpleAutowireCandidateResolver，而对于默认的实现并没有过多的逻辑处理。在这里，Spring使用了QualifierAnnotationAutowireCandidateResolver，设置了这个解析器后Spring就可以支持注解方式的注入了。
+		在讲解根据类型自定注入的时候，我们说过解析autowire类型时首先会调用方法:
+
+```java
+0bject value = getAutowireCandidateResolver().getSuggestedValue (descriptor);
+```
+
+因此我们知道，在 QualifierAnnotationAutowireCandidateResolver中一定会提供了解析Qualifier 与Autowire注解的方法。
+
+QualifierAnnotationAutowireCandidateResolver.java
+
+```java
+public Object getSuggestedValue(DependencyDescriptor descriptor) {
+   Object value = findValue(descriptor.getAnnotations());
+   if (value == null) {
+      MethodParameter methodParam = descriptor.getMethodParameter();
+      if (methodParam != null) {
+         value = findValue(methodParam.getMethodAnnotations());
+      }
+   }
+   return value;
+}
+```
+
+### 6.4.2 加载BeanDefinition
+
+在第一步中提到了将 ClassPathXmlApplicationContext与XmlBeanFactory创建的对比，在实现配置文件的加载功能中除了我们在第一步中已经初始化的DefaultListableBeanFactory外，还需要XmlBeanDefinitionReader 来读取XML，那么在这个步骤中首先要做的就是初始化XmlBeanDefinitionReader。
+
+AbstractXmlApplicationContext.java
+
+```java
+protected void loadBeanDefinitions(DefaultListableBeanFactory beanFactory) throws BeansException, IOException {
+   // Create a new XmlBeanDefinitionReader for the given BeanFactory.
+    //为指定beanFactory创建XmlBeanDefinitionReader
+   XmlBeanDefinitionReader beanDefinitionReader = new XmlBeanDefinitionReader(beanFactory);
+
+   // Configure the bean definition reader with this context's
+   // resource loading environment..
+    //对beanDefinitionReader进行环境变量的设置
+   beanDefinitionReader.setEnvironment(this.getEnvironment());
+   beanDefinitionReader.setResourceLoader(this);
+   beanDefinitionReader.setEntityResolver(new ResourceEntityResolver(this));
+
+   // Allow a subclass to provide custom initialization of the reader,
+   // then proceed with actually loading the bean definitions.
+    //对 BeanDefinitionReader进行设置,可以覆盖
+   initBeanDefinitionReader(beanDefinitionReader);
+   loadBeanDefinitions(beanDefinitionReader);
+}
+```
+
+在初始化了DefaultListableBeanFactory和XmlBeanDefinitionReader后就可以进行配置文件的读取了。
+
+```java
+protected void loadBeanDefinitions(XmlBeanDefinitionReader reader) throws BeansException, IOException {
+   Resource[] configResources = getConfigResources();
+   if (configResources != null) {
+      reader.loadBeanDefinitions(configResources);
+   }
+   String[] configLocations = getConfigLocations();
+   if (configLocations != null) {
+      reader.loadBeanDefinitions(configLocations);
+   }
+}
+```
+
+使用XmlBeanDefinitionReader的 loadBeanDefinitions方法进行配置文件的加载机注册相信大家已经不陌生，这完全就是开始BeanFactory 的套路。因为在XmlBeanDefinitionReader中已经将之前初始化的DefaultListableBeanFactory注册进去了,所以XmlBeanDefinitionReader 所读取的BeanDefinitionHolder都会注册到DefaultListableBeanFactory中,也就是经过此步骤,类型DefaultListableBeanFactory的变量beanFactory已经包含了所有解析好的配置。
+
+## 6.5功能扩展
+
+​		进人函数prepareBeanFactory前，Spring已经完成了对配置的解析，而ApplicationContext在功能上的扩展也由此展开。
+
+AbstractApplicationContext.java
+
+```java
+protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+   // Tell the internal bean factory to use the context's class loader etc.
+   /**
+    * 设置beanFactory
+    * 类加载器：使用上下文的类加载器
+    * BeanExpressionResolver：
+    * PropertyEditorRegistrar：属性相关
+    */
+   beanFactory.setBeanClassLoader(getClassLoader());
+    //设置beanFactory的表达式语言处理器，Spring3增加了表达式语言的支持，
+    //默认可以使用#{bean. xxx}的形式来调用相关属性值。
+   beanFactory.setBeanExpressionResolver(new StandardBeanExpressionResolver(beanFactory.getBeanClassLoader()));
+    //为beanFactory增加了一个默认的propertyEditor，这个主要是对bean 的属性等设置管理的一个工具
+   beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, getEnvironment()));
+   // Configure the bean factory with context callbacks.
+   /**
+    * beanFactory，装配上下文的回调
+    */
+   beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
+    //设置了几个忽略自动装配的接口
+   beanFactory.ignoreDependencyInterface(EnvironmentAware.class);
+   beanFactory.ignoreDependencyInterface(EmbeddedValueResolverAware.class);
+   beanFactory.ignoreDependencyInterface(ResourceLoaderAware.class);
+   beanFactory.ignoreDependencyInterface(ApplicationEventPublisherAware.class);
+   beanFactory.ignoreDependencyInterface(MessageSourceAware.class);
+   beanFactory.ignoreDependencyInterface(ApplicationContextAware.class);
+
+   // BeanFactory interface not registered as resolvable type in a plain factory.
+   // MessageSource registered (and found for autowiring) as a bean.
+    //设置了几个自动装配的特殊规则
+   beanFactory.registerResolvableDependency(BeanFactory.class, beanFactory);
+   beanFactory.registerResolvableDependency(ResourceLoader.class, this);
+   beanFactory.registerResolvableDependency(ApplicationEventPublisher.class, this);
+   beanFactory.registerResolvableDependency(ApplicationContext.class, this);
+
+   // Register early post-processor for detecting inner beans as ApplicationListeners.
+   /**
+    * 给检测内部bean注册早期的前置处理作为应用监听器
+    */
+   beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
+
+   // Detect a LoadTimeWeaver and prepare for weaving, if found.
+    //增加对AspectJ的支持
+   if (beanFactory.containsBean(LOAD_TIME_WEAVER_BEAN_NAME)) {
+      beanFactory.addBeanPostProcessor(new LoadTimeWeaverAwareProcessor(beanFactory));
+      // Set a temporary ClassLoader for type matching.
+      beanFactory.setTempClassLoader(new ContextTypeMatchClassLoader(beanFactory.getBeanClassLoader()));
+   }
+
+   // Register default environment beans.
+   /**
+    * 注册默认的环境Bean
+    */
+   if (!beanFactory.containsLocalBean(ENVIRONMENT_BEAN_NAME)) {
+      beanFactory.registerSingleton(ENVIRONMENT_BEAN_NAME, getEnvironment());
+   }
+   if (!beanFactory.containsLocalBean(SYSTEM_PROPERTIES_BEAN_NAME)) {
+      beanFactory.registerSingleton(SYSTEM_PROPERTIES_BEAN_NAME, getEnvironment().getSystemProperties());
+   }
+   if (!beanFactory.containsLocalBean(SYSTEM_ENVIRONMENT_BEAN_NAME)) {
+      beanFactory.registerSingleton(SYSTEM_ENVIRONMENT_BEAN_NAME, getEnvironment().getSystemEnvironment());
+   }
+}
+```
+
+上面函数中主要进行了几个方面的扩展。
+
+- 增加对SPEL语言的支持。
+- 增加对属性编辑器的支持。
+- 增加对一些内置类，比如EnvironmentAware、MessageSourceAware 的信息注入。
+- 设置了依赖功能可忽略的接口。
+- 注册一些固定依赖的属性。
+- 增加AspectJ的支持(会在第7章中进行详细的讲解)。
+- 将相关环境变量及属性注册以单例模式注册。
+
+可能读者不是很理解每个步骤的具体含义，接下来我们会对各个步骤进行详细地分析。
+
+### 6.5.1 增加 SPEL语言的支持
+
+​		Spring 表达式语言全称为“Spring Expression Language”，缩写为“SpEL"，类似于Struts2x中使用的OGNL 表达式语言，能在运行时构建复杂表达式、存取对象图属性、对象方法调用等,并且能与Spring功能完美整合,比如能用来配置bean定义SpEL是单独模块，只依赖于core模块，不依赖于其他模块，可以单独使用。
+SpEL使用#{...}作为定界符，所有在大框号中的字符都将被认为是SpEL,使用格式如下:
+
+```xml
+<bean id="saxophone" value="com.xxx.xxx.xxx"/>
+<bean>
+	<property name="instrument" value="#{saxophone}"/>
+<bean/>
+```
+
+相当于:
+```xml
+<bean id="saxophone" value="com.xxx.xxx.Xxx"/><bean >
+<property name="instrument" ref="saxophone"/><bean/>
+```
+
+​		当然，上面只是列举了其中最简单的使用方式，SPEL 功能非常强大，使用好可以大大提高开发效率，这里只为唤起读者的记忆来帮助我们理解源码，有兴趣的读者可以进一步深入研究。
+​		在源码中通过代码beanFactory.setBeanExpressionResolver(new StandardBeanExpressionResolver())注册语言解析器，就可以对SPEL 进行解析了，那么在注册解析器后Spring 又是在什么时候调用这个解析器进行解析呢?
+​		之前我们讲解过Spring 在 bean进行初始化的时候会有属性填充的一步，而在这一步中Spring会调用AbstractAutowireCapableBeanFactory类的 applyPropertyValues 函数来完成功能。就在这个函数中，会通过构造BeanDefinitionValueResolver类型实例valueResolver 来进行属性值的解析。同时，也是在这个步骤中一般通过AbstractBeanFactory 中的 evaluateBeanDefinitionString方法去完成SPEL的解析。
+
+AbstractBeanFactory.java
+
+```java
+@Nullable
+protected Object evaluateBeanDefinitionString(@Nullable String value, @Nullable BeanDefinition beanDefinition) {
+   if (this.beanExpressionResolver == null) {
+      return value;
+   }
+   Scope scope = null;
+   if (beanDefinition != null) {
+      String scopeName = beanDefinition.getScope();
+      if (scopeName != null) {
+         scope = getRegisteredScope(scopeName);
+      }
+   }
+   return this.beanExpressionResolver.evaluate(value, new BeanExpressionContext(this, scope));
+}
+```
+
+​		当调用这个方法时会判断是否存在语言解析器，如果存在则调用语言解析器的方法进行解析,解析的过程是在Spring 的 expression的包内,这里不做过多解释。我们通过查看对evaluateBeanDefinitionString方法的调用层次可以看出，应用语言解析器的调用主要是在解析依赖注入bean 的时候，以及在完成bean的初始化和属性获取后进行属性填充的时候。
+
+### 6.5.2 增加属性注册编辑器
+
+在Spring DI注人的时候可以把普通属性注入进来,但是像Date类型就无法被识别。例如:
+
+```java
+public class UserManager{
+    private Date datavalue;
+    public Date getDatavalue(){
+    	return dataValue;
+    }
+    public void setDataValue (Date datavalue){
+    	this.datavalue =dataValue;
+    }
+    public string tostring (){
+    	return "datavalue: "+datavalue;
+    }
+}
+```
+
+上面代码中,需要对日期型属性进行注入:
+
+```xml
+<bean id="userManager" class="com.test.UserManager">
+	<property name="dataValue">
+		<value>2013-03-15</value>
+    </property>
+</bean>
+```
+
+测试代码:
+```java
+public void testDate(){
+    ApplicationContext ctx = new ClassPathXmlApplicationContext("beans.xml");
+    UserManager userManager =(UserManager)ctx.getBean("userManager");
+    System.out.println(userManager);
+}
+```
+
+如果直接这样使用，程序则会报异常,类型转换不成功。因为在 UserManager中的 dataValue属性是Date类型的，而在XML中配置的却是String类型的，所以当然会报异常。Spring针对此问题提供了两种解决办法。
+
+#### 1. 使用自定义属性编辑器
+
+使用自定义属性编辑器，通过继承PropertyEditorSupport，重写setAsText方法，具体步骤如下。
+(1）编写自定义的属性编辑器。
+
+```java
+public class DatePropertyEditor extends PropertyEditorSupport {
+    private String format = "yyyy-MM-dd" ;
+    public void setFormat (String format){
+    	this.format = format;
+    }
+    public void setAsText(String arg0) throws IllegalArgumentException {
+        System. out.println("arg0: " + arg0);
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        try {
+        	Date d = sdf.parse(arg0);
+            this.setvalue(d);
+        }catch (ParseException e){
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+(2）将自定义属性编辑器注册到Spring 中。
+
+```xml
+<!--自定义属性编辑器-->
+<bean class="org.Springframework.beans.factory.config.CustomEditorConfigurer">
+    <property name="customEditors">
+        <map>
+            <entry key="java.util.Date">
+                <bean class="com.test.DatePropertyEditor"
+                	<property name="format" value="yyyy-MM-dd"/>
+                </bean>
+            </entry>
+        </map>
+    </property>
+</bean>
+```
+
+在配置文件中引人类型为org.Springframework.beans.factory.config.CustomEditorConfigurer的bean，并在属性 customEditors中加入自定义的属性编辑器，其中 key为属性编辑器所对应的类型。通过这样的配置，当Spring在注入 bean的属性时一旦遇到了java.util.Date类型的属性会自动调用自定义的DatePropertyEditor解析器进行解析，并用解析结果代替配置属性进行注入。
+
+#### 2. 注册 Spring自带的属性编辑器CustomDateEditor
+
+通过注册 Spring自带的属性编辑器CustomDateEditor，具体步骤如下。
+
+(1) 定义属性编辑器。
+
+```java
+public class DatePropertyEditorRegistrar implements PropertyEditorRegistrar {
+    public void registerCustomEditors(PropertyEditorRegistry registry){
+        registry.registerCustomEditor(Date.class,new CustomDateEditor(new SimpleDateFormat("yyyy-MM-dd") ,true));
+    }
+}
+```
+
+(2) 注册到 Spring 中。
+```xml
+<!--注册Spring自带编辑器-->
+<bean class="org.Springframework.beans.factory.config.CustomEditorConfigurer">
+    <property name="propertyEditorRegistrars">
+        <list>
+        	<bean class="com.test.DatePropertyEditorRegistrar"></bean>
+        </list>
+    </property>
+</bean>
+```
+
+​		通过在配置文件中将自定义的 DatePropertyEditorRegistrar注册进人 org.Springframework.beans.factory.config.CustomEditorConfigurer的propertyEditorRegistrars属性中，可以具有与方法1同样的效果。
+​		我们了解了自定义属性编辑器的使用，但是，似乎这与本节中围绕的核心代码beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, getEnvironment()))并无联系,因为在注册自定义属性编辑器的时候使用的是PropertyEditorRegistry的 registerCustomEditor方法，而这里使用的是ConfigurableListableBeanFactory 的addPropertyEditorRegistrar方法。我们不妨深入探索一下ResourceEditorRegistrar的内部实现，在ResourceEditorRegistrar中，我们最关心的方法是registerCustomEditors。
+
+ResourceEditorRegistrar.java
+
+```java
+@Override
+public void registerCustomEditors(PropertyEditorRegistry registry) {
+   ResourceEditor baseEditor = new ResourceEditor(this.resourceLoader, this.propertyResolver);
+   doRegisterEditor(registry, Resource.class, baseEditor);
+   doRegisterEditor(registry, ContextResource.class, baseEditor);
+   doRegisterEditor(registry, InputStream.class, new InputStreamEditor(baseEditor));
+   doRegisterEditor(registry, InputSource.class, new InputSourceEditor(baseEditor));
+   doRegisterEditor(registry, File.class, new FileEditor(baseEditor));
+   doRegisterEditor(registry, Path.class, new PathEditor(baseEditor));
+   doRegisterEditor(registry, Reader.class, new ReaderEditor(baseEditor));
+   doRegisterEditor(registry, URL.class, new URLEditor(baseEditor));
+
+   ClassLoader classLoader = this.resourceLoader.getClassLoader();
+   doRegisterEditor(registry, URI.class, new URIEditor(classLoader));
+   doRegisterEditor(registry, Class.class, new ClassEditor(classLoader));
+   doRegisterEditor(registry, Class[].class, new ClassArrayEditor(classLoader));
+
+   if (this.resourceLoader instanceof ResourcePatternResolver) {
+      doRegisterEditor(registry, Resource[].class,
+            new ResourceArrayPropertyEditor((ResourcePatternResolver) this.resourceLoader, this.propertyResolver));
+   }
+}
+
+
+
+private void doRegisterEditor(PropertyEditorRegistry registry, Class<?> requiredType, PropertyEditor editor) {
+    if (registry instanceof PropertyEditorRegistrySupport) {
+        ((PropertyEditorRegistrySupport) registry).overrideDefaultEditor(requiredType, editor);
+    }
+    else {
+        registry.registerCustomEditor(requiredType, editor);
+    }
+}
+```
+
+​		在 doRegisterEditor函数中，可以看到在之前提到的自定义属性中使用的关键代码:registry.registerCustomEditor(requiredType, editor)，回过头来看 ResourceEditorRegistrar类的registerCustomEditors方法的核心功能,其实无非是注册了一系列的常用类型的属性编辑器，例如,代码doRegisterEditor(registry, Class.class, new ClassEditor(classLoader))实现的功能就是注册Class类对应的属性编辑器。那么，注册后，一旦某个实体 bean中存在一些Class类型的属性,那么Spring会调用ClassEditor将配置中定义的 String类型转换为Class类型并进行赋值。
+​		分析到这里，我们不禁有个疑问,虽说ResourceEditorRegistrar类的registerCustomEditors方法实现了批量注册的功能,但是beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this,getEnvironment()仅仅是注册了ResourceEditorRegistrar实例,却并没有调用ResourceEditorRegistrar的 registerCustomEditors方法进行注册，那么到底是在什么时候进行注册的呢?进一步查看ResourceEditorRegistrar 的registerCustomEditors方法的调用层次结构,发现在 AbstractBeanFactory中的registerCustomEditors方法中被调用过，继续查看AbstractBeanFactory中的registerCustomEditors方法的调用层次结构。
+
+​		其中我们看到一个方法是我们熟悉的，就是 AbstractBeanFactory类中的 initBeanWrapper方法,这是在bean初始化时使用的一个方法，之前已
+在将 BeanDefinition转换为BeanWrapper后用于对属性的填充。到此，逻辑已经明了，在bean的初始化后会调用ResourceEditorRegistrar的registerCustomEditors方法进行批量的通用属性编辑器注册。注册后，在属性填充的环节便可以直接让Spring使用这些编辑器进行属性的解析了。
+​		既然提到了BeanWrapper,这里也有必要强调下,Spring 中用于封装bean 的是BeanWrapper类型，而它又间接继承了PropertyEditorRegistry类型,
+也就是我们之前反复看到的方法参数PropertyEditorRegistry registry，其实大部分情况下都是Spring 中的默认实现是BeanWrapperImpl，而 BeanWrapperImpl除了实现 BeanWrapper接口外还继承了PropertyEditorRegistrySupport，在 PropertyEditorRegistrySupport 中有这样一个方法:
+
+```java
+private void createDefaultEditors() {
+   this.defaultEditors = new HashMap<>(64);
+
+   // Simple editors, without parameterization capabilities.
+   // The JDK does not contain a default editor for any of these target types.
+   this.defaultEditors.put(Charset.class, new CharsetEditor());
+   this.defaultEditors.put(Class.class, new ClassEditor());
+   this.defaultEditors.put(Class[].class, new ClassArrayEditor());
+   this.defaultEditors.put(Currency.class, new CurrencyEditor());
+   this.defaultEditors.put(File.class, new FileEditor());
+   this.defaultEditors.put(InputStream.class, new InputStreamEditor());
+   ...
+   this.defaultEditors.put(Collection.class, new CustomCollectionEditor(Collection.class));
+   this.defaultEditors.put(Set.class, new CustomCollectionEditor(Set.class));
+   this.defaultEditors.put(SortedSet.class, new CustomCollectionEditor(SortedSet.class));
+   this.defaultEditors.put(List.class, new CustomCollectionEditor(List.class));
+   this.defaultEditors.put(SortedMap.class, new CustomMapEditor(SortedMap.class));
+   // Default editors for primitive arrays.
+   this.defaultEditors.put(byte[].class, new ByteArrayPropertyEditor());
+   this.defaultEditors.put(char[].class, new CharArrayPropertyEditor());
+   // The JDK does not contain a default editor for char!
+   this.defaultEditors.put(char.class, new CharacterEditor(false));
+   this.defaultEditors.put(Character.class, new CharacterEditor(true));
+   // Spring's CustomBooleanEditor accepts more flag values than the JDK's default editor.
+   this.defaultEditors.put(boolean.class, new CustomBooleanEditor(false));
+   this.defaultEditors.put(Boolean.class, new CustomBooleanEditor(true));
+   // The JDK does not contain default editors for number wrapper types!
+   // Override JDK primitive number editors with our own CustomNumberEditor.
+   this.defaultEditors.put(byte.class, new CustomNumberEditor(Byte.class, false));
+   this.defaultEditors.put(Byte.class, new CustomNumberEditor(Byte.class, true));
+   this.defaultEditors.put(short.class, new CustomNumberEditor(Short.class, false));
+   this.defaultEditors.put(Short.class, new CustomNumberEditor(Short.class, true));
+   this.defaultEditors.put(int.class, new CustomNumberEditor(Integer.class, false));
+   this.defaultEditors.put(Integer.class, new CustomNumberEditor(Integer.class, true));
+   this.defaultEditors.put(long.class, new CustomNumberEditor(Long.class, false));
+   this.defaultEditors.put(Long.class, new CustomNumberEditor(Long.class, true));
+   this.defaultEditors.put(float.class, new CustomNumberEditor(Float.class, false));
+   this.defaultEditors.put(Float.class, new CustomNumberEditor(Float.class, true));
+   this.defaultEditors.put(double.class, new CustomNumberEditor(Double.class, false));
+   this.defaultEditors.put(Double.class, new CustomNumberEditor(Double.class, true));
+   this.defaultEditors.put(BigDecimal.class, new CustomNumberEditor(BigDecimal.class, true));
+   this.defaultEditors.put(BigInteger.class, new CustomNumberEditor(BigInteger.class, true));
+   // Only register config value editors if explicitly requested.
+   if (this.configValueEditorsActive) {
+      StringArrayPropertyEditor sae = new StringArrayPropertyEditor();
+      this.defaultEditors.put(String[].class, sae);
+      this.defaultEditors.put(short[].class, sae);
+      this.defaultEditors.put(int[].class, sae);
+      this.defaultEditors.put(long[].class, sae);
+   }
+}
+```
+
+具体的调用方法我们就不去深究了，但是至少通过这个方法我们已经知道了在Spring 中定义了上面一系列常用的属性编辑器使我们可以方便地进行配置。如果我们定义的 bean 中的某个属性的类型不在上面的常用配置中的话，才需要我们进行个性化属性编辑器的注册。
+
+### 6.5.3 添加ApplicationContextAwareProcessor 处理器
+
+​		了解了属性编辑器的使用后，接下来我们继续通过AbstractApplicationContext 的prepareBeanFactory方法的主线来进行函数跟踪。对于beanFactory.addBeanPostProcessor(newApplicationContextAwareProcessor(this))其实主要目的就是注册个 BeanPostProcessor，而真正的逻辑还是在ApplicationContextAwareProcessor中。
+​		ApplicationContextAwareProcessor实现BeanPostProcessor 接口，我们回顾下之前讲过的内容，在 bean 实例化的时候，也就是Spring 激活bean的init-method 的前后，会调用BeanPostProcessor 的postProcessBeforeInitialization方法和postProcessAfterInitialization方法。同样，对于ApplicationContextAwareProcessor我们也关心这两个方法。
+
+对于postProcessAfterInitialization方法,在 ApplicationContextAwareProcessor中并没有做过多逻辑处理。
+```java
+public 0bject postProcessAfterInitialization (0bject bean，String beanName){
+	return bean;
+}
+```
+
+那么,我们重点看一下postProcessBeforeInitialization方法。
+
+ApplicationContextAwareProcessor.java
+
+```java
+public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+   if (!(bean instanceof EnvironmentAware || bean instanceof EmbeddedValueResolverAware ||
+         bean instanceof ResourceLoaderAware || bean instanceof ApplicationEventPublisherAware ||
+         bean instanceof MessageSourceAware || bean instanceof ApplicationContextAware)){
+      return bean;
+   }
+
+   AccessControlContext acc = null;
+
+   if (System.getSecurityManager() != null) {
+      acc = this.applicationContext.getBeanFactory().getAccessControlContext();
+   }
+
+   if (acc != null) {
+      AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+         invokeAwareInterfaces(bean);
+         return null;
+      }, acc);
+   }
+   else {
+      invokeAwareInterfaces(bean);
+   }
+
+   return bean;
+}
+
+
+private void invokeAwareInterfaces(Object bean) {
+    if (bean instanceof EnvironmentAware) {
+        ((EnvironmentAware) bean).setEnvironment(this.applicationContext.getEnvironment());
+    }
+    if (bean instanceof EmbeddedValueResolverAware) {
+        ((EmbeddedValueResolverAware) bean).setEmbeddedValueResolver(this.embeddedValueResolver);
+    }
+    if (bean instanceof ResourceLoaderAware) {
+        ((ResourceLoaderAware) bean).setResourceLoader(this.applicationContext);
+    }
+    if (bean instanceof ApplicationEventPublisherAware) {
+        ((ApplicationEventPublisherAware) bean).setApplicationEventPublisher(this.applicationContext);
+    }
+    if (bean instanceof MessageSourceAware) {
+        ((MessageSourceAware) bean).setMessageSource(this.applicationContext);
+    }
+    if (bean instanceof ApplicationContextAware) {
+        ((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
+    }
+}
+```
+
+postProcessBeforeInitialization方法中调用了invokeAwareInterfaces。从 invokeAwareInterfaces方法中，我们或许已经或多或少了解了Spring的用意，实现这些Aware接口的bean在被初始化之后，可以取得一些对应的资源。
+
+### 6.5.4 设置忽略依赖
+
+​		当Spring将ApplicationContextAwareProcessor注册后，那么在 invokeAwareInterfaces方法中间接调用的Aware类已经不是普通的 bean了，如ResourceLoaderAware、ApplicationEventPublisherAware等，那么当然需要在Spring做 bean 的依赖注入的时候忽略它们。而ignoreDependencyInterface
+的作用正是在此。
+
+```java
+//设置了几个忽略自动装配的接口
+beanFactory.ignoreDependencyInterface (ResourceLoaderAware.class) ;
+beanFactory.ignoreDependencyInterface(ApplicationEventPublisherAware.class);beanFactory.ignoreDependencyInterface (MessageSourceAware.class);
+beanFactory.ignoreDependencyInterface (ApplicationContextAware.class);beanFactory.ignoreDependencyInterface (EnvironmentAware.class);
+```
+
+### 6.5.5 注册依赖
+
+Spring中有了忽略依赖的功能，当然也必不可少地会有注册依赖的功能。
+```java
+beanFactory.registerResolvableDependency(BeanFactory.class,beanFactory) ;
+beanFactory.registerResolvableDependency(ResourceLoader.class，this);
+beanFactory.registerResolvableDependency(ApplicationEventPublisher.class,this);
+beanFactory.registerResolvableDependency(ApplicationContext.class，this);
+```
+
+当注册了依赖解析后，例如当注册了对BeanFactory.class的解析依赖后，当bean的属性注入的时候，一旦检测到属性为 BeanFactory类型便会将beanFactory的实例注入进去。
+
+## 6.6 BeanFactory的后处理
+
+​		BeanFacotry作为Spring 中容器功能的基础，用于存放所有已经加载的bean，为了保证程序上的高可扩展性，Spring 针对 BeanFactory做了大量的扩展，比如我们熟知的 PostProcessor等都是在这里实现的。
+
+### 6.6.1 激活注册的BeanFactoryPostProcessor
+
+​		正式开始介绍之前我们先了解下BeanFactoryPostProcessor的用法。
+​		BeanFactoryPostProcessor接口跟 BeanPostProcessor类似，可以对bean的定义（配置元数据)进行处理。也就是说，Spring loC容器允许BeanFactoryPostProcessor在容器实际实例化任何其他的 bean之前读取配置元数据，并有可能修改它。如果你愿意，你可以配置多个BeanFactoryPostProcessor。你还能通过设置“order”属性来控制BeanFactoryPostProcessor的执行次序（仅当BeanFactoryPostProcessor 实现了Ordered接口时你才可以设置此属性，因此在实现BeanFactoryPostProcessor时，就应当考虑实现 Ordered 接口)。请参考 BeanFactoryPostProcessor和 Ordered接口的JavaDoc 以获取更详细的信息。
+​		如果你想改变实际的bean实例（例如从配置元数据创建的对象)，那么你最好使用BeanPostProcessor。同样地，BeanFactoryPostProcessor的作用域范围是容器级的。它只和你所使用的容器有关。如果你在容器中定义一个 BeanFactoryPostProcessor，它仅仅对此容器中的bean进行后置处理。BeanFactoryPostProcessor不会对定义在另一个容器中的 bean进行后置处理,即使这两个容器都是在同一层次上。在 Spring 中存在对于BeanFactoryPostProcessor的典型应用，比如 PropertyPlaceholderConfigurer。
+
+#### 1. BeanFactoryPostProcessor 的典型应用:PropertyPlaceholderConfigurer
+
+有时候，阅读Spring 的 Bean描述文件时，你也许会遇到类似如下的一些配置:
+
+```xml
+<bean id="message" class="distConfig.HelloMessage">
+    <property name="mes">
+    	<value>${bean.message}</value>
+    </property>
+</bean>
+```
+
+其中竟然出现了变量引用:${bean.message}。这就是Spring 的分散配置，可以在另外的配置文件中为bean.message指定值。如在 bean.property 配置如下
+bean.message=Hi, can you find me?
+当访问名为message 的bean时，mes属性就会被置为字符串 “Hi,can you find me?”，
+
+但Spring框架是怎么知道存在这样的配置文件呢?这就要靠PropertyPlaceholderConfigurer这个类的 bean:
+```xml
+<bean id="mesHandler" class="org.Springframework.beans.factory.config.Property PlaceholderConfigurer">
+    <property name="locations">
+        <list>
+            <value>config/bean.properties</value>
+        </list>
+    </property>
+</bean>
+```
+
+在这个bean 中指定了配置文件为config/bean.properties。到这里似乎找到问题的答案了，但是其实还有个问题。这个“mesHandler”只不过是Spring框架管理的一个bean，并没有被别的 bean或者对象引用, Spring的 beanFactory是怎么知道要从这个bean中获取配置信息的呢?
+		查看层级结构可以看出 PropertyPlaceholderConfigurer这个类间接继承了 BeanFactoryPostProcessor接口。这是一个很特别的接口，当Spring 加载任何实现了这个接口的bean 的配置时，都会在 bean 工厂载入所有bean的配置之后执行 postProcessBeanFactory方法。在PropertyResourceConfigurer类中实现了postProcessBeanFactory方法，在方法中先后调用了mergeProperties、convertProperties、processProperties这3个方法分别得到配置,将得到的配置转换为合适的类型，最后将配置内容告知 BeanFactory。正是通过实现BeanFactoryPostProcessor接口，BeanFactory会在实例化任何bean之前获得配置信息，从而能够正确解析bean描述文件中的变量引用。
+
+#### 2. 使用自定义 BeanFactoryPostProcessor
+
+​		我们以实现一个 BeanFactoryPostProcessor，去除潜在的“流氓”属性值的功能来展示自定义BeanFactoryPostProcessor 的创建及使用，例如 bean定义中留下bollocks这样的字眼。
+
+BeanFactory.xml
+
+```xml
+<?xml version="1.0"encoding="UTF-8"?>
+<beans xmlns="http://www.Springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.Springframework.org/schema/beans  http://www.Springframework.org/schema/beans/Spring-beans.xsd">
+    <bean id="bfpp" class="com.Spring.ch04.0bscenityRemovingBeanFactoryPostProcessor">
+        <property name="obscenties">
+	        <set>
+                <value>bollocks</value>
+                <value>winky</value>
+                <value>bum</value>
+                <value>Microsoft</value>
+            </set>
+        </property>
+    </bean>
+    <bean id="simpleBean" class="com.Spring.ch04.SimplePostProcesso">
+        <property name="connectionstring" value="bollocks"/>
+        <property name="password" value="imaginecup" />
+        <property name="username" value="Microsoft"/>
+    </bean>
+</beans>
+
+```
+
+ObscenityRemovingBeanFactoryPostProcessor.java
+
+```java
+public class 0bscenityRemovingBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+    private Set<String> obscenties;
+    public ObscenityRemovingBeanFactoryPostProcessor (){
+        this.obscenties=new HashSet<String>();
+    }
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        string[] beanNames=beanFactory.getBeanDefinitionNames ();
+        for(string beanName: beanNames) {
+            BeanDefinition bd=beanFactory.getBeanDefinition(beanName);
+            StringValueResolver valueResover=new StringvalueResolver(){
+                public string resolvestringvalue (string strval){
+                    if (is0bscene(strval))
+                        return "*****";
+                }
+                return strVal;
+            }
+            BeanDefinitionvisitor visitor=new BeanDefinitionVisitor(valueResover);
+	        visitor.visitBeanDefinition (bd);
+        }
+    }
+   
+    public boolean isObscene (0bject value){
+        string potential0bscenity=value.tostring().toUpperCase();
+        return this.obscenties.contains(potential0bscenity);
+    }
+    public void setObscenties(Set<string>obscenties){
+        this.obscenties.clear();
+        for(String obscenity : obscenties) {
+            this.obscenties.add(obscenity.toUpperCase());
+        }
+    }
+}
+```
+
+执行类:
+```java
+public class PropertyConfigurerDemo {
+    public static void main (String[] args){
+        ConfigurableListableBeanFactory bf=new XmlBeanFactory(new ClassPathResource("/META-INF/BeanFactory.xml"));
+        BeanFactoryPostProcessor bfpp=(BeanFactoryPostProcessor)bf.getBean ("bfpp");
+        bfpp.postProcessBeanFactory(bf);
+        System.out.println(bf.getBean("simpleBean"));
+    }
+}
+```
+
+输出结果:
+SimplePostProcessor{connectionstring=\*\*\*\*\*,username=\*\*\*\*\*,password=imaginecup}
+通过ObscenityRemovingBeanFactoryPostProcessor Spring很好地实现了屏蔽掉obscenties定义的不应该展示的属性。
+
+#### 3. 激活BeanFactoryPostProcessor
+
+了解了BeanFactoryPostProcessor的用法后便可以深入研究 BeanFactoryPostProcessor的调过程了
+
+```java
+protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+   PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
+   // Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime
+   // (e.g. through an @Bean method registered by ConfigurationClassPostProcessor)
+   if (beanFactory.getTempClassLoader() == null && beanFactory.containsBean(LOAD_TIME_WEAVER_BEAN_NAME)) {
+      beanFactory.addBeanPostProcessor(new LoadTimeWeaverAwareProcessor(beanFactory));
+      beanFactory.setTempClassLoader(new ContextTypeMatchClassLoader(beanFactory.getBeanClassLoader()));
+   }
+}
+```
+
+重点在于调用了 PostProcessorRegistrationDelegate的invokeBeanFactoryPostProcessors方法
+
+```java
+public static void invokeBeanFactoryPostProcessors(
+      ConfigurableListableBeanFactory beanFactory, List<BeanFactoryPostProcessor> beanFactoryPostProcessors) {
+
+   // Invoke BeanDefinitionRegistryPostProcessors first, if any.
+   Set<String> processedBeans = new HashSet<>();
+	//对BeanDefinitionRegistry类型的处理
+   if (beanFactory instanceof BeanDefinitionRegistry) {
+      BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
+      List<BeanFactoryPostProcessor> regularPostProcessors = new ArrayList<>();
+      List<BeanDefinitionRegistryPostProcessor> registryProcessors = new ArrayList<>();
+		//硬编码注册的后处理器
+      for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
+         if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
+            BeanDefinitionRegistryPostProcessor registryProcessor =
+                  (BeanDefinitionRegistryPostProcessor) postProcessor;
+            registryProcessor.postProcessBeanDefinitionRegistry(registry);
+            registryProcessors.add(registryProcessor);
+         }
+         else {
+            regularPostProcessors.add(postProcessor);
+         }
+      }
+
+      // Do not initialize FactoryBeans here: We need to leave all regular beans
+      // uninitialized to let the bean factory post-processors apply to them!
+      // Separate between BeanDefinitionRegistryPostProcessors that implement
+      // PriorityOrdered, Ordered, and the rest.
+      List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
+
+      // First, invoke the BeanDefinitionRegistryPostProcessors that implement PriorityOrdered.
+      String[] postProcessorNames =
+            beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
+      for (String ppName : postProcessorNames) {
+         if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
+            currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
+            processedBeans.add(ppName);
+         }
+      }
+	       //按照优先级进行排序
+      sortPostProcessors(currentRegistryProcessors, beanFactory);
+      registryProcessors.addAll(currentRegistryProcessors);
+      invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
+      currentRegistryProcessors.clear();
+
+      // Next, invoke the BeanDefinitionRegistryPostProcessors that implement Ordered.
+      postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
+      for (String ppName : postProcessorNames) {
+         if (!processedBeans.contains(ppName) && beanFactory.isTypeMatch(ppName, Ordered.class)) {
+            currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
+            processedBeans.add(ppName);
+         }
+      }
+      //按照优先级进行排序
+      sortPostProcessors(currentRegistryProcessors, beanFactory);
+      registryProcessors.addAll(currentRegistryProcessors);
+      invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
+      currentRegistryProcessors.clear();
+
+      // Finally, invoke all other BeanDefinitionRegistryPostProcessors until no further ones appear.
+      boolean reiterate = true;
+      while (reiterate) {
+         reiterate = false;
+         postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
+         for (String ppName : postProcessorNames) {
+            if (!processedBeans.contains(ppName)) {
+               currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
+               processedBeans.add(ppName);
+               reiterate = true;
+            }
+         }
+         sortPostProcessors(currentRegistryProcessors, beanFactory);
+         registryProcessors.addAll(currentRegistryProcessors);
+         invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
+         currentRegistryProcessors.clear();
+      }
+
+      // Now, invoke the postProcessBeanFactory callback of all processors handled so far.
+      invokeBeanFactoryPostProcessors(registryProcessors, beanFactory);
+      invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
+   }
+
+   else {
+      // Invoke factory processors registered with the context instance.
+      invokeBeanFactoryPostProcessors(beanFactoryPostProcessors, beanFactory);
+   }
+
+   // Do not initialize FactoryBeans here: We need to leave all regular beans
+   // uninitialized to let the bean factory post-processors apply to them!
+   String[] postProcessorNames =
+         beanFactory.getBeanNamesForType(BeanFactoryPostProcessor.class, true, false);
+
+   // Separate between BeanFactoryPostProcessors that implement PriorityOrdered,
+   // Ordered, and the rest.
+   List<BeanFactoryPostProcessor> priorityOrderedPostProcessors = new ArrayList<>();
+   List<String> orderedPostProcessorNames = new ArrayList<>();
+   List<String> nonOrderedPostProcessorNames = new ArrayList<>();
+   for (String ppName : postProcessorNames) {
+      if (processedBeans.contains(ppName)) {
+         // skip - already processed in first phase above
+      }
+      else if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
+         priorityOrderedPostProcessors.add(beanFactory.getBean(ppName, BeanFactoryPostProcessor.class));
+      }
+      else if (beanFactory.isTypeMatch(ppName, Ordered.class)) {
+         orderedPostProcessorNames.add(ppName);
+      }
+      else {
+         nonOrderedPostProcessorNames.add(ppName);
+      }
+   }
+
+   // First, invoke the BeanFactoryPostProcessors that implement PriorityOrdered.
+   sortPostProcessors(priorityOrderedPostProcessors, beanFactory);
+   invokeBeanFactoryPostProcessors(priorityOrderedPostProcessors, beanFactory);
+
+   // Next, invoke the BeanFactoryPostProcessors that implement Ordered.
+   List<BeanFactoryPostProcessor> orderedPostProcessors = new ArrayList<>(orderedPostProcessorNames.size());
+   for (String postProcessorName : orderedPostProcessorNames) {
+      orderedPostProcessors.add(beanFactory.getBean(postProcessorName, BeanFactoryPostProcessor.class));
+   }
+   sortPostProcessors(orderedPostProcessors, beanFactory);
+   invokeBeanFactoryPostProcessors(orderedPostProcessors, beanFactory);
+
+   // Finally, invoke all other BeanFactoryPostProcessors.
+    //无序，直接调用
+   List<BeanFactoryPostProcessor> nonOrderedPostProcessors = new ArrayList<>(nonOrderedPostProcessorNames.size());
+   for (String postProcessorName : nonOrderedPostProcessorNames) {
+      nonOrderedPostProcessors.add(beanFactory.getBean(postProcessorName, BeanFactoryPostProcessor.class));
+   }
+   invokeBeanFactoryPostProcessors(nonOrderedPostProcessors, beanFactory);
+
+   // Clear cached merged bean definitions since the post-processors might have
+   // modified the original metadata, e.g. replacing placeholders in values...
+   beanFactory.clearMetadataCache();
+}
+```
+
+​		从上面的方法中我们看到，对于BeanFactoryPostProcessor 的处理主要分两种情况进行，一个是对于BeanDefinitionRegistry类的特殊处理，另一种是对普通的BeanFactoryPostProcessor进行处理。而对于每种情况都需要考虑硬编码注入注册的后处理器以及通过配置注入的后处理器。
+对于BeanDefinitionRegistry类型的处理类的处理主要包括以下内容。
+(1) 对于硬编码注册的后处理器的处理，主要是通过AbstractApplicationContext中的添加处理器方法addBeanFactoryPostProcessor进行添加。
+
+```java
+public void addBeanFactoryPostProcessor(BeanFactoryPostProcessor beanFactoryPostProcessor) {
+	this.beanFactoryPostProcessors.add (beanFactoryPostProcessor);
+}
+```
+
+​		添加后的后处理器会存放在 beanFactoryPostProcessors中，而在处理 BeanFactoryPostProcessor时候会首先检测beanFactoryPostProcessors是否有数据。当然, BeanDefinitionRegistryPostProcessor继承自BeanFactoryPostProcessor，不但有BeanFactoryPostProcessor的特性，同时还有自己定义的个性化方法，也需要在此调用。所以，这里需要从beanFactoryPostProcessors中挑出BeanDefinitionRegistryPostProcessor 的后处理器,并进行其postProcessBeanDefinitionRegistry方法的激活。
+(2) 记录后处理器主要使用了三个List完成。
+
+- registryPostProcessors:记录通过硬编码方式注册的 BeanDefinitionRegistryPostProcessor类型的处理器。
+- regularPostProcessors:记录通过硬编码方式注册的BeanFactoryPostProcessor类型的处理器。
+- registryPostProcessorBeans:记录通过配置方式注册的BeanDefinitionRegistryPostProcessor类型的处理器。
+
+(3) 对以上所记录的 List 中的后处理器进行统一调用 BeanFactoryPostProcessor 的postProcessBeanFactory方法。
+
+(4) 对beanFactoryPostProcessors 中非 BeanDefinitionRegistryPostProcessor类型的后处理器进行统一的 BeanFactoryPostProcessor的postProcessBeanFactory方法调用。
+
+(5）普通beanFactory处理。
+		BeanDefinitionRegistryPostProcessor 只对BeanDefinitionRegistry类型的 ConfigurableLIStableBeanFactory有效，所以如果判断所示的 beanFactory并不是 BeanDefinitionRegistry，那么便可以忽略BeanDefinitionRegistryPostProcessor，而直接处理 BeanFactoryPostProcessor，当然获取的方式与上面的获取类似。
+		这里需要提到的是，对于硬编码方式手动添加的后处理器是不需要做仕何排予的，但是仕配置文件中读取的处理器，Sping 并不保证读取的顺序。所以，为了保证用户的调用顺序的要求，Spring对于后处理器的调用支持按照PriorityOrdered或者Ordered的顺序调用。
+
+### 6.6.2 注册BeanPostProcessor
+
+​		上文中提到了BeanFacotoryPostProcessors的调用，现在我们来探索下BeanPostProcessor,但是这里并不是调用，而是注册。真正的调用其实是在 bean 的实例化阶段进行的。这是一个很重要的步骤,也是很多功能 BeanFactory不支持的重要原因Spring 中大部分功能都是通过后处理器的方式进行扩展的，这是Spring框架的一个特性，但是在BeanFactory中其实并没有实现后处理器的自动注册，所以在调用的时候如果没有进行手动注册其实是不能使用的。但是在ApplicationContext 中却添加了自动注册功能，如自定义这样一个后处理器:
+
+```java
+public class MyInstantiationAwareBeanPostProcessor implements InstantiationAwareBeanPostProcessor{
+    public 0bject postProcessBeforeInitialization(Object bean，String beanName) throws BeansException {
+	    System.out.println ("====");
+        return null;
+    }
+}
+```
+
+在配置文件中添加配置:
+```xml
+<bean class="processors.MyInstantiationAwareBeanPostProcessor"/>
+```
+
+那么使用 BeanFactory方式进行Spring 的 bean的加载时是不会有任何改变的，但是使用ApplicationContext方式获取 bean的时候会在获取每个bean时打印出“====”，而这个特性就是在registerBeanPostProcessors方法中完成的。我们继续探索registerBeanPostProcessors的方法实现。
+
+```java
+public static void registerBeanPostProcessors(
+      ConfigurableListableBeanFactory beanFactory, AbstractApplicationContext applicationContext) {
+
+   String[] postProcessorNames = beanFactory.getBeanNamesForType(BeanPostProcessor.class, true, false);
+
+   // Register BeanPostProcessorChecker that logs an info message when
+   // a bean is created during BeanPostProcessor instantiation, i.e. when
+   // a bean is not eligible for getting processed by all BeanPostProcessors.
+   /*BeanPostProcessorChecker是一个普通的信息打印，可能会有些情况，
+    *当Spring 的配置中的后处理器还没有被注册就已经开始了bean 的初始化时
+    *便会打印出 BeanPostProcessorChecker中设定的信息
+	*/
+   int beanProcessorTargetCount = beanFactory.getBeanPostProcessorCount() + 1 + postProcessorNames.length;
+   beanFactory.addBeanPostProcessor(new BeanPostProcessorChecker(beanFactory, beanProcessorTargetCount));
+   // Separate between BeanPostProcessors that implement PriorityOrdered,
+   // Ordered, and the rest.
+    //使用Priorityordered保证顺序
+   List<BeanPostProcessor> priorityOrderedPostProcessors = new ArrayList<>();
+   List<BeanPostProcessor> internalPostProcessors = new ArrayList<>();
+    //使用Ordered保证顺序
+   List<String> orderedPostProcessorNames = new ArrayList<>();
+    //无序 BeanPostProcessor
+   List<String> nonOrderedPostProcessorNames = new ArrayList<>();
+   for (String ppName : postProcessorNames) {
+      if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
+         BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
+         priorityOrderedPostProcessors.add(pp);
+         if (pp instanceof MergedBeanDefinitionPostProcessor) {
+            internalPostProcessors.add(pp);
+         }
+      }
+      else if (beanFactory.isTypeMatch(ppName, Ordered.class)) {
+         orderedPostProcessorNames.add(ppName);
+      }
+      else {
+         nonOrderedPostProcessorNames.add(ppName);
+      }
+   }
+
+   // First, register the BeanPostProcessors that implement PriorityOrdered.
+    //第一步，注册所有实现Priorityordered的 BeanPostProcessor
+   sortPostProcessors(priorityOrderedPostProcessors, beanFactory);
+   registerBeanPostProcessors(beanFactory, priorityOrderedPostProcessors);
+
+   // Next, register the BeanPostProcessors that implement Ordered.
+    //第二步，注册所有实现ordered的 BeanPostProcessor
+   List<BeanPostProcessor> orderedPostProcessors = new ArrayList<>(orderedPostProcessorNames.size());
+   for (String ppName : orderedPostProcessorNames) {
+      BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
+      orderedPostProcessors.add(pp);
+      if (pp instanceof MergedBeanDefinitionPostProcessor) {
+         internalPostProcessors.add(pp);
+      }
+   }
+   sortPostProcessors(orderedPostProcessors, beanFactory);
+   registerBeanPostProcessors(beanFactory, orderedPostProcessors);
+
+   // Now, register all regular BeanPostProcessors.
+    //第三步，注册所有无序的 BeanPostProcessor
+   List<BeanPostProcessor> nonOrderedPostProcessors = new ArrayList<>(nonOrderedPostProcessorNames.size());
+   for (String ppName : nonOrderedPostProcessorNames) {
+      BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
+      nonOrderedPostProcessors.add(pp);
+      if (pp instanceof MergedBeanDefinitionPostProcessor) {
+         internalPostProcessors.add(pp);
+      }
+   }
+   registerBeanPostProcessors(beanFactory, nonOrderedPostProcessors);
+
+   // Finally, re-register all internal BeanPostProcessors.
+    //第四步，注册所有MergedBeanDefinitionPostProcessor类型的BeanPostProcessor，并非重复注册，
+//在beanFactory.addBeanPostProcessor 中会先移除已经存在的BeanPostProcessor
+   sortPostProcessors(internalPostProcessors, beanFactory);
+   registerBeanPostProcessors(beanFactory, internalPostProcessors);
+
+   // Re-register post-processor for detecting inner beans as ApplicationListeners,
+   // moving it to the end of the processor chain (for picking up proxies etc).
+    //添加 ApplicationListener探测器
+   beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(applicationContext));
+}
+```
+
+​		配合源码以及注释，在 registerBeanPostProcessors方法中所做的逻辑相信大家已经很清楚了，我们再做一下总结。
+​		首先我们会发现，对于 BeanPostProcessor 的处理与BeanFactoryPostProcessor的处理极为相似，但是似乎又有些不一样的地方。经过反复的对比发现，对于 BeanFactoryPostProcessor的处理要区分两种情况，一种方式是通过硬编码方式的处理,另一种是通过配置文件方式的处理。那么为什么在 BeanPostProcessor 的处理中只考虑了配置文件的方式而不考虑硬编码的方式呢?提出这个问题，还是因为读者没有完全理解两者实现的功能。
+
+​		对于 BeanFactoryPostProcessor的处理，不但要实现注册功能，而且还要实现对后处理器的激活操作，所以需要载入配置中的定义,并进行激活;而对于BeanPostProcessor并不需要马上调用
+再说,硬编码的方式实现的功能是将后处理器提取并调用，这里并不需要调用，当然不需要考虑硬编码的方式了，这里的功能只需要将配置文件的 BeanPostProcessor提取出来并注册进入 beanFactory就可以了。对于beanFactory 的注册，也不是直接注册就可以的。在 Spring中支持对于 BeanPostProcessor的排序,比如根据PriorityOrdered进行排序、根据Ordered进行排序或者无序,而 Spring在BeanPostProcessor 的激活顺序的时候也会考虑对于顺序的问题而先进行排序。
+​		这里可能有个地方读者不是很理解，对于internalPostProcessors 中存储的后处理器也就是MergedBeanDefinitionPostProcessor类型的处理器，在代码中似乎是被重复调用了，如:
+
+```java
+ for (String ppName : postProcessorNames) {
+     if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
+         BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
+         priorityOrderedPostProcessors.add(pp);
+         if (pp instanceof MergedBeanDefinitionPostProcessor) {
+             internalPostProcessors.add(pp);
+         }
+     }
+     else if (beanFactory.isTypeMatch(ppName, Ordered.class)) {
+         orderedPostProcessorNames.add(ppName);
+     }
+     else {
+         nonOrderedPostProcessorNames.add(ppName);
+     }
+ }
+```
+
+其实不是，我们可以看看对于registerBeanPostProcessors方法的实现方式。
+
+```java
+private void registerBeanPostProcessors(ConfigurableListableBeanFactorybeanFactList<BeanPostProcessor>postProcessors){
+for (BeanPostProcessor postProcessor : postProcesssors) {
+	beanFactory.addBeanPostProcessor(postProcessor);
+}
+public void addBeanPostProcessor (BeanPostProcessor beanPostProcessor){
+    Assert.notNull(beanPostProcessor,"BeanPostProcessor must not be null");
+    this.beanPostProcessors.remove(beanPostProcessor);
+    this.beanPostProcessors.add(beanPostProcessor);
+    if(beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+	    this.hasInstantiationAwareBeanPostProcessors=true;
+    }
+    if(beanPostProcessor instanceof DestructionAwareBeanPostProcessor){
+	    this.hasDestructionAwareBeanPostProcessors = true;
+    }
+}
+```
+
+可以看到，在registerBeanPostProcessors方法的实现中其实已经确保了beanPostProcessor的唯一性，个人猜想，之所以选择在registerBeanPostProcessors中没有进行重复移除操作或许是为了保持分类的效果，使逻辑更为清晰吧。
+
+### 6.6.3 初始化消息资源
+
+​		在进行这段函数的解析之前，我们同样先来回顾Spring国际化的使用方法。
+​		假设我们正在开发一个支持多国语言的Web应用程序,要求系统能够根据客户端的系统的语言类型返回对应的界面:英文的操作系统返回英文界面，而中文的操作系统则返回中文界面——这便是典型的i18n国际化问题。对于有国际化要求的应用系统,我们不能简单地采用硬编码的方式编写用户界面信息、报错信息等内容，而必须为这些需要国际化的信息进行特殊处理。简单来说，就是为每种语言提供一套相应的资源文件，并以规范化命名的方式保存在特定的目录中,由系统自动根据客户端语言选择适合的资源文件。
+​		“国际化信息”也称为“本地化信息”，一般需要两个条件才可以确定一个特定类型的本地化信息，它们分别是“语言类型”和“国家/地区的类型”。如中文本地化信息既有中国大陆地区的中文，又有中国台湾地区、中国香港地区的中文，还有新加坡地区的中文。Java通过java.util.Locale类表示一个本地化对象，它允许通过语言参数和国家/地区参数创建一个确定的本地化对象。
+​		java.util.Locale是表示语言和国家/地区信息的本地化类，它是创建国际化应用的基础。下面给出几个创建本地化对象的示例:
+
+```java
+//1. 带有语言和国家/地区信息的本地化对象
+Locale locale1 =new Locale ( "zh" , "CN");
+//2. 只有语言信息的本地化对象
+Locale locale2 =new Locale( "zh");
+//3. 等同于Locale("zh", "CN")
+Locale locale3 =Locale.CHINA;
+//4. 等同于Locale("zh")
+Locale locale4 = Locale. CHINESE;
+//5. 获取本地系统默认的本地化对象
+Locale locale 5=Locale.getDefault();
+```
+
+JDK 的java.util包中提供了几个支持本地化的格式化操作工具类:NumberFormat 、DateFormat、MessageFormat，而在Spring 中的国际化资源操作也无非是对于这些类的封装操作，我们仅仅介绍下MessageFormat 的用法以帮助大家回顾:
+
+```java
+//1. 信息格式化串
+String pattern1 = "{0}，你好!你于{1}在工商银行存入{2}元。";
+string pattern2 = "At {1,time, short} On{1,date,long)，{0} paid {2, number, currency}.";
+//2. 用于动态替换占位符的参数
+object[] params = { "John",new GregorianCalendar().getTime(),1.0E3};
+//3. 使用默认本地化对象格式化信息
+String msgl = MessageFormat.format(pattern1,params);
+//4. 使用指定的本地化对象格式化信息
+MessageFormat mf = new MessageFormat(pattern2, Locale.uS);
+String msg2 = mf.format (params);
+System.out.println(msg1);
+System.out.println(msg2);
+```
+
+Spring定义了访问国际化信息的 MessageSource接口，并提供了几个易用的实现类。MessageSource分别被 HierarchicalMessageSource和ApplicationContext 接口扩展，这里我们主要看一下HierarchicalMessageSource接口的几个实现类，如图6-3所示。
+
+<img src="images/MessageSource.svg" alt="MessageSource" style="zoom:67%;" />
+
+HierarchicalMessageSource接口最重要的两个实现类是ResourceBundleMessageSource 和ReloadableResourceBundleMessageSource。它们基于Java的 ResourceBundle基础类实现，允许仅通过资源名加载国际化资源。ReloadableResourceBundleMessageSource提供了定时刷新功能,允许在不重启系统的情况下，更新资源的信息。StaticMessageSource主要用于程序测试，它允许通过编程的方式提供国际化信息。而DelegatingMessageSource是为方便操作父MessageSource而提供的代理类。仅仅举例ResourceBundleMessageSource的实现方式。
+
+(1）定义资源文件。
+
+- messages.properties（默认:英文)，内容仅一句，如test=test
+- messages_zh_CN.properties（简体中文):test=测试
+
+然后cmd，打开命令行窗口，输人native2ascii -encoding gbk C:lmessages_zh_CN.propertiesC:lmessages_zh_CN_tem.properties，并将C:\messages_zh_CN_tem.properties中的内容替换到messages_ zh_CN.properties中，这样 messages_zh_CN.properties文件就存放的是转码后的内容了，比较简单。
+
+(2）定义配置文件。
+```xml
+<bean id="messageSource"class="org.Springframework.context.support.ResourceBundleMessageSource">
+    <property name= "basenames">
+        <list>
+            <value>test/messages</value>
+        </list>
+    </property>
+</bean>
+```
+
+其中，这个Bean 的ID必须命名为messageSource，否则会抛出 NoSuchMessageException异常。
+
+(3）使用。通过ApplicationContext访问国际化信息。
+
+```java
+String []configs = { "applicationContext.xml"};
+Applicationcontext ctx = new ClassPathXmlApplicationContext (configs);
+//直接通过容器访问国际化信息
+0bject[] params = { "John",new GregorianCalendar().getTime() };
+String strl = ctx.getMessage ("test",params, Locale.US);
+String str2 = ctx.getMessage ("test", params, Locale.CHINA);
+System.out.println(str1);
+System.out.println(str2);
+```
+
+了解了Spring国际化的使用后便可以进行源码的分析了。
+		在 initMessageSource 中的方法主要功能是提取配置中定义的 messageSource，并将其记录在 Spring的容器中，也就是AbstractApplicationContext中。当然，如果用户未设置资源文件的话，Spring中也提供了默认的配置DelegatingMessageSource。
+		在initMessageSource中获取自定义资源文件的方式为beanFactory.getBean(MESSAGESOURCE_BEAN_NAME, MessageSource.class),在这里Spring使用了硬编码的方式硬性规定了子定义资源文件必须为message，否则便会获取不到自定义资源配置，这也是为什么之前提到Bean的 id如果部位message会抛出异常。
+
+AbstractApplicationContext.java
+
+```java
+protected void initMessageSource() {
+   ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+   if (beanFactory.containsLocalBean(MESSAGE_SOURCE_BEAN_NAME)) {
+       //如果在配置中已经配置了messageSource，那么将messageSource 提取并记录在this.messageSource中
+      this.messageSource = beanFactory.getBean(MESSAGE_SOURCE_BEAN_NAME, MessageSource.class);
+      // Make MessageSource aware of parent MessageSource.
+      if (this.parent != null && this.messageSource instanceof HierarchicalMessageSource) {
+         HierarchicalMessageSource hms = (HierarchicalMessageSource) this.messageSource;
+         if (hms.getParentMessageSource() == null) {
+            // Only set parent context as parent MessageSource if no parent MessageSource
+            // registered already.
+            hms.setParentMessageSource(getInternalParentMessageSource());
+         }
+      }
+      if (logger.isTraceEnabled()) {
+         logger.trace("Using MessageSource [" + this.messageSource + "]");
+      }
+   }
+   else {
+      // Use empty MessageSource to be able to accept getMessage calls.
+       //如果用户并没有定义配置文件,那么使用临时的DelegatingMessageSource以便于作为调用getMessage方法的返回。
+      DelegatingMessageSource dms = new DelegatingMessageSource();
+      dms.setParentMessageSource(getInternalParentMessageSource());
+      this.messageSource = dms;
+      beanFactory.registerSingleton(MESSAGE_SOURCE_BEAN_NAME, this.messageSource);
+      if (logger.isTraceEnabled()) {
+         logger.trace("No '" + MESSAGE_SOURCE_BEAN_NAME + "' bean, using [" + this.messageSource + "]");
+      }
+   }
+}
+```
+
+通过读取并将自定义资源文件配置记录在容器中，那么就可以在获取资源文件的时候直接使用了，例如，在AbstractApplicationContext中的获取资源文件属性的方法:
+```java
+public String getMessage(String code，Object args[]，Locale locale) throws NoSuchMessageException {
+	return getMessageSource().getMessage(code,args,locale);
+}
+```
+
+其中的getMessageSource()方法正是获取了之前定义的自定义资源配置。
+
+### 6.6.4 初始化 ApplicationEventMulticaster
+
+在讲解Spring 的时间传播器之前，我们还是先来看一下Spring 的事件监听的简单用法。
+
+(1) 定义监听事件。
+```java
+    public class TestEvent extends ApplicationEvent {
+    public string msg;
+    public TestEvent (0bject source){
+	    super(source);
+    }
+    public TestEvent (object source,string msg) {
+        super(source);
+        this.msg = msg;
+    }
+    public void print () {
+        system.out.println (msg);
+    }
+}
+```
+
+(2）定义监听器。
+```java
+public class TestListener implements ApplicationListener {
+    public void onApplicationEvent (ApplicationEvent event) {
+        if(event instanceof TestEvent){
+        	TestEvent testEvent = (TestEvent) event;
+            testEvent .print ();
+        }
+    }
+}
+```
+
+(3）添加配置文件。
+```xml
+<bean id="testListener" class="com.test.event.TestListener"/>
+```
+
+( 4）测试。
+```java
+public class Test{
+    public static void main (string[] args) {
+        ApplicationContext context = new ClassPathXmlApplicationContext("classpath:applicationContext.xml");
+        TestEvent event=new TestEvent("hello", "msg");
+        context.publishEvent(event);
+    }
+}
+```
+
+​		当程序运行时，Spring 会将发出的TestEvent事件转给我们自定义的TestListener 进行进一步处理。或许很多人一下子会反映出设计模式中的观察者模式，这确实是个典型的应用，可以在比较关心的事件结束后及时处理。那么我们看看ApplicationEventMulticaster是如何被初始化的，以确保功能的正确运行。
+initApplicationEventMulticaster 的方式比较简单，无非考虑两种情况。
+
+- 如果用户自定义了事件广播器，那么使用用户自定义的事件广播器。
+- 如果用户没有自定义事件广播器，那么使用默认的ApplicationEventMulticaster。
+
+AbstractApplicationContext.java
+
+```java
+protected void initApplicationEventMulticaster() {
+   ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+   if (beanFactory.containsLocalBean(APPLICATION_EVENT_MULTICASTER_BEAN_NAME)) {
+      this.applicationEventMulticaster =
+            beanFactory.getBean(APPLICATION_EVENT_MULTICASTER_BEAN_NAME, ApplicationEventMulticaster.class);
+      if (logger.isTraceEnabled()) {
+         logger.trace("Using ApplicationEventMulticaster [" + this.applicationEventMulticaster + "]");
+      }
+   }
+   else {
+      this.applicationEventMulticaster = new SimpleApplicationEventMulticaster(beanFactory);
+      beanFactory.registerSingleton(APPLICATION_EVENT_MULTICASTER_BEAN_NAME, this.applicationEventMulticaster);
+      if (logger.isTraceEnabled()) {
+         logger.trace("No '" + APPLICATION_EVENT_MULTICASTER_BEAN_NAME + "' bean, using " +
+               "[" + this.applicationEventMulticaster.getClass().getSimpleName() + "]");
+      }
+   }
+}
+```
+
+​		按照之前介绍的顺序及逻辑，我们推断，作为广播器，一定是用于存放监听器并在合适的时候调用监听器，那么我们不妨进入默认的广播器实现		SimpleApplicationEventMulticaster来一探究竟。
+​		其中的一段代码是我们感兴趣的。
+
+SimpleApplicationEventMulticaster.java
+
+```java
+@Override
+public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableType eventType) {
+   ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));
+   Executor executor = getTaskExecutor();
+   for (ApplicationListener<?> listener : getApplicationListeners(event, type)) {
+      if (executor != null) {
+         executor.execute(() -> invokeListener(listener, event));
+      }
+      else {
+         invokeListener(listener, event);
+      }
+   }
+}
+```
+
+可以推断，当产生 Spring 事件的时候会默认使用 SimpleApplicationEventMulticaster的multicastEvent 来广播事件，遍历所有监听器，并使用监听器中的onApplicationEvent方法来进行监听器的处理。而对于每个监听器来说其实都可以获取到产生的事件，但是是否进行处理则由事件监听器来决定。
+
+### 6.6.5 注册监听器
+
+之前在介绍Spring 的广播器时反复提到了事件监听器，那么在Spring 注册监听器的时候又做了哪些逻辑操作呢?
+
+AbstractApplicationContext.java
+
+```java
+protected void registerListeners() {
+   // Register statically specified listeners first.
+    //硬编码方式注册的监听器处理
+   for (ApplicationListener<?> listener : getApplicationListeners()) {
+      getApplicationEventMulticaster().addApplicationListener(listener);
+   }
+
+   // Do not initialize FactoryBeans here: We need to leave all regular beans
+   // uninitialized to let post-processors apply to them!
+    //配置文件注册的监听器处理
+   String[] listenerBeanNames = getBeanNamesForType(ApplicationListener.class, true, false);
+   for (String listenerBeanName : listenerBeanNames) {
+      getApplicationEventMulticaster().addApplicationListenerBean(listenerBeanName);
+   }
+
+   // Publish early application events now that we finally have a multicaster...
+   Set<ApplicationEvent> earlyEventsToProcess = this.earlyApplicationEvents;
+   this.earlyApplicationEvents = null;
+   if (!CollectionUtils.isEmpty(earlyEventsToProcess)) {
+      for (ApplicationEvent earlyEvent : earlyEventsToProcess) {
+         getApplicationEventMulticaster().multicastEvent(earlyEvent);
+      }
+   }
+}
+```
+
+## 6.7 初始化非延迟加载单例
+
+完成BeanFactory的初始化工作，其中包括ConversionService的设置、配置冻结以及非延迟加载的bean的初始化工作。
+
+AbstractApplicationContext.java
+
+```java
+protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
+   // Initialize conversion service for this context.
+   if (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &&
+         beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class)) {
+      beanFactory.setConversionService(beanFactory.getBean(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class));
+   }
+   // Register a default embedded value resolver if no BeanFactoryPostProcessor
+   // (such as a PropertySourcesPlaceholderConfigurer bean) registered any before:
+   // at this point, primarily for resolution in annotation attribute values.
+   if (!beanFactory.hasEmbeddedValueResolver()) {
+      beanFactory.addEmbeddedValueResolver(strVal -> getEnvironment().resolvePlaceholders(strVal));
+   }
+
+   // Initialize LoadTimeWeaverAware beans early to allow for registering their transformers early.
+   String[] weaverAwareNames = beanFactory.getBeanNamesForType(LoadTimeWeaverAware.class, false, false);
+   for (String weaverAwareName : weaverAwareNames) {
+      getBean(weaverAwareName);
+   }
+
+   // Stop using the temporary ClassLoader for type matching.
+   beanFactory.setTempClassLoader(null);
+
+   // Allow for caching all bean definition metadata, not expecting further changes.
+    //冻结所有的bean定义，说明注册的bean定义将不被修改或任何进一步的处理。
+   beanFactory.freezeConfiguration();
+   // Instantiate all remaining (non-lazy-init) singletons.
+    //初始化剩下的单实例(非惰性的)
+   beanFactory.preInstantiateSingletons();
+}
+```
+
+​		首先我们来了解一下ConversionService类所提供的作用。
+
+#### 1. ConversionService的设置
+
+​		之前我们提到过使用自定义类型转换器从String转换为Date的方式，那么,在Spring中还提供了另一种转换方式:使用Converter。同样，我们使用一个简单的示例来了解下Converter的使用方式。
+
+(1）定义转换器。
+```java
+public class String2DateConverter implements Converter<string,Date>{
+    @override
+    public Date convert (String arg0){
+        try {
+	        return DateUtils.parseDate (arg0,new string [] { "yyyy-MM-dd HH : mm : ss" });
+        }catch (ParseException e){
+    	    return null;
+	    }
+    }
+}
+```
+
+(2）注册。
+```xml
+<bean id="conversionService" class="org.Springframework.context.support.ConversionServiceFactoryBean">
+    <property name="converters">
+    	<list>
+    		<bean class="String2DateConverter"/>
+        </ list>
+    </property>
+</bean>
+```
+
+(3）测试。
+这样便可以使用Converter为我们提供的功能了，下面我们通过一个简便的方法来对此直接测试。
+
+```java
+public void testStringToPhoneNumberConvert() {
+	DefaultConversionService conversionService = new DefaultConversionService ();conversionService.addConverter (new StringToPhoneNumberConverter());
+	String phoneNumberStr = "010-12345678";
+    PhoneNumberModel phoneNumber = conversionService.convert(phoneNumberstr, PhoneNumberModel.class);
+    Assert.assertEquals("010",phoneNumber.getAreaCode())
+}
+```
+
+通过以上的功能我们看到了Converter 以及ConversionService提供的便利功能，其中的配置就是在当前函数中被初始化的。
+
+#### 2. 冻结配置
+
+冻结所有的 bean定义，说明注册的 bean定义将不被修改或进行任何进一步的处理。
+
+DefaultListableBeanFactory.java
+
+```java
+public void freezeConfiguration() {
+   this.configurationFrozen = true;
+   this.frozenBeanDefinitionNames = StringUtils.toStringArray(this.beanDefinitionNames);
+}
+```
+
+#### 3. 初始化非延迟加载
+
+​		ApplicationContext实现的默认行为就是在启动时将所有单例bean提前进行实例化。提前实例化意味着作为初始化过程的一部分，ApplicationContext实例会创建并配置所有的单例bean。通常情况下这是一件好事，因为这样在配置中的任何错误就会即刻被发现（否则的话可能要花几个小时甚至几天)。而这个实例化的过程就是在finishBeanFactoryInitialization中完成的。
+
+DefaultListableBeanFactory.java
+
+```java
+public void preInstantiateSingletons() throws BeansException {
+   if (logger.isTraceEnabled()) {
+      logger.trace("Pre-instantiating singletons in " + this);
+   }
+   // Iterate over a copy to allow for init methods which in turn register new bean definitions.
+   // While this may not be part of the regular factory bootstrap, it does otherwise work fine.
+   List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
+   // Trigger initialization of all non-lazy singleton beans...
+   for (String beanName : beanNames) {
+      RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
+      if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
+         if (isFactoryBean(beanName)) {
+            Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
+            if (bean instanceof FactoryBean) {
+               FactoryBean<?> factory = (FactoryBean<?>) bean;
+               boolean isEagerInit;
+               if (System.getSecurityManager() != null && factory instanceof SmartFactoryBean) {
+                  isEagerInit = AccessController.doPrivileged(
+                        (PrivilegedAction<Boolean>) ((SmartFactoryBean<?>) factory)::isEagerInit,
+                        getAccessControlContext());
+               }
+               else {
+                  isEagerInit = (factory instanceof SmartFactoryBean &&
+                        ((SmartFactoryBean<?>) factory).isEagerInit());
+               }
+               if (isEagerInit) {
+                  getBean(beanName);
+               }
+            }
+         }
+         else {
+            getBean(beanName);
+         }
+      }
+   }
+   // Trigger post-initialization callback for all applicable beans...
+   for (String beanName : beanNames) {
+      Object singletonInstance = getSingleton(beanName);
+      if (singletonInstance instanceof SmartInitializingSingleton) {
+         SmartInitializingSingleton smartSingleton = (SmartInitializingSingleton) singletonInstance;
+         if (System.getSecurityManager() != null) {
+            AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+               smartSingleton.afterSingletonsInstantiated();
+               return null;
+            }, getAccessControlContext());
+         }
+         else {
+            smartSingleton.afterSingletonsInstantiated();
+         }
+      }
+   }
+}
+```
+
+## 6.8 finishRefresh
+
+​		在Spring 中还提供了Lifecycle接口，Lifecycle中包含start/stop方法,实现此接口后Spring 会保证在启动的时候调用其start方法开始生命周期,并在 Spring
+关闭的时候调用stop方法来结束生命周期，通常用来配置后台程序,在启动后一直运行(如对MQ进行轮询等)。而ApplicationContext的初始化最后正是保证了这一功能的实现。
+
+AbstractApplicationContext.java
+
+```java
+protected void finishRefresh() {
+   // Clear context-level resource caches (such as ASM metadata from scanning).
+   clearResourceCaches();
+
+   // Initialize lifecycle processor for this context.
+   initLifecycleProcessor();
+
+   // Propagate refresh to lifecycle processor first.
+   getLifecycleProcessor().onRefresh();
+
+   // Publish the final event.
+   publishEvent(new ContextRefreshedEvent(this));
+
+   // Participate in LiveBeansView MBean, if active.
+   LiveBeansView.registerApplicationContext(this);
+}
+```
+
+#### 1. initLifecycleProcessor
+
+当ApplicationContext启动或停止时，它会通过LifecycleProcessor 来与所有声明的bean的周期做状态更新，而在LifecycleProcessor的使用前首先需要初始化。
+
+AbstractApplicationContext.java
+
+```java
+protected void initLifecycleProcessor() {
+   ConfigurableListableBeanFactory beanFactory = getBeanFactory();
+   if (beanFactory.containsLocalBean(LIFECYCLE_PROCESSOR_BEAN_NAME)) {
+      this.lifecycleProcessor =
+            beanFactory.getBean(LIFECYCLE_PROCESSOR_BEAN_NAME, LifecycleProcessor.class);
+      if (logger.isTraceEnabled()) {
+         logger.trace("Using LifecycleProcessor [" + this.lifecycleProcessor + "]");
+      }
+   }
+   else {
+      DefaultLifecycleProcessor defaultProcessor = new DefaultLifecycleProcessor();
+      defaultProcessor.setBeanFactory(beanFactory);
+      this.lifecycleProcessor = defaultProcessor;
+      beanFactory.registerSingleton(LIFECYCLE_PROCESSOR_BEAN_NAME, this.lifecycleProcessor);
+      if (logger.isTraceEnabled()) {
+         logger.trace("No '" + LIFECYCLE_PROCESSOR_BEAN_NAME + "' bean, using " +
+               "[" + this.lifecycleProcessor.getClass().getSimpleName() + "]");
+      }
+   }
+}
+```
+
+#### 2. onRefresh
+
+启动所有实现了Lifecycle接口的bean。
+
+AbstractApplicationContext.java
+
+```java
+public void onRefresh() {
+   startBeans(true);
+   this.running = true;
+}
+
+private void startBeans(boolean autoStartupOnly) {
+    Map<String, Lifecycle> lifecycleBeans = getLifecycleBeans();
+    Map<Integer, LifecycleGroup> phases = new HashMap<>();
+    lifecycleBeans.forEach((beanName, bean) -> {
+        if (!autoStartupOnly || (bean instanceof SmartLifecycle && ((SmartLifecycle) bean).isAutoStartup())) {
+            int phase = getPhase(bean);
+            LifecycleGroup group = phases.get(phase);
+            if (group == null) {
+                group = new LifecycleGroup(phase, this.timeoutPerShutdownPhase, lifecycleBeans, autoStartupOnly);
+                phases.put(phase, group);
+            }
+            group.add(beanName, bean);
+        }
+    });
+    if (!phases.isEmpty()) {
+        List<Integer> keys = new ArrayList<>(phases.keySet());
+        Collections.sort(keys);
+        for (Integer key : keys) {
+            phases.get(key).start();
+        }
+    }
+}
+```
+
+#### 3. publishEvent
+
+当完成ApplicationContext初始化的时候,要通过Spring 中的事件发布机制来发出ContextRefreshedEvent事件，以保证对应的监听器可以做进一步的逻辑处理。
+
+```java
+protected void publishEvent(Object event, @Nullable ResolvableType eventType) {
+   Assert.notNull(event, "Event must not be null");
+   // Decorate event as an ApplicationEvent if necessary
+   ApplicationEvent applicationEvent;
+   if (event instanceof ApplicationEvent) {
+      applicationEvent = (ApplicationEvent) event;
+   }
+   else {
+      applicationEvent = new PayloadApplicationEvent<>(this, event);
+      if (eventType == null) {
+         eventType = ((PayloadApplicationEvent<?>) applicationEvent).getResolvableType();
+      }
+   }
+   // Multicast right now if possible - or lazily once the multicaster is initialized
+   if (this.earlyApplicationEvents != null) {
+      this.earlyApplicationEvents.add(applicationEvent);
+   }
+   else {
+      getApplicationEventMulticaster().multicastEvent(applicationEvent, eventType);
+   }
+   // Publish event via parent context as well...
+   if (this.parent != null) {
+      if (this.parent instanceof AbstractApplicationContext) {
+         ((AbstractApplicationContext) this.parent).publishEvent(event, eventType);
+      }
+      else {
+         this.parent.publishEvent(event);
+      }
+   }
+}
+```
+
+
+
+# 第7章 AOP
+
+​		我们知道，使用面向对象编程（OOP)有一些弊端，当需要为多个不具有继承关系的对象引入同一个公共行为时，例如日志、安全检测等，我们只有在每个对象里引用公共行为，这样程序中就产生了大量的重复代码，程序就不便于维护了，所以就有了一个对面向对象编程的补充，即面向方面编程（AOP)，AOP所关注的方向是横向的，不同于0OP的纵向。
+​		Spring 中提供了AOP的实现，但是在低版本 Spring 中定义一个切面是比较麻烦的，需要实现特定的接口，并进行一些较为复杂的配置。低版本Spring AOP的配置是被批评最多的地方。Spring听取了这方面的批评声音，并下决心彻底改变这一现状。在Spring 2.0中,Spring AOP已经焕然一新，你可以使用@AspectJ注解非常容易地定义一个切面，不需要实现任何的接口。
+​		Spring 2.0采用@AspectJ注解对POJO进行标注，从而定义一个包含切点信息和增强横切逻辑的切面。Spring 2.0可以将这个切面织人到匹配的目标Bean中。@AspectJ注解使用Aspect,J切点表达式语法进行切点定义，可以通过切点函数、运算符、通配符等高级功能进行切点定义,拥有强大的连接点描述能力。我们先来直观地浏览一下Spring 中的AOP实现。
 
