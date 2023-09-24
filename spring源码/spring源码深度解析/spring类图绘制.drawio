@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-09-15T15:10:17.886Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36" etag="S_Qzh6mr8EdsOkHjBKW3" version="21.7.4" type="device">
+<mxfile host="app.diagrams.net" modified="2023-09-23T13:37:49.669Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36" etag="1U7UEdbl2cMfePaezc3M" version="21.7.4" type="device">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
     <mxGraphModel dx="2389" dy="1999" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -175,6 +175,63 @@
             <mxPoint x="-525" y="70" as="sourcePoint" />
             <mxPoint x="-395" y="10" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="cQNJ7dowPsHSuxTDrmRj-5" target="cQNJ7dowPsHSuxTDrmRj-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-5" value="创建beanA" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="-580" y="2160" width="110" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="cQNJ7dowPsHSuxTDrmRj-6" target="cQNJ7dowPsHSuxTDrmRj-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-6" value="addSingletonFactory" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="-350" y="2250" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="cQNJ7dowPsHSuxTDrmRj-7" target="cQNJ7dowPsHSuxTDrmRj-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-7" value="开始创建bean(记录beanNameA)" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="-385" y="2160" width="190" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="cQNJ7dowPsHSuxTDrmRj-8" target="cQNJ7dowPsHSuxTDrmRj-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="cQNJ7dowPsHSuxTDrmRj-8" target="cQNJ7dowPsHSuxTDrmRj-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-8" value="popuilateBean(填充属性)" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="-365" y="2338" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-9" value="结束创建bean(移除beanNameA)" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="-392.5" y="2440" width="205" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="cQNJ7dowPsHSuxTDrmRj-11" target="cQNJ7dowPsHSuxTDrmRj-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-11" value="开始创建bean(记录beanNameB)" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="-108" y="2338" width="190" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="cQNJ7dowPsHSuxTDrmRj-12" target="cQNJ7dowPsHSuxTDrmRj-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-12" value="addSingletonFactory" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="-73" y="2430" width="120" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="cQNJ7dowPsHSuxTDrmRj-13" target="cQNJ7dowPsHSuxTDrmRj-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="cQNJ7dowPsHSuxTDrmRj-13" target="cQNJ7dowPsHSuxTDrmRj-15">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-13" value="popuilateBean(填充属性)" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="-88" y="2518" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-14" value="结束创建bean(移除beanNameB)" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="-110.5" y="2620" width="205" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="cQNJ7dowPsHSuxTDrmRj-15" value="getBean(beanNameA)" style="html=1;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="167" y="2518" width="150" height="50" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
