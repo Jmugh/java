@@ -5463,7 +5463,7 @@ protected void registerDisposableBeanIfNecessary(String beanName, Object bean, R
 - 使用 BeanFactory方式加载XML。
 
 ```java
-BeanFactory bf = new XmlBeanFactory(new ClassPathResource("beanFactoryTest.xml") ;
+BeanFactory bf = new XmlBeanFactory(new ClassPathResource("beanFactoryTest.xml");
 ```
 
 - 使用ApplicationContext方式加载XML。
@@ -5554,7 +5554,7 @@ public void refresh() throws BeansException, IllegalStateException {
          // Register bean processors that intercept bean creation.
          /**
           * 注册并创建拦截bean创建的bean处理器
-             */
+          */
 
          registerBeanPostProcessors(beanFactory);
 
@@ -5611,18 +5611,30 @@ public void refresh() throws BeansException, IllegalStateException {
 下面概括一下ClassPathXmlApplicationContext初始化的步骤，并从中解释一下它为我们提供的功能。
 (1) 初始化前的准备工作，例如对系统属性或者环境变量进行准备及验证。
 		在某种情况下项目的使用需要读取某些系统变量，而这个变量的设置很可能会影响着系统的正确性，那么ClassPathXmlApplicationContext为我们提供的这个准备函数就显得非常必要，它可以在 Spring启动的时候提前对必须的变量进行存在性验证。
+
 (2) 初始化 BeanFactory，并进行XML文件读取。
 		之前有提到ClassPathXmlApplicationContext包含着BeanFactory所提供的一切特征，那么在这一步骤中将会复用 BeanFactory 中的配置文件读取解析及其他功能，这一步之后，ClassPathXmlApplicationContext '实际上就已经包含了BeanFactory 所提供的功能，也就是可以进行Bean的提取等基础操作了。
+
 (3) 对 BeanFactory进行各种功能填充。
 @Qualifier 与@Autowired应该是大家非常熟悉的注解,那么这两个注解正是在这一步骤中增加的支持。
+
 (4) 子类覆盖方法做额外的处理。
 		Spring 之所以强大，为世人所推崇，除了它功能上为大家提供了便例外，还有一方面是它的完美架构，开放式的架构让使用它的程序员很容易根据业务需要扩展已经存在的功能。这种开放式的设计在Spring 中随处可见，例如在本例中就提供了一个空的函数实现 postProcessBeanFactory来方便程序员在业务上做进一步扩展。
+
 (5）激活各种 BeanFactory处理器。
-(6）注册拦截bean创建的 bean处理器，这里只是注册，真正的调用是在getBean时候。(7）为上下文初始化 Message源，即对不同语言的消息体进行国际化处理。
-(8）初始化应用消息广播器，并放入“applicationEventMulticaster”bean中。(9）留给子类来初始化其他的bean。
+
+(6）注册拦截bean创建的 bean处理器，这里只是注册，真正的调用是在getBean时候。
+
+(7）为上下文初始化 Message源，即对不同语言的消息体进行国际化处理。
+
+(8）初始化应用消息广播器，并放入“applicationEventMulticaster”bean中。
+
+(9）留给子类来初始化其他的bean。
+
 (10) 在所有注册的 bean中查找listener bean，注册到消息广播器中。
 
 (11)初始化剩下的单实例（非惰性的)。
+
 (12) 完成刷新过程，通知生命周期处理器lifecycleProcessor刷新过程，同时发出ContextRefreshEvent通知别人。
 
 ## 6.3 环境准备
@@ -5681,8 +5693,7 @@ public class MyClassPathXmlApplicationContext extends ClassPathXmlApplicationCon
 }
 ```
 
-​		我们自定义了继承自ClassPathXmlApplicationContext的 MyClassPathXmlApplicationContext,并重写了initPropertySources方法,在方法中添加了我们
-的个性化需求,那么在验证的时候也就是程序走到getEnvironment().validateRequiredProperties()代码的时候,如果系统并没有检测到对应 VAR的环境变量，那么将抛出异常。当然我们还需要在使用的时候替换掉原有的ClassPathXmlApplicationContext:
+​		我们自定义了继承自ClassPathXmlApplicationContext的 MyClassPathXmlApplicationContext,并重写了initPropertySources方法,在方法中添加了我们的个性化需求,那么在验证的时候也就是程序走到getEnvironment().validateRequiredProperties()代码的时候,如果系统并没有检测到对应 VAR的环境变量，那么将抛出异常。当然我们还需要在使用的时候替换掉原有的ClassPathXmlApplicationContext:
 
 ```java
 public static void main (String[] args) {
@@ -5735,7 +5746,7 @@ protected final void refreshBeanFactory() throws BeansException {
 
 我们详细分析上面的每个步骤。
 (1) 创建DefaultListableBeanFactory。
-在介绍BeanFactory的时候，不知道读者是否还有印象，声明方式为:BeanFactory bf =new XmlBeanFactory("beanFactory Test.xml"),其中的XmlBeanFactory继承自DefaultListableBeanFactory，并提供了XmlBeanDefinitionReader类型的reader属性，也就是说DefaultListableBeanFactory是容器的基础。必须首先要实例化，那么在这里就是实例化DefaultListableBeanFactory的步骤。
+在介绍BeanFactory的时候，不知道读者是否还有印象，声明方式为:BeanFactory bf =new XmlBeanFactory("beanFactoryTest.xml"),其中的XmlBeanFactory继承自DefaultListableBeanFactory，并提供了XmlBeanDefinitionReader类型的reader属性，也就是说DefaultListableBeanFactory是容器的基础。必须首先要实例化，那么在这里就是实例化DefaultListableBeanFactory的步骤。
 
 (2) 指定序列化ID。
 
@@ -6188,7 +6199,7 @@ private void createDefaultEditors() {
 
 ### 6.5.3 添加ApplicationContextAwareProcessor 处理器
 
-​		了解了属性编辑器的使用后，接下来我们继续通过AbstractApplicationContext 的prepareBeanFactory方法的主线来进行函数跟踪。对于beanFactory.addBeanPostProcessor(newApplicationContextAwareProcessor(this))其实主要目的就是注册个 BeanPostProcessor，而真正的逻辑还是在ApplicationContextAwareProcessor中。
+​		了解了属性编辑器的使用后，接下来我们继续通过AbstractApplicationContext 的prepareBeanFactory方法的主线来进行函数跟踪。对于beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this))其实主要目的就是注册个 BeanPostProcessor，而真正的逻辑还是在ApplicationContextAwareProcessor中。
 ​		ApplicationContextAwareProcessor实现BeanPostProcessor 接口，我们回顾下之前讲过的内容，在 bean 实例化的时候，也就是Spring 激活bean的init-method 的前后，会调用BeanPostProcessor 的postProcessBeforeInitialization方法和postProcessAfterInitialization方法。同样，对于ApplicationContextAwareProcessor我们也关心这两个方法。
 
 对于postProcessAfterInitialization方法,在 ApplicationContextAwareProcessor中并没有做过多逻辑处理。
@@ -6204,9 +6215,12 @@ ApplicationContextAwareProcessor.java
 
 ```java
 public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-   if (!(bean instanceof EnvironmentAware || bean instanceof EmbeddedValueResolverAware ||
-         bean instanceof ResourceLoaderAware || bean instanceof ApplicationEventPublisherAware ||
-         bean instanceof MessageSourceAware || bean instanceof ApplicationContextAware)){
+   if (!(bean instanceof EnvironmentAware || 
+         bean instanceof EmbeddedValueResolverAware ||
+         bean instanceof ResourceLoaderAware || 
+         bean instanceof ApplicationEventPublisherAware ||
+         bean instanceof MessageSourceAware || 
+         bean instanceof ApplicationContextAware)){
       return bean;
    }
 
@@ -6262,8 +6276,10 @@ postProcessBeforeInitialization方法中调用了invokeAwareInterfaces。从 inv
 ```java
 //设置了几个忽略自动装配的接口
 beanFactory.ignoreDependencyInterface (ResourceLoaderAware.class) ;
-beanFactory.ignoreDependencyInterface(ApplicationEventPublisherAware.class);beanFactory.ignoreDependencyInterface (MessageSourceAware.class);
-beanFactory.ignoreDependencyInterface (ApplicationContextAware.class);beanFactory.ignoreDependencyInterface (EnvironmentAware.class);
+beanFactory.ignoreDependencyInterface(ApplicationEventPublisherAware.class);
+beanFactory.ignoreDependencyInterface (MessageSourceAware.class);
+beanFactory.ignoreDependencyInterface (ApplicationContextAware.class);
+beanFactory.ignoreDependencyInterface (EnvironmentAware.class);
 ```
 
 ### 6.5.5 注册依赖
@@ -6329,7 +6345,7 @@ BeanFactory.xml
 <beans xmlns="http://www.Springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	   xsi:schemaLocation="http://www.Springframework.org/schema/beans  http://www.Springframework.org/schema/beans/Spring-beans.xsd">
-    <bean id="bfpp" class="com.Spring.ch04.0bscenityRemovingBeanFactoryPostProcessor">
+    <bean id="bfpp" class="com.Spring.ch04.ObscenityRemovingBeanFactoryPostProcessor">
         <property name="obscenties">
 	        <set>
                 <value>bollocks</value>
@@ -6351,7 +6367,7 @@ BeanFactory.xml
 ObscenityRemovingBeanFactoryPostProcessor.java
 
 ```java
-public class 0bscenityRemovingBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+public class ObscenityRemovingBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
     private Set<String> obscenties;
     public ObscenityRemovingBeanFactoryPostProcessor (){
         this.obscenties=new HashSet<String>();
@@ -6360,9 +6376,9 @@ public class 0bscenityRemovingBeanFactoryPostProcessor implements BeanFactoryPos
         string[] beanNames=beanFactory.getBeanDefinitionNames ();
         for(string beanName: beanNames) {
             BeanDefinition bd=beanFactory.getBeanDefinition(beanName);
-            StringValueResolver valueResover=new StringvalueResolver(){
+            StringValueResolver valueResover=new StringValueResolver(){
                 public string resolvestringvalue (string strval){
-                    if (is0bscene(strval))
+                    if (isObscene(strval))
                         return "*****";
                 }
                 return strVal;
@@ -6372,7 +6388,7 @@ public class 0bscenityRemovingBeanFactoryPostProcessor implements BeanFactoryPos
         }
     }
    
-    public boolean isObscene (0bject value){
+    public boolean isObscene (Object value){
         string potential0bscenity=value.tostring().toUpperCase();
         return this.obscenties.contains(potential0bscenity);
     }
@@ -6693,29 +6709,30 @@ public static void registerBeanPostProcessors(
 ​		这里可能有个地方读者不是很理解，对于internalPostProcessors 中存储的后处理器也就是MergedBeanDefinitionPostProcessor类型的处理器，在代码中似乎是被重复调用了，如:
 
 ```java
- for (String ppName : postProcessorNames) {
-     if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
-         BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
-         priorityOrderedPostProcessors.add(pp);
-         if (pp instanceof MergedBeanDefinitionPostProcessor) {
-             internalPostProcessors.add(pp);
-         }
-     }
-     else if (beanFactory.isTypeMatch(ppName, Ordered.class)) {
-         orderedPostProcessorNames.add(ppName);
-     }
-     else {
-         nonOrderedPostProcessorNames.add(ppName);
-     }
- }
+for (String ppName : postProcessorNames) {
+    if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
+        BeanPostProcessor pp = beanFactory.getBean(ppName, BeanPostProcessor.class);
+        priorityOrderedPostProcessors.add(pp);
+        if (pp instanceof MergedBeanDefinitionPostProcessor) {
+            internalPostProcessors.add(pp);
+        }
+    }
+    else if (beanFactory.isTypeMatch(ppName, Ordered.class)) {
+        orderedPostProcessorNames.add(ppName);
+    }
+    else {
+        nonOrderedPostProcessorNames.add(ppName);
+    }
+}
 ```
 
 其实不是，我们可以看看对于registerBeanPostProcessors方法的实现方式。
 
 ```java
 private void registerBeanPostProcessors(ConfigurableListableBeanFactorybeanFactList<BeanPostProcessor>postProcessors){
-for (BeanPostProcessor postProcessor : postProcesssors) {
-	beanFactory.addBeanPostProcessor(postProcessor);
+    for (BeanPostProcessor postProcessor : postProcesssors) {
+        beanFactory.addBeanPostProcessor(postProcessor);
+    }
 }
 public void addBeanPostProcessor (BeanPostProcessor beanPostProcessor){
     Assert.notNull(beanPostProcessor,"BeanPostProcessor must not be null");
@@ -7279,7 +7296,2224 @@ protected void publishEvent(Object event, @Nullable ResolvableType eventType) {
 
 # 第7章 AOP
 
-​		我们知道，使用面向对象编程（OOP)有一些弊端，当需要为多个不具有继承关系的对象引入同一个公共行为时，例如日志、安全检测等，我们只有在每个对象里引用公共行为，这样程序中就产生了大量的重复代码，程序就不便于维护了，所以就有了一个对面向对象编程的补充，即面向方面编程（AOP)，AOP所关注的方向是横向的，不同于0OP的纵向。
+​		我们知道，使用面向对象编程(OOP)有一些弊端，当需要为多个不具有继承关系的对象引入同一个公共行为时，例如日志、安全检测等，我们只有在每个对象里引用公共行为，这样程序中就产生了大量的重复代码，程序就不便于维护了，所以就有了一个对面向对象编程的补充，即面向方面编程（AOP)，AOP所关注的方向是横向的，不同于0OP的纵向。
 ​		Spring 中提供了AOP的实现，但是在低版本 Spring 中定义一个切面是比较麻烦的，需要实现特定的接口，并进行一些较为复杂的配置。低版本Spring AOP的配置是被批评最多的地方。Spring听取了这方面的批评声音，并下决心彻底改变这一现状。在Spring 2.0中,Spring AOP已经焕然一新，你可以使用@AspectJ注解非常容易地定义一个切面，不需要实现任何的接口。
-​		Spring 2.0采用@AspectJ注解对POJO进行标注，从而定义一个包含切点信息和增强横切逻辑的切面。Spring 2.0可以将这个切面织人到匹配的目标Bean中。@AspectJ注解使用Aspect,J切点表达式语法进行切点定义，可以通过切点函数、运算符、通配符等高级功能进行切点定义,拥有强大的连接点描述能力。我们先来直观地浏览一下Spring 中的AOP实现。
+​		Spring 2.0采用@AspectJ注解对POJO进行标注，从而定义一个包含切点信息和增强横切逻辑的切面。Spring 2.0可以将这个切面织人到匹配的目标Bean中。@AspectJ注解使用AspectJ切点表达式语法进行切点定义，可以通过切点函数、运算符、通配符等高级功能进行切点定义,拥有强大的连接点描述能力。我们先来直观地浏览一下Spring 中的AOP实现。
+
+## 7.1 动态AOP使用示例
+
+(1)创建用于拦截的 bean。
+在实际工作中,此bean可能是满足业务需要的核心逻辑,例如 test方法中可能会封装着某个核心业务，但是，如果我们想在test前后加人日志来跟踪调试，如果直接修改源码并不符合面向对象的设计方法，而且随意改动原有代码也会造成一定的风险，还好接下来的Spring帮我们做到了这一点。
+
+```java
+public class TestBean {
+	private string teststr = "teststr";
+    public String getTeststr(){
+        return teststr;
+    }
+    public void setTeststr (string teststr){
+        this.teststr = teststr;
+    )
+    public void test (){
+        System.out.println ( "test");
+    }
+}
+```
+
+(2）创建Advisor
+		Spring 中摒弃了最原始的繁杂配置方式而采用@AspectJ注解对POJO进行标注，使AOP的工作大大简化，例如，在AspectJTest类中，我要做的就是在所有方法执行前在控制台中打印 beforeTest，而在所有类的test方法执行后打印 afterTest，同时又使用环绕的方式在所有类的方法执行前后再次分别打印before1和 after1。
+
+```java
+@Aspect
+public class AspectJTest {
+	Pointcut("execution (**.test (..) )")
+    public void test(){}
+    @Before("test()")
+    public void beforeTest(){
+    	System.out.println("beforeTest");
+    }
+    @After ( "test () ")
+    public void afterTest(){
+		system.out.println("afterTest");
+    }
+	@Around("test()")
+	public Object arountTest (ProceedingJoinPoint p){
+		System.out.println ( "before1");
+		object o=null;
+        try {
+            o = p.proceed ();
+        }catch(Throwable e){
+            e.printStackTrace();
+            system.out.println("after1");
+            return o;
+		}
+    }
+}
+```
+
+
+
+(3）创建配置文件。
+XML是Spring 的基础。尽管Spring一再简化配置，并且大有使用注解取代XML 配置之势，但是无论如何，至少现在XML还是Spring 的基础。要在Spring 中开启AOP 功能
+还需要在配置文件中作如下声明:
+
+```XML
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.Springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       	xmlns :aop="http://www.Springframework.org/schema/aop"
+		xmlns:context="http://www.Springframework.org/schema/context"
+        xsi:schemaLocation="http://www.Springframework.org/schema/beans
+		http://www.Springframework.org/schema/beans/Spring-beans-3.0.xsd
+		http://www.Springframework.org /schema/aop
+		http://www.springframework.org/schema/aop/Spring-aop-3.0.xsd
+        http://www.Springframework.org /schema/context
+		http://www.Springframework.org/schema/context/Spring-context-3.0.xsd"/>
+<aop:aspectj-autoproxy/>
+		<bean id="test" class="test.TestBean"/>
+        <bean class="test.AspectJTest"/>
+</beans>
+```
+
+
+
+( 4）测试。
+		经过以上步骤后，便可以验证 Spring 的AOP为我们提供的神奇效果了。
+
+```java
+public static void main(String []args) {
+	ApplicationContext bf = new ClassPathXmlApplicationContext("aspectTest.xmlTestBean");
+    bean= (TestBean) bf.getBean("test") ;
+	bean.test();
+}
+```
+
+不出意外，我们会看到控制台中打印了如下代码:
+beforeTest
+before1test
+afterTestafter1
+Spring 实现了对所有类的test方法进行增强，使辅助功能可以独立于核心业务之外方便与程序的扩展和解耦。
+那么，Spring究竟是如何实现AOP的呢?首先我们知道，Spring是否支持注解的AOP是由一个配置文件控制的，也就是<aop:aspectj-autoproxy >，当在配置文件中声明了这句配置的时候，Spring就会支持注解的AOP，那么我们的分析就从这句注解开始。
+
+## 7.2 动态AOP自定义标签
+
+​		之前讲过Spring中的自定义注解，如果声明了自定义的注解,那么就一定会在程序中的某个地方注册了对应的解析器。我们搜索整个代码，尝试找到注册的地方，全局搜索后我们发现了在AopNamespaceHandler 中对应着这样一段函数:
+
+AopNamespaceHandler.java
+
+```java
+public void init() {
+   // In 2.0 XSD as well as in 2.5+ XSDs
+   registerBeanDefinitionParser("config", new ConfigBeanDefinitionParser());
+   registerBeanDefinitionParser("aspectj-autoproxy", new AspectJAutoProxyBeanDefinitionParser());
+   registerBeanDefinitionDecorator("scoped-proxy", new ScopedProxyBeanDefinitionDecorator());
+   // Only in 2.0 XSD: moved to context namespace in 2.5+
+   registerBeanDefinitionParser("spring-configured", new SpringConfiguredBeanDefinitionParser());
+}
+```
+
+此处不再对Spring 中的自定义注解方式进行讨论。有兴趣的读者可以回顾之前的内容我们可以得知，在解析配置文件的时候，一旦遇到aspectj-autoproxy注解时就会使用解析器AspectJAutoProxyBeanDefinitionParser进行解析，那么我们来看一看AspectJAutoProxyBeanDefinitionParser的内部实现。
+
+### 7.2.1 注册AnnotationAwareAspectJAutoProxyCreator
+
+​		所有解析器，因为是对BeanDefinitionParser接口的统一实现，入口都是从parse函数开始的，AspectJAutoProxyBeanDefinitionParser 的 parse函数如下:
+
+AspectJAutoProxyBeanDefinitionParser.java
+
+```java
+public BeanDefinition parse(Element element, ParserContext parserContext) {
+    //注册AnnotationAwareAspectJAutoProxyCreator
+   AopNamespaceUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(parserContext, element);
+    //对于注解中子类的处理
+   extendBeanDefinition(element, parserContext);
+   return null;
+}
+```
+
+其中registerAspectJAnnotationAutoProxyCreatorIfNecessary函数是我们比较关心的，也是关键逻辑的实现。
+
+AopNamespaceUtils.java
+
+```java
+public static void registerAspectJAnnotationAutoProxyCreatorIfNecessary(
+      ParserContext parserContext, Element sourceElement) {
+//注册或升级 AutoProxyCreator定义 beanName为 org.Springframework.aop.config.internalAutoProxyCreator的 BeanDefinition
+   BeanDefinition beanDefinition = AopConfigUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(
+         parserContext.getRegistry(), parserContext.extractSource(sourceElement));
+    //对于proxy-target-class以及expose-proxy属性的处理
+   useClassProxyingIfNecessary(parserContext.getRegistry(), sourceElement);
+    //注册组件并通知，便于监听器做进一步处理
+	//其中 beanDefinition的className为AnnotationAwareAspectJAutoProxyCreator
+   registerComponentIfNecessary(beanDefinition, parserContext);
+}
+```
+
+在registerAspectJAnnotationAutoProxyCreatorIfNecessary方法中主要完成了3件事情基本上每行代码就是一个完整的逻辑。
+
+#### 1．注册或者升级AnnotationAwareAspectJAutoProxyCreator
+
+​		对于AOP的实现，基本上都是靠AnnotationAwareAspectJAutoProxyCreator去完成，它可以根据@Point注解定义的切点来自动代理相匹配的 bean。但是为了配置简便，Spring 使用了自定义配置来帮助我们自动注册AnnotationAwareAspectJAutoProxyCreator，其注册过程就是在这里实现的。
+
+AopNamespaceUtils.java
+
+```java
+public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(
+      BeanDefinitionRegistry registry, @Nullable Object source) {
+   return registerOrEscalateApcAsRequired(AnnotationAwareAspectJAutoProxyCreator.class, registry, source);
+}
+
+private static BeanDefinition registerOrEscalateApcAsRequired(
+			Class<?> cls, BeanDefinitionRegistry registry, @Nullable Object source) {
+
+    Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+	//如果已经存在了自动代理创建器且存在的自动代理创建器与现在的不一致那么需要根据优先级来判断到底需要使用哪
+    if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
+        BeanDefinition apcDefinition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
+        if (!cls.getName().equals(apcDefinition.getBeanClassName())) {
+            int currentPriority = findPriorityForClass(apcDefinition.getBeanClassName());
+            int requiredPriority = findPriorityForClass(cls);
+            if (currentPriority < requiredPriority) {
+                //改变bean最重要的就是改变bean所对应的className属性
+                apcDefinition.setBeanClassName(cls.getName());
+            }
+        }
+        //如果已经存在自动代理创建器并且与将要创建的一致，那么无需再此创建
+        return null;
+    }
+
+    RootBeanDefinition beanDefinition = new RootBeanDefinition(cls);
+    beanDefinition.setSource(source);
+    beanDefinition.getPropertyValues().add("order", Ordered.HIGHEST_PRECEDENCE);
+    beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+    //AUTO_PROXY_CREATOR_BEAN_NAME = "org.Springframework.aop.config.internalAutoProxyCreator";
+    registry.registerBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME, beanDefinition);
+    return beanDefinition;
+}
+```
+
+以上代码中实现了自动注册AnnotationAwareAspectJAutoProxyCreator类的功能,同时这里还涉及了一个优先级的问题，如果已经存在了自动代理创建器，而且存在的自动代理创建器与现在的不一致，那么需要根据优先级来判断到底需要使用哪个。
+
+#### 2．处理proxy-target-class以及expose-proxy属性
+
+​		useClassProxyingIfNecessary实现了proxy-target-class属性以及 expose-proxy属性的处理。
+
+AopNamespaceUtils.java
+
+```java
+private static void useClassProxyingIfNecessary(BeanDefinitionRegistry registry, @Nullable Element sourceElement) {
+   if (sourceElement != null) {
+       //对于proxy-target-class属性的处理。
+      boolean proxyTargetClass = Boolean.parseBoolean(sourceElement.getAttribute(PROXY_TARGET_CLASS_ATTRIBUTE));
+      if (proxyTargetClass) {
+         AopConfigUtils.forceAutoProxyCreatorToUseClassProxying(registry);
+      }
+       //对于expose-proxy属性的处理
+      boolean exposeProxy = Boolean.parseBoolean(sourceElement.getAttribute(EXPOSE_PROXY_ATTRIBUTE));
+      if (exposeProxy) {
+         AopConfigUtils.forceAutoProxyCreatorToExposeProxy(registry);
+      }
+   }
+}
+//强制使用的过程其实也是一个属性设置的过程
+public static void forceAutoProxyCreatorToExposeProxy(BeanDefinitionRegistry registry) {
+    if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
+        BeanDefinition definition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
+        definition.getPropertyValues().add("exposeProxy", Boolean.TRUE);
+    }
+}
+```
+
+- proxy-target-class: Spring AOP部分使用JDK动态代理或者CGLIB来为目标对象创建代理。(建议尽量使用JDK的动态代理),如果被代理的目标对象实现了至少一个接口，则会使用JDK动态代理。所有该目标类型实现的接口都将被代理。若该目标对象没有实现任何接口，则创建一个CGLIB代理。如果你希望强制使用CGLIB代理,(例如希望代理目标对象的所有方法，而不只是实现自接口的方法）那也可以。但是需要考虑以下两个问题。
+  - 无法通知( advise ) Final方法，因为它们不能被覆写。
+  - 你需要将CGLIB二进制发行包放在classpath下面。
+- 与之相较，JDK本身就提供了动态代理，强制使用CGLIB代理需要将<aop:config的proxy-target-class属性设为true:
+  <aop:config proxy-target-class="true"> ... \</aop:config>
+  当需要使用CGLIB代理和@AspectJ自动代理支持，可以按照以下方式设置\<aop:aspectj-autoproxy>的proxy-target-class属性:
+  <aop:aspectj-autoproxy proxy-target-class="true" />
+  而实际使用的过程中才会发现细节问题的差别，The devil is in the detail。
+- JDK动态代理:其代理对象必须是某个接口的实现，它是通过在运行期间创建一个接口的实现类来完成对目标对象的代理。
+- CGLIB代理:实现原理类似于JDK动态代理，只是它在运行期间生成的代理对象是针对目标类扩展的子类。CGLIB是高效的代码生成包，底层是依靠ASM（开源的Java字节码编辑类库）操作字节码实现的，性能比JDK强。
+- expose-proxy:有时候目标对象内部的自我调用将无法实施切面中的增强，如下示例:
+
+```java
+public interface AService {
+	public void a();
+	public void b();
+}
+@service
+public class AServiceImpl1 implements AService{
+    @Transactional(propagation = Propagation.REQUIRED)public void a () {
+        this.b();
+    }
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void b(){
+    }
+}
+```
+
+此处的this指向目标对象,因此调用this.b()将不会执行b事务切面,即不会执行事务增强,因此b方法的事务定义“@Transactional(propagation = Propagation.REQUIRES_NEW)”将不会实施，为了解决这个问题，我们可以这样做:
+<aop: aspectj-autoproxy expose-proxy="true" />
+然后将以上代码中的“this.b();”修改为“(AService)AopContext.currentProxy()).b);" 即可。
+通过以上的修改便可以完成对a和b方法的同时增强。最后注册组件并通知，便于监听器做进一步处理，这里就不再一一赘述了。
+
+## 7.3 创建AOP代理
+
+​		上文中讲解了通过自定义配置完成了对AnnotationAwareAspectJAutoProxyCreator类型的自动注册，那么这个类到底做了什么工作来完成AOP 的操作呢?首先我们看看AnnotationAwareAspectJAutoProxyCreator类的层次结构，如图7-1所示。
+
+![image-20231003173042431](images/image-20231003173042431.png)
+
+在类的层级中，我们看到AnnotationAwareAspectJAutoProxyCreator 实现了 BeanPostProcessor接口，而实现BeanPostProcessor后，当Spring加载这个Bean时会在实例化前调用其postProcessAfterInitialization方法，而我们对于AOP逻辑的分析也由此开始。
+在父类 AbstractAutoProxyCreator 的 postProcessAfterInitialization中代码如下:
+
+AbstractAutoProxyCreator.java
+
+```java
+public Object postProcessAfterInitialization(@Nullable Object bean, String beanName) {
+   if (bean != null) {
+       //根据给定的bean的class和name构建出个key，格式:beanclassName_beanName
+      Object cacheKey = getCacheKey(bean.getClass(), beanName);
+      if (this.earlyProxyReferences.remove(cacheKey) != bean) {
+         //如果它适合被代理,则需要封装指定bean。
+         return wrapIfNecessary(bean, beanName, cacheKey);
+      }
+   }
+   return bean;
+}
+
+protected Object wrapIfNecessary(Object bean, String beanName, Object cacheKey) {
+    //如果已经处理过
+    if (StringUtils.hasLength(beanName) && this.targetSourcedBeans.contains(beanName)) {
+        return bean;
+    }
+    //无需增强
+    if (Boolean.FALSE.equals(this.advisedBeans.get(cacheKey))) {
+        return bean;
+    }
+    //给定的bean类是否代表一个基础设施类，基础设施类不应代理,或者配置了指定bean 不需要自动代理
+    if (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) {
+        this.advisedBeans.put(cacheKey, Boolean.FALSE);
+        return bean;
+    }
+
+    // Create proxy if we have advice.
+    //如果存在增强方法则创建代理
+    Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
+    //如果获取到了增强则需要针对增强创建代理
+    if (specificInterceptors != DO_NOT_PROXY) {
+        this.advisedBeans.put(cacheKey, Boolean.TRUE);
+        //创建代理
+        Object proxy = createProxy(
+            bean.getClass(), 
+            beanName, 
+            specificInterceptors, 
+            new SingletonTargetSource(bean));
+        
+        this.proxyTypes.put(cacheKey, proxy.getClass());
+        return proxy;
+    }
+
+    this.advisedBeans.put(cacheKey, Boolean.FALSE);
+    return bean;
+}
+```
+
+函数中我们已经看到了代理创建的雏形。当然，真正开始之前还需要经过一些判断，比如是否已经处理过或者是否是需要跳过的 bean，而真正创建代理的代码是从 getAdvicesAndAdvisorsForBean开始的。
+创建代理主要包含了两个步骤:
+
+(1) 获取增强方法或者增强器;
+
+(2) 根据获取的增强进行代理。
+
+核心逻辑的时序图如图7-2所示。
+
+![image-20231003174209918](images/image-20231003174209918.png)
+
+虽然看似简单，但是每个步骤中都经历了大量复杂的逻辑。首先来看看获取增强方法的实现逻辑。
+
+AbstractAdvisorAutoProxyCreator.java  -> extends AbstractAutoProxyCreator
+
+```java
+protected Object[] getAdvicesAndAdvisorsForBean(
+      Class<?> beanClass, String beanName, @Nullable TargetSource targetSource) {
+
+   List<Advisor> advisors = findEligibleAdvisors(beanClass, beanName);
+   if (advisors.isEmpty()) {
+      return DO_NOT_PROXY;
+   }
+   return advisors.toArray();
+}
+protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
+    List<Advisor> candidateAdvisors = findCandidateAdvisors();
+    List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
+    extendAdvisors(eligibleAdvisors);
+    if (!eligibleAdvisors.isEmpty()) {
+        eligibleAdvisors = sortAdvisors(eligibleAdvisors);
+    }
+    return eligibleAdvisors;
+}
+```
+
+对于指定bean 的增强方法的获取一定是包含两个步骤的，获取所有的增强以及寻找所有增强中适用于bean的增强并应用，那么findCandidateAdvisors 与 findAdvisorsThatCanApply便是做了这两件事情。当然，如果无法找到对应的增强器便返回 DO_NOT_PROXY，其中 DO_NOT_PROXY=null。
+
+### 7.3.1 获取增强器
+
+​		由于我们分析的是使用注解进行的AOP，所以对于findCandidateAdvisors 的实现其实是由AnnotationAwareAspectIJAutoProxyCreator类完成的，我们继续跟踪AnnotationAwareAspectJAutoProxyCreator的 findCandidateAdvisors方法。
+
+AnnotationAwareAspectJAutoProxyCreator.java
+
+```java
+protected List<Advisor> findCandidateAdvisors() {
+    //当使用注解方式配置AOP的时候并不是丢弃了对XML 配置的支持，
+    //在这里调用父类方法加载配置文件中的AOP声明
+    // Add all the Spring advisors found according to superclass rules.
+    List<Advisor> advisors = super.findCandidateAdvisors();
+    // Build Advisors for all AspectJ aspects in the bean factory.
+    if (this.aspectJAdvisorsBuilder != null) {
+        advisors.addAll(this.aspectJAdvisorsBuilder.buildAspectJAdvisors());
+    }
+    return advisors;
+}
+```
+
+​		AnnotationAwareAspectJAutoProxyCreator间接继承了AbstractAdvisorAutoProxyCreat在实现获取增强的方法中除了保留父类的获取配置文件中定义的增强外，同时添加了获取Bean的注解增强的功能,那么其实现正是由this.aspectJAdvisorsBuilder.buildAspectJAdvisors()来实现的。
+
+​		在真正研究代码之前读者可以尝试着自己去想象一下解析思路，看看自己的实现与Spring是否有差别呢?或者我们一改以往的方式，先来了解函数提供的大概功能框架，读者可以在头脑中尝试实现这些功能点，看看是否有思路。
+(1) 获取所有beanName，这一步骤中所有在 beanFacotry中注册的 Bean都会被提取出来。
+
+(2) 遍历所有beanName，并找出声明AspectJ注解的类，进行进一步的处理。
+
+(3) 对标记为AspectJ注解的类进行增强器的提取。
+
+(4) 将提取结果加入缓存。
+现在我们来看看函数实现，对Spring 中所有的类进行分析，提取Advisor
+
+BeanFactoryAspectJAdvisorsBuilder.java
+
+```java
+public List<Advisor> buildAspectJAdvisors() {
+   List<String> aspectNames = this.aspectBeanNames;
+
+   if (aspectNames == null) {
+      synchronized (this) {
+         aspectNames = this.aspectBeanNames;
+         if (aspectNames == null) {
+            List<Advisor> advisors = new ArrayList<>();
+            aspectNames = new ArrayList<>();
+             //获取所有的beanName
+            String[] beanNames = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(
+                  this.beanFactory, Object.class, true, false);
+             //循环所有的beanName获取对应的增强方法
+            for (String beanName : beanNames) {
+                //不合法的bean则略过，由子类定义规则，默认返true
+               if (!isEligibleBean(beanName)) {
+                  continue;
+               }
+               // We must be careful not to instantiate beans eagerly as in this case they
+               // would be cached by the Spring container but would not have been weaved.
+                //获取对应bean的类型
+                Class<?> beanType = this.beanFactory.getType(beanName, false);
+               if (beanType == null) {
+                  continue;
+               }
+				//如果存在Aspect注解
+               if (this.advisorFactory.isAspect(beanType)) {
+                  aspectNames.add(beanName);
+                  AspectMetadata amd = new AspectMetadata(beanType, beanName);
+                  if (amd.getAjType().getPerClause().getKind() == PerClauseKind.SINGLETON) {
+                     MetadataAwareAspectInstanceFactory factory =
+                           new BeanFactoryAspectInstanceFactory(this.beanFactory, beanName);
+                      //解析标记AspectJ注解中的增强方法
+                     List<Advisor> classAdvisors = this.advisorFactory.getAdvisors(factory);
+                     if (this.beanFactory.isSingleton(beanName)) {
+                        this.advisorsCache.put(beanName, classAdvisors);
+                     } else {
+                        this.aspectFactoryCache.put(beanName, factory);
+                     }
+                     advisors.addAll(classAdvisors);
+                  } else {
+                     // Per target or per this.
+                     if (this.beanFactory.isSingleton(beanName)) {
+                        throw new IllegalArgumentException("Bean with name '" + beanName +
+                              "' is a singleton, but aspect instantiation model is not singleton");
+                     }
+                     MetadataAwareAspectInstanceFactory factory =
+                           new PrototypeAspectInstanceFactory(this.beanFactory, beanName);
+                     this.aspectFactoryCache.put(beanName, factory);
+                     advisors.addAll(this.advisorFactory.getAdvisors(factory));
+                  }
+               }
+            }
+            this.aspectBeanNames = aspectNames;
+            return advisors;
+         }
+      }
+   }
+
+   if (aspectNames.isEmpty()) {
+      return Collections.emptyList();
+   }
+    //记录在缓存中
+   List<Advisor> advisors = new ArrayList<>();
+   for (String aspectName : aspectNames) {
+      List<Advisor> cachedAdvisors = this.advisorsCache.get(aspectName);
+      if (cachedAdvisors != null) {
+         advisors.addAll(cachedAdvisors);
+      } else {
+         MetadataAwareAspectInstanceFactory factory = this.aspectFactoryCache.get(aspectName);
+         advisors.addAll(this.advisorFactory.getAdvisors(factory));
+      }
+   }
+   return advisors;
+}
+```
+
+至此，我们已经完成了Advisor的提取，在上面的步骤中最为重要也最为繁杂的就是增强器的获取。而这一功能委托给了getAdvisors方法去实现this.advisorFactory.getAdvisors(factory)
+
+ReflectiveAspectJAdvisorFactory.java
+
+```java
+public List<Advisor> getAdvisors(MetadataAwareAspectInstanceFactory aspectInstanceFactory) {
+    //获取标记为AspectJ的类
+   Class<?> aspectClass = aspectInstanceFactory.getAspectMetadata().getAspectClass();
+    //获取标记为AspectJ的name
+   String aspectName = aspectInstanceFactory.getAspectMetadata().getAspectName();
+    //验证
+   validate(aspectClass);
+
+   // We need to wrap the MetadataAwareAspectInstanceFactory with a decorator
+   // so that it will only instantiate once.
+   MetadataAwareAspectInstanceFactory lazySingletonAspectInstanceFactory =
+         new LazySingletonAspectInstanceFactoryDecorator(aspectInstanceFactory);
+
+   List<Advisor> advisors = new ArrayList<>();
+   for (Method method : getAdvisorMethods(aspectClass)) {
+      // Prior to Spring Framework 5.2.7, advisors.size() was supplied as the declarationOrderInAspect
+      // to getAdvisor(...) to represent the "current position" in the declared methods list.
+      // However, since Java 7 the "current position" is not valid since the JDK no longer
+      // returns declared methods in the order in which they are declared in the source code.
+      // Thus, we now hard code the declarationOrderInAspect to 0 for all advice methods
+      // discovered via reflection in order to support reliable advice ordering across JVM launches.
+      // Specifically, a value of 0 aligns with the default value used in
+      // AspectJPrecedenceComparator.getAspectDeclarationOrder(Advisor).
+      Advisor advisor = getAdvisor(method, lazySingletonAspectInstanceFactory, 0, aspectName);
+      if (advisor != null) {
+         advisors.add(advisor);
+      }
+   }
+
+   // If it's a per target aspect, emit the dummy instantiating aspect.
+   if (!advisors.isEmpty() && lazySingletonAspectInstanceFactory.getAspectMetadata().isLazilyInstantiated()) {
+       //如果寻找的增强器不为空而且又配置了增强延迟初始化那么需要在首位加人同步实例化增强器
+      Advisor instantiationAdvisor = new SyntheticInstantiationAdvisor(lazySingletonAspectInstanceFactory);
+      advisors.add(0, instantiationAdvisor);
+   }
+
+   // Find introduction fields.
+    //获取 DeclareParents注解
+   for (Field field : aspectClass.getDeclaredFields()) {
+      Advisor advisor = getDeclareParentsAdvisor(field);
+      if (advisor != null) {
+         advisors.add(advisor);
+      }
+   }
+
+   return advisors;
+}
+
+private List<Method> getAdvisorMethods(Class<?> aspectClass) {
+    final List<Method> methods = new ArrayList<>();
+    ReflectionUtils.doWithMethods(aspectClass, method -> {
+        // Exclude pointcuts
+        //声明为pointcut的方法不处理
+        if (AnnotationUtils.getAnnotation(method, Pointcut.class) == null) {
+            methods.add(method);
+        }
+    }, ReflectionUtils.USER_DECLARED_METHODS);
+    if (methods.size() > 1) {
+        methods.sort(METHOD_COMPARATOR);
+    }
+    return methods;
+}
+```
+
+​		函数中首先完成了对增强器的获取，包括获取注解以及根据注解生成增强的步骤，然后考虑到在配置中可能会将增强配置成延迟初始化，那么需要在首位加入同步实例化增强器以保证增强使用之前的实例化，最后是对DeclareParents注解的获取，下面将详细介绍一下每个步骤。
+
+#### 1．普通增强器的获取
+
+​		普通增强器的获取逻辑通过getAdvisor方法实现，实现步骤包括对切点的注解的获取以及根据注解信息生成增强.
+
+ReflectiveAspectJAdvisorFactory.java
+
+```java
+public Advisor getAdvisor(Method candidateAdviceMethod, MetadataAwareAspectInstanceFactory aspectInstanceFactory,
+                    int declarationOrderInAspect, String aspectName) {
+   validate(aspectInstanceFactory.getAspectMetadata().getAspectClass());
+    //切点信息的获取
+   AspectJExpressionPointcut expressionPointcut = getPointcut(
+         candidateAdviceMethod, aspectInstanceFactory.getAspectMetadata().getAspectClass());
+   if (expressionPointcut == null) {
+      return null;
+   }
+    //根据切点信息生成增强器
+   return new InstantiationModelAwarePointcutAdvisorImpl(expressionPointcut, candidateAdviceMethod,
+         this, aspectInstanceFactory, declarationOrderInAspect, aspectName);
+}
+```
+
+(1) 切点信息的获取。所谓获取切点信息就是指定注解的表达式信息的获取如@Before("test()")。
+
+ReflectiveAspectJAdvisorFactory.java
+
+```java
+private AspectJExpressionPointcut getPointcut(Method candidateAdviceMethod, Class<?> candidateAspectClass) {
+    //获取方法上的注解
+   AspectJAnnotation<?> aspectJAnnotation =
+         AbstractAspectJAdvisorFactory.findAspectJAnnotationOnMethod(candidateAdviceMethod);
+   if (aspectJAnnotation == null) {
+      return null;
+   }
+	//使用AspectJExpressionPointcut实例封装获取的信息
+   AspectJExpressionPointcut ajexp =
+         new AspectJExpressionPointcut(candidateAspectClass, new String[0], new Class<?>[0]);
+    //提取得到的注解中的表达式如:
+	//@Pointcut ("execution (* .*test*(..))")中的execution(* *.*test*(..))
+   ajexp.setExpression(aspectJAnnotation.getPointcutExpression());
+   if (this.beanFactory != null) {
+      ajexp.setBeanFactory(this.beanFactory);
+   }
+   return ajexp;
+}
+
+//AbstractAspectJAdvisorFactory.java
+protected static AspectJAnnotation<?> findAspectJAnnotationOnMethod(Method method) {
+    //设置敏感的注解类
+    for (Class<?> clazz : ASPECTJ_ANNOTATION_CLASSES) {
+        AspectJAnnotation<?> foundAnnotation = findAnnotation(method, (Class<Annotation>) clazz);
+        if (foundAnnotation != null) {
+            return foundAnnotation;
+        }
+    }
+    return null;
+}
+//获取指定方法上的注解并使用AspectJAnnotation封装
+private static <A extends Annotation> AspectJAnnotation<A> findAnnotation(Method method, Class<A> toLookFor) {
+    A result = AnnotationUtils.findAnnotation(method, toLookFor);
+    if (result != null) {
+        return new AspectJAnnotation<>(result);
+    } else {
+        return null;
+    }
+}
+```
+
+(2) 根据切点信息生成增强。所有的增强都由Advisor的实现类InstantiationModelAwarePointcutAdvisorImpl统一封装的。
+
+InstantiationModelAwarePointcutAdvisorImpl.java
+
+```java
+public InstantiationModelAwarePointcutAdvisorImpl(AspectJExpressionPointcut declaredPointcut,
+                                      Method aspectJAdviceMethod, AspectJAdvisorFactory aspectJAdvisorFactory,
+                                      MetadataAwareAspectInstanceFactory aspectInstanceFactory, int declarationOrder, String aspectName) {
+
+   this.declaredPointcut = declaredPointcut;
+   this.declaringClass = aspectJAdviceMethod.getDeclaringClass();
+   this.methodName = aspectJAdviceMethod.getName();
+   this.parameterTypes = aspectJAdviceMethod.getParameterTypes();
+   this.aspectJAdviceMethod = aspectJAdviceMethod;
+   this.aspectJAdvisorFactory = aspectJAdvisorFactory;
+   this.aspectInstanceFactory = aspectInstanceFactory;
+   this.declarationOrder = declarationOrder;
+   this.aspectName = aspectName;
+
+   if (aspectInstanceFactory.getAspectMetadata().isLazilyInstantiated()) {
+      // Static part of the pointcut is a lazy type.
+      Pointcut preInstantiationPointcut = Pointcuts.union(
+            aspectInstanceFactory.getAspectMetadata().getPerClausePointcut(), this.declaredPointcut);
+
+      // Make it dynamic: must mutate from pre-instantiation to post-instantiation state.
+      // If it's not a dynamic pointcut, it may be optimized out
+      // by the Spring AOP infrastructure after the first evaluation.
+      this.pointcut = new PerTargetInstantiationModelPointcut(
+            this.declaredPointcut, preInstantiationPointcut, aspectInstanceFactory);
+      this.lazy = true;
+   } else {
+      // A singleton aspect.
+      this.pointcut = this.declaredPointcut;
+      this.lazy = false;
+      this.instantiatedAdvice = instantiateAdvice(this.declaredPointcut);
+   }
+}
+```
+
+​		在封装过程中只是简单地将信息封装在类的实例中，所有的信息单纯地赋值，在实例初始化的过程中还完成了对于增强器的初始化。因为不同的增强所体现的逻辑是不同的,比如@Before (“test()”)与@After (“test()”)标签的不同就是增强器增强的位置不同，所以就需要不同的增强器来完成不同的逻辑，而根据注解中的信息初始化对应的增强器就是在instantiateAdvice函数中实现的。
+
+InstantiationModelAwarePointcutAdvisorImpl.java
+
+```java
+private Advice instantiateAdvice(AspectJExpressionPointcut pointcut) {
+   Advice advice = this.aspectJAdvisorFactory.getAdvice(this.aspectJAdviceMethod, pointcut,
+         this.aspectInstanceFactory, this.declarationOrder, this.aspectName);
+   return (advice != null ? advice : EMPTY_ADVICE);
+}
+
+public Advice getAdvice(Method candidateAdviceMethod, AspectJExpressionPointcut expressionPointcut,
+							MetadataAwareAspectInstanceFactory aspectInstanceFactory, int declarationOrder, String aspectName) {
+
+    Class<?> candidateAspectClass = aspectInstanceFactory.getAspectMetadata().getAspectClass();
+    validate(candidateAspectClass);
+
+    AspectJAnnotation<?> aspectJAnnotation =
+        AbstractAspectJAdvisorFactory.findAspectJAnnotationOnMethod(candidateAdviceMethod);
+    if (aspectJAnnotation == null) {
+        return null;
+    }
+
+    // If we get here, we know we have an AspectJ method.
+    // Check that it's an AspectJ-annotated class
+    if (!isAspect(candidateAspectClass)) {
+        throw new AopConfigException("Advice must be declared inside an aspect type: " +
+                                     "Offending method '" + candidateAdviceMethod + "' in class [" +
+                                     candidateAspectClass.getName() + "]");
+    }
+
+    if (logger.isDebugEnabled()) {
+        logger.debug("Found AspectJ method: " + candidateAdviceMethod);
+    }
+
+    AbstractAspectJAdvice springAdvice;
+	//根据不同的注解类型封装不同的增强器
+    switch (aspectJAnnotation.getAnnotationType()) {
+        case AtPointcut:
+            if (logger.isDebugEnabled()) {
+                logger.debug("Processing pointcut '" + candidateAdviceMethod.getName() + "'");
+            }
+            return null;
+        case AtAround:
+            springAdvice = new AspectJAroundAdvice(
+                candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+            break;
+        case AtBefore:
+            springAdvice = new AspectJMethodBeforeAdvice(
+                candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+            break;
+        case AtAfter:
+            springAdvice = new AspectJAfterAdvice(
+                candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+            break;
+        case AtAfterReturning:
+            springAdvice = new AspectJAfterReturningAdvice(
+                candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+            AfterReturning afterReturningAnnotation = (AfterReturning) aspectJAnnotation.getAnnotation();
+            if (StringUtils.hasText(afterReturningAnnotation.returning())) {
+                springAdvice.setReturningName(afterReturningAnnotation.returning());
+            }
+            break;
+        case AtAfterThrowing:
+            springAdvice = new AspectJAfterThrowingAdvice(
+                candidateAdviceMethod, expressionPointcut, aspectInstanceFactory);
+            AfterThrowing afterThrowingAnnotation = (AfterThrowing) aspectJAnnotation.getAnnotation();
+            if (StringUtils.hasText(afterThrowingAnnotation.throwing())) {
+                springAdvice.setThrowingName(afterThrowingAnnotation.throwing());
+            }
+            break;
+        default:
+            throw new UnsupportedOperationException(
+                "Unsupported advice type on method: " + candidateAdviceMethod);
+    }
+
+    // Now to configure the advice...
+    springAdvice.setAspectName(aspectName);
+    springAdvice.setDeclarationOrder(declarationOrder);
+    String[] argNames = this.parameterNameDiscoverer.getParameterNames(candidateAdviceMethod);
+    if (argNames != null) {
+        springAdvice.setArgumentNamesFromStringArray(argNames);
+    }
+    springAdvice.calculateArgumentBindings();
+
+    return springAdvice;
+}
+```
+
+从函数中可以看到，Spring会根据不同的注解生成不同的增强器，例如 AtBefore会对应我们AspectJMethodBeforeAdvice，而在AspectJMethodBeforeAdvice中完成了增强方法的逻辑尝试分析下几个常用的增强器实现。
+
+- MethodBeforeAdviceInterceptor。
+  我们首先查看MethodBeforeAdvicelInterceptor类的内部实现。
+
+```java
+public class MethodBeforeAdviceInterceptor implements MethodInterceptor, BeforeAdvice, Serializable {
+   private final MethodBeforeAdvice advice;
+   /**
+    * Create a new MethodBeforeAdviceInterceptor for the given advice.
+    *
+    * @param advice the MethodBeforeAdvice to wrap
+    */
+   public MethodBeforeAdviceInterceptor(MethodBeforeAdvice advice) {
+      Assert.notNull(advice, "Advice must not be null");
+      this.advice = advice;
+   }
+   @Override
+   public Object invoke(MethodInvocation mi) throws Throwable {
+      this.advice.before(mi.getMethod(), mi.getArguments(), mi.getThis());
+      return mi.proceed();
+   }
+}
+```
+
+其中的属性 MethodBeforeAdvice 代表着前置增强的 AspectJMethodBeforeAdvice，跟踪before 方法:
+
+AspectJMethodBeforeAdvice.java
+
+```java
+public void before(Method method, Object[] args, @Nullable Object target) throws Throwable {
+   invokeAdviceMethod(getJoinPointMatch(), null, null);
+}
+//AbstractAspectJAdvice.java
+protected Object invokeAdviceMethod(
+    @Nullable JoinPointMatch jpMatch, @Nullable Object returnValue, @Nullable Throwable ex)
+    throws Throwable {
+
+    return invokeAdviceMethodWithGivenArgs(argBinding(getJoinPoint(), jpMatch, returnValue, ex));
+}
+
+protected Object invokeAdviceMethodWithGivenArgs(Object[] args) throws Throwable {
+    Object[] actualArgs = args;
+    if (this.aspectJAdviceMethod.getParameterCount() == 0) {
+        actualArgs = null;
+    }
+    try {
+        ReflectionUtils.makeAccessible(this.aspectJAdviceMethod);
+        // TODO AopUtils.invokeJoinpointUsingReflection
+        //激活增强方法
+        return this.aspectJAdviceMethod.invoke(this.aspectInstanceFactory.getAspectInstance(), actualArgs);
+    } catch (IllegalArgumentException ex) {
+        throw new AopInvocationException("Mismatch on arguments to advice method [" +
+                                         this.aspectJAdviceMethod + "]; pointcut expression [" +
+                                         this.pointcut.getPointcutExpression() + "]", ex);
+    } catch (InvocationTargetException ex) {
+        throw ex.getTargetException();
+    }
+}
+```
+
+invokeAdviceMethodWithGivenArgs方法中的aspectJAdviceMethod正是对于前置增强的方法，在这里实现了调用。
+
+- AspectJAfterAdvice。
+
+​		后置增强与前置增强有稍许不一致的地方。回顾之前讲过的前置增强，大致的结构是在拦截器链中放置MethodBeforeAdviceInterceptor，而在 MethodBeforeAdviceInterceptor 中又放置了AspectJMethodBeforeAdvice，并在调用invoke时首先串联调用。但是在后置增强的时候却不一样，没有提供中间的类，而是直接在拦截器链中使用了中间的 AspectJAfterAdvice
+
+```java
+public class AspectJAfterAdvice extends AbstractAspectJAdvice
+      implements MethodInterceptor, AfterAdvice, Serializable {
+   public AspectJAfterAdvice(
+         Method aspectJBeforeAdviceMethod, AspectJExpressionPointcut pointcut, AspectInstanceFactory aif) {
+
+      super(aspectJBeforeAdviceMethod, pointcut, aif);
+   }
+   @Override
+   public Object invoke(MethodInvocation mi) throws Throwable {
+      try {
+         return mi.proceed();
+      } finally {
+          //激活增强方法
+         invokeAdviceMethod(getJoinPointMatch(), null, null);
+      }
+   }
+   @Override
+   public boolean isBeforeAdvice() {
+      return false;
+   }
+   @Override
+   public boolean isAfterAdvice() {
+      return true;
+   }
+}
+```
+
+#### 2．增加同步实例化增强器
+
+​		如果寻找的增强器不为空而且又配置了增强延迟初始化,那么就需要在首位加人同步实例化增强器。同步实例化增强器SyntheticInstantiationAdvisor 如下:
+
+ReflectiveAspectJAdvisorFactory.java的内部类
+
+```java
+protected static class SyntheticInstantiationAdvisor extends DefaultPointcutAdvisor {
+   public SyntheticInstantiationAdvisor(final MetadataAwareAspectInstanceFactory aif) {
+      super(aif.getAspectMetadata().getPerClausePointcut(), (MethodBeforeAdvice)
+            (method, args, target) -> aif.getAspectInstance());//
+   }
+}
+
+/*
+super(aif.getAspectMetadata ().getPerClausePointcut (), new MethodBeforeAdvice() {
+    //目标方法前调用,类似@Before
+    public void before (Method method, object[] args,0bject target){
+        //简单初始化aspect
+        aif.getAspectInstance ();
+    }	
+);
+
+*/
+```
+
+#### 3．获取 DeclareParents注解
+
+DeclareParents主要用于引介增强的注解形式的实现，而其实现方式与普通增强很类似，只不过使用DeclareParentsAdvisor对功能进行封装。
+
+ReflectiveAspectJAdvisorFactory.java
+
+```java
+private Advisor getDeclareParentsAdvisor(Field introductionField) {
+   DeclareParents declareParents = introductionField.getAnnotation(DeclareParents.class);
+   if (declareParents == null) {
+      // Not an introduction field
+      return null;
+   }
+
+   if (DeclareParents.class == declareParents.defaultImpl()) {
+      throw new IllegalStateException("'defaultImpl' attribute must be set on DeclareParents");
+   }
+
+   return new DeclareParentsAdvisor(
+         introductionField.getType(), declareParents.value(), declareParents.defaultImpl());
+}
+```
+
+### 7.3.2 寻找匹配的增强器
+
+​		前面的函数中已经完成了所有增强器的解析，但是对于所有增强器来讲，并不一定都适用于当前的 Bean，还要挑取出适合的增强器，也就是满足我们配置的通配符的增强器。具体实现在findAdvisorsThatCanApply中。
+
+AbstractAdvisorAutoProxyCreator.java
+
+```java
+protected List<Advisor> findAdvisorsThatCanApply(
+      List<Advisor> candidateAdvisors, Class<?> beanClass, String beanName) {
+
+   ProxyCreationContext.setCurrentProxiedBeanName(beanName);
+   try {
+       //过滤已经得到的advisors
+      return AopUtils.findAdvisorsThatCanApply(candidateAdvisors, beanClass);
+   } finally {
+      ProxyCreationContext.setCurrentProxiedBeanName(null);
+   }
+}
+```
+
+继续看findAdvisorsThatCanApply :
+
+AopUtils.java
+
+```java
+public static List<Advisor> findAdvisorsThatCanApply(List<Advisor> candidateAdvisors, Class<?> clazz) {
+    if (candidateAdvisors.isEmpty()) {
+        return candidateAdvisors;
+    }
+    List<Advisor> eligibleAdvisors = new ArrayList<>();
+    //首先处理引介增强
+    for (Advisor candidate : candidateAdvisors) {
+        if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
+            eligibleAdvisors.add(candidate);
+        }
+    }
+    boolean hasIntroductions = !eligibleAdvisors.isEmpty();
+    for (Advisor candidate : candidateAdvisors) {
+        //引介增强已处理
+        if (candidate instanceof IntroductionAdvisor) {
+            // already processed
+            continue;
+        }
+        //普通bean的处理
+        if (canApply(candidate, clazz, hasIntroductions)) {
+            eligibleAdvisors.add(candidate);
+        }
+    }
+    return eligibleAdvisors;
+}
+```
+
+findAdvisorsThatCanApply函数的主要功能是寻找所有增强器中适用于当前class 的增强器。引介增强与普通的增强是处理不一样的，所以分开处理。而对于真正的匹配在 canApply中实现。
+
+
+
+```java
+public static boolean canApply(Advisor advisor, Class<?> targetClass) {
+   return canApply(advisor, targetClass, false);
+}
+public static boolean canApply(Advisor advisor, Class<?> targetClass, boolean hasIntroductions) {
+    if (advisor instanceof IntroductionAdvisor) {
+        return ((IntroductionAdvisor) advisor).getClassFilter().matches(targetClass);
+    } else if (advisor instanceof PointcutAdvisor) {
+        PointcutAdvisor pca = (PointcutAdvisor) advisor;
+        return canApply(pca.getPointcut(), targetClass, hasIntroductions);
+    } else {
+        // It doesn't have a pointcut so we assume it applies.
+        return true;
+    }
+}
+public static boolean canApply(Pointcut pc, Class<?> targetClass, boolean hasIntroductions) {
+    Assert.notNull(pc, "Pointcut must not be null");
+    if (!pc.getClassFilter().matches(targetClass)) {
+        return false;
+    }
+
+    MethodMatcher methodMatcher = pc.getMethodMatcher();
+    if (methodMatcher == MethodMatcher.TRUE) {
+        // No need to iterate the methods if we're matching any method anyway...
+        return true;
+    }
+
+    IntroductionAwareMethodMatcher introductionAwareMethodMatcher = null;
+    if (methodMatcher instanceof IntroductionAwareMethodMatcher) {
+        introductionAwareMethodMatcher = (IntroductionAwareMethodMatcher) methodMatcher;
+    }
+
+    Set<Class<?>> classes = new LinkedHashSet<>();
+    if (!Proxy.isProxyClass(targetClass)) {
+        classes.add(ClassUtils.getUserClass(targetClass));
+    }
+    classes.addAll(ClassUtils.getAllInterfacesForClassAsSet(targetClass));
+
+    for (Class<?> clazz : classes) {
+        Method[] methods = ReflectionUtils.getAllDeclaredMethods(clazz);
+        for (Method method : methods) {
+            if (introductionAwareMethodMatcher != null ?
+                introductionAwareMethodMatcher.matches(method, targetClass, hasIntroductions) :
+                methodMatcher.matches(method, targetClass)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+```
+
+### 7.3.3 创建代理
+
+​		在获取了所有对应bean的增强器后，便可以进行代理的创建了。
+
+AbstractAutoproxyCreator.java
+
+```java
+protected Object createProxy(Class<?> beanClass, 
+                             @Nullable String beanName,
+                      		 @Nullable Object[] specificInterceptors, 
+                             TargetSource targetSource) {
+   if (this.beanFactory instanceof ConfigurableListableBeanFactory) {
+      AutoProxyUtils.exposeTargetClass((ConfigurableListableBeanFactory) this.beanFactory, beanName, beanClass);
+   }
+   ProxyFactory proxyFactory = new ProxyFactory();
+    //获取当前类中相关属性
+   proxyFactory.copyFrom(this);
+    //决定对于给定的bean是否应该使用targetclass而不是他的接口代理,
+    //检查proxyTargeclass设置以及preserveTargetclass属性
+   if (proxyFactory.isProxyTargetClass()) {
+      // Explicit handling of JDK proxy targets (for introduction advice scenarios)
+      if (Proxy.isProxyClass(beanClass)) {
+         // Must allow for introductions; can't just set interfaces to the proxy's interfaces only.
+         for (Class<?> ifc : beanClass.getInterfaces()) {
+            proxyFactory.addInterface(ifc);
+         }
+      }
+   } else {
+      // No proxyTargetClass flag enforced, let's apply our default checks...
+      if (shouldProxyTargetClass(beanClass, beanName)) {
+         proxyFactory.setProxyTargetClass(true);
+      } else {
+         evaluateProxyInterfaces(beanClass, proxyFactory);
+      }
+   }
+
+   Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
+    //加入增强器
+   proxyFactory.addAdvisors(advisors);
+    //设置要代理的类
+   proxyFactory.setTargetSource(targetSource);
+    //定制代理
+   customizeProxyFactory(proxyFactory);
+    //用来控制代理工厂被配置之后，是否还允许修改通知。
+    //缺省值为false（即在代理被配置之后，不允许修改代理的配置)。
+   proxyFactory.setFrozen(this.freezeProxy);
+   if (advisorsPreFiltered()) {
+      proxyFactory.setPreFiltered(true);
+   }
+
+   return proxyFactory.getProxy(getProxyClassLoader());
+}
+```
+
+​		对于代理类的创建及处理，Spring委托给了ProxyFactory去处理，而在此函数中主要是对ProxyFactory的初始化操作，进而对真正的创建代理做准备，这些初始化操作包括如下内容。
+(1) 获取当前类中的属性。
+
+(2) 添加代理接口。
+
+(3) 封装Advisor并加入到ProxyFactory 中。
+
+(4) 设置要代理的类。
+
+(5) 当然在Spring 中还为子类提供了定制的函数customizeProxyFactory，子类可以在此函数中进行对ProxyFactory的进一步封装。
+
+(6) 进行获取代理操作。
+		其中，封装 Advisor并加入到ProxyFactory 中以及创建代理是两个相对繁琐的过程，可以通过ProxyFactory提供的addAdvisor方法直接将增强器置入代理创建工厂中，但是将拦截器封装为增强器还是需要一定的逻辑的。
+
+AbstractAutoproxyCreator.java
+
+```java
+protected Advisor[] buildAdvisors(@Nullable String beanName, @Nullable Object[] specificInterceptors) {
+   // Handle prototypes correctly...
+    //解析注册的所有interceptorName
+   Advisor[] commonInterceptors = resolveInterceptorNames();
+
+   List<Object> allInterceptors = new ArrayList<>();
+   if (specificInterceptors != null) {
+      if (specificInterceptors.length > 0) {
+         // specificInterceptors may equals PROXY_WITHOUT_ADDITIONAL_INTERCEPTORS
+          //加入拦截器
+         allInterceptors.addAll(Arrays.asList(specificInterceptors));
+      }
+      if (commonInterceptors.length > 0) {
+         if (this.applyCommonInterceptorsFirst) {
+            allInterceptors.addAll(0, Arrays.asList(commonInterceptors));
+         } else {
+            allInterceptors.addAll(Arrays.asList(commonInterceptors));
+         }
+      }
+   }
+   if (logger.isTraceEnabled()) {
+      int nrOfCommonInterceptors = commonInterceptors.length;
+      int nrOfSpecificInterceptors = (specificInterceptors != null ? specificInterceptors.length : 0);
+      logger.trace("Creating implicit proxy for bean '" + beanName + "' with " + nrOfCommonInterceptors +
+            " common interceptors and " + nrOfSpecificInterceptors + " specific interceptors");
+   }
+
+   Advisor[] advisors = new Advisor[allInterceptors.size()];
+   for (int i = 0; i < allInterceptors.size(); i++) {
+       //拦截器进行封装转化为Advisor
+      advisors[i] = this.advisorAdapterRegistry.wrap(allInterceptors.get(i));
+   }
+   return advisors;
+}
+
+//DefaultAdvisorAdapterRegistry.java
+public Advisor wrap(Object adviceObject) throws UnknownAdviceTypeException {
+	//如果要封装的对象本身就是Advisor类型的那么无需再做过多处理
+    if (adviceObject instanceof Advisor) {
+        return (Advisor) adviceObject;
+    }
+    //因为此封装方法只对Advisor与Advice两种类型的数据有效，如果不是将不能封装
+    if (!(adviceObject instanceof Advice)) {
+        throw new UnknownAdviceTypeException(adviceObject);
+    }
+    Advice advice = (Advice) adviceObject;
+    if (advice instanceof MethodInterceptor) {
+        // So well-known it doesn't even need an adapter.
+        //如果是MethodInterceptor类型则使用DefaultPointcutAdvisor封装
+        return new DefaultPointcutAdvisor(advice);
+    }
+    for (AdvisorAdapter adapter : this.adapters) {
+        // Check that it is supported.
+        //如果存在Advisor的适配器那么也同样需要进行封装
+        if (adapter.supportsAdvice(advice)) {
+            return new DefaultPointcutAdvisor(advice);
+        }
+    }
+    throw new UnknownAdviceTypeException(advice);
+}
+```
+
+​		由于Spring 中涉及过多的拦截器、增强器、增强方法等方式来对逻辑进行增强，所以非常有必要统一封装成Advisor来进行代理的创建，完成了增强的封装过程，那么解析最重要的一步就是代理的创建与获取了。
+```java
+public object getProxy(ClassLoader classLoader){
+	return createAopProxy().getProxy(classLoader);
+}
+```
+
+#### 1．创建代理
+
+ProxyCreatorSupport.java
+
+```java
+protected final synchronized AopProxy createAopProxy() {
+   if (!this.active) {
+      activate();
+   }
+   return getAopProxyFactory().createAopProxy(this);
+}
+
+//DefaultAopProxyFactory.java
+public AopProxy createAopProxy(AdvisedSupport config) throws AopConfigException {
+    if (config.isOptimize() || config.isProxyTargetClass() || hasNoUserSuppliedProxyInterfaces(config)) {
+        Class<?> targetClass = config.getTargetClass();
+        if (targetClass == null) {
+            throw new AopConfigException("TargetSource cannot determine target class: " +
+                                         "Either an interface or a target is required for proxy creation.");
+        }
+        if (targetClass.isInterface() || Proxy.isProxyClass(targetClass)) {
+            return new JdkDynamicAopProxy(config);
+        }
+        return new ObjenesisCglibAopProxy(config);
+    } else {
+        return new JdkDynamicAopProxy(config);
+    }
+}
+```
+
+​		到此已经完成了代理的创建，不管我们之前是否有阅读过Spring的源代码，但是都或多或少地听过对于Spring 的代理中JDKProxy的实现和CglibProxy的实现。Spring是如何选取的呢?网上的介绍到处都是，现在我们就从源代码的角度分析，看看到底Spring是如何选择代理方式的。
+从if中的判断条件可以看到3个方面影响着Spring 的判断。
+
+- optimize:用来控制通过CGLIB创建的代理是否使用激进的优化策略。除非完全了解
+- AOP代理如何处理优化，否则不推荐用户使用这个设置。目前这个属性仅用于CGLIB代理，对于JDK动态代理（缺省代理)无效。
+- proxyTargetClass:这个属性为true时，目标类本身被代理而不是目标类的接口。如果这个属性值被设为true，CGLIB代理将被创建，设置方式:\<aop:aspectj-autoproxyproxy-target-class="true"/>。
+- hasNoUserSuppliedProxyInterfaces:是否存在代理接口。
+
+下面是对JDK与Cglib方式的总结。
+
+- 如果目标对象实现了接口，默认情况下会采用JDK的动态代理实现AOP.
+- 如果目标对象实现了接口，可以强制使用CGLIB实现AOP。
+- 如果目标对象没有实现了接口，必须采用CGLIB库，Spring会自动在JDK动态代理和CGLIB之间转换。
+
+如何强制使用CGLIB实现AOP?
+(1) 添加CGLIB库，Spring_HOME/cglib/*.jar。
+(2) 在Spring 配置文件中加入<aop:aspectj-autoproxy proxy-target-class="true">。
+
+JDK动态代理和 CGLIB字节码生成的区别?
+
+- JDK动态代理只能对实现了接口的类生成代理，而不能针对类。
+- CGLIB是针对类实现代理，主要是对指定的类生成一个子类，覆盖其中的方法，因为是继承，所以该类或方法最好不要声明成final。
+
+#### 2．获取代理
+
+​		确定了使用哪种代理方式后便可以进行代理的创建了,但是创建之前有必要回顾一下两种方式的使用方法。
+
+##### (1) JDK代理使用示例。
+
+创建业务接口，业务对外提供的接口，包含着业务可以对外提供的功能。
+
+```java
+public interface UserService {
+    /**
+	*目标方法
+	*/
+	public abstract void add ();
+}
+```
+
+
+
+创建业务接口实现类。
+```java
+public class UserserviceImpl implements UserService {
+/* (non-Javadoc)
+* @see dynamic.proxy.Userservice#add ()*/
+  public void add () {
+  	System.out.println ( "----------------------add------------------------");
+  }
+}
+```
+
+创建自定义的InvocationHandler，用于对接口提供的方法进行增强。
+
+```java
+public class MyInvocationHandler implements InvocationHandler {
+    //目标对象
+    private object target;
+    /**
+    *构造方法
+    *Cparam target目标对象
+    */
+    public MyInvocationHandler (0bject target){
+        super ();
+        this.target = target;
+    }
+    /**
+    *执行目标对象的方法
+    */
+    public object invoke (Object proxy，Method method,0bject[] args) throws Throwable {
+        //在目标对象的方法执行之前简单的打印一下
+        System.out.println("------before--------");
+        //执行目标对象的方法
+        object result = method.invoke (target, args) ;
+        //在目标对象的方法执行之后简单的打印一下
+        System.out.println("------after--------");
+        return result;
+    }
+    /**
+    *获取目标对象的代理对象
+    return代理对象
+    */
+    public object getProxy () {
+    	return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(),
+                                      target.getClass ().getInterfaces(), this);
+    }
+}
+```
+
+最后进行测试,验证对于接口的增强是否起到作用。
+
+```java
+public class ProxyTest {
+    @Test
+    public void testProxy () throws Throwable {
+        //实例化目标对象
+        UserService userService = new UserServiceImpl();
+        //实例化InvocationHandler
+        MyInvocationHandler invocationHandler = new MyInvocationHandler(userService);
+        //根据目标对象生成代理对象
+        UserService proxy = (Userservice) invocationHandler.getProxy ();
+        //调用代理对象的方法
+        proxy.add();
+    }
+}
+```
+
+
+
+执行结果如下:
+
+---------------before---------------
+---------------add---------------
+
+---------------after---------------
+		用起来很简单，其实这基本上就是 AOP 的一个简单实现了，在目标对象的方法执行之前和执行之后进行了增强.Spring 的AOP实现其实也是用了Proxy和 InvocationHandler这两个东西的。
+		我们再次来回顾一下使用JDK代理的方式，在整个创建过程中，对于InvocationHandler的创建是最为核心的，在自定义的 InvocationHandler中需要重写3个函数。
+
+- 构造函数,将代理的对象传入。
+- invoke方法，此方法中实现了AOP增强的所有逻辑。
+- getProxy方法，此方法千篇一律，但是必不可少。
+
+那么，我们看看Spring 中的JDK代理实现是不是也是这么做的呢?继续之前的跟踪，到达JdkDynamicAopProxy的getProxy。
+
+```java
+public Object getProxy(@Nullable ClassLoader classLoader) {
+   if (logger.isTraceEnabled()) {
+      logger.trace("Creating JDK dynamic proxy: " + this.advised.getTargetSource());
+   }
+   Class<?>[] proxiedInterfaces = AopProxyUtils.completeProxiedInterfaces(this.advised, true);
+   findDefinedEqualsAndHashCodeMethods(proxiedInterfaces);
+   return Proxy.newProxyInstance(classLoader, proxiedInterfaces, this);
+}
+```
+
+​		通过之前的示例我们知道，JDKProxy 的使用关键是创建自定义的 InvocationHandler，而InvocationHandler 中包含了需要覆盖的函数 getProxy，而当前的方法正是完成了这个操作。再次确认一下JdkDynamicAopProxy也确实实现了InvocationiHandler接口，那么我们就可以推断出，在JdkDynamicAopProxy中一定会有个invoke函数，并且JdkDynamicAopProxy会把AOP的核心逻辑写在其中。查看代码，果然有这样个函数:
+
+JdkDynamicAopProxy.java
+
+```java
+public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+   Object oldProxy = null;
+   boolean setProxyContext = false;
+
+   TargetSource targetSource = this.advised.targetSource;
+   Object target = null;
+
+   try {
+      if (!this.equalsDefined && AopUtils.isEqualsMethod(method)) {//equals方法的处理
+         // The target does not implement the equals(Object) method itself.
+         return equals(args[0]);
+      } else if (!this.hashCodeDefined && AopUtils.isHashCodeMethod(method)) {//hash方法的处理
+         // The target does not implement the hashCode() method itself.
+         return hashCode();
+      } else if (method.getDeclaringClass() == DecoratingProxy.class) {
+         // There is only getDecoratedClass() declared -> dispatch to proxy config.
+         return AopProxyUtils.ultimateTargetClass(this.advised);
+      } 
+       /*
+        Class类的isAssignableFrom (class cls)方法:
+        如果调用这个方法的class或接口与参数cls表示的类或接口相同，或者是参数cls表示的类或接口的父类,则返回true。
+        形象地:自身类.class.isAssignableFrom(自身类或子类.class)返回true
+        例:
+        system.out.println(ArrayList.class.isAssignableFrom(Object.class));//false
+        system.out.println (object.class.isAssignableFrom(ArrayList.class));//true
+        */
+       else if (!this.advised.opaque && method.getDeclaringClass().isInterface() &&
+            method.getDeclaringClass().isAssignableFrom(Advised.class)) {
+         // Service invocations on ProxyConfig with the proxy config...
+         return AopUtils.invokeJoinpointUsingReflection(this.advised, method, args);
+      }
+
+      Object retVal;
+		//有时候目标对象内部的自我调用将无法实施切面中的增强则需要通过此属性暴露代理
+      if (this.advised.exposeProxy) {
+         // Make invocation available if necessary.
+         oldProxy = AopContext.setCurrentProxy(proxy);
+         setProxyContext = true;
+      }
+
+      // Get as late as possible to minimize the time we "own" the target,
+      // in case it comes from a pool.
+      target = targetSource.getTarget();
+      Class<?> targetClass = (target != null ? target.getClass() : null);
+      // Get the interception chain for this method.
+       //获取当前方法的拦截器链
+      List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
+
+      // Check whether we have any advice. If we don't, we can fallback on direct
+      // reflective invocation of the target, and avoid creating a MethodInvocation.
+       //如果没有发现任何拦截器那么直接调用切点方法
+      if (chain.isEmpty()) {
+         // We can skip creating a MethodInvocation: just invoke the target directly
+         // Note that the final invoker must be an InvokerInterceptor so we know it does
+         // nothing but a reflective operation on the target, and no hot swapping or fancy proxying.
+         Object[] argsToUse = AopProxyUtils.adaptArgumentsIfNecessary(method, args);
+         retVal = AopUtils.invokeJoinpointUsingReflection(target, method, argsToUse);
+      } else {
+         // We need to create a method invocation...
+          //将拦截器封装在ReflectiveMethodInvocation,
+          //以便于使用其proceed进行链接表用拦截器
+         MethodInvocation invocation =
+               new ReflectiveMethodInvocation(proxy, target, method, args, targetClass, chain);
+         // Proceed to the joinpoint through the interceptor chain.
+         retVal = invocation.proceed();
+      }
+
+      // Massage return value if necessary.
+      Class<?> returnType = method.getReturnType();
+       //返回结果
+      if (retVal != null && retVal == target &&
+            returnType != Object.class && returnType.isInstance(proxy) &&
+            !RawTargetAccess.class.isAssignableFrom(method.getDeclaringClass())) {
+         // Special case: it returned "this" and the return type of the method
+         // is type-compatible. Note that we can't help if the target sets
+         // a reference to itself in another returned object.
+         retVal = proxy;
+      } else if (retVal == null && returnType != Void.TYPE && returnType.isPrimitive()) {
+         throw new AopInvocationException(
+               "Null return value from advice does not match primitive return type for: " + method);
+      }
+      return retVal;
+   } finally {
+      if (target != null && !targetSource.isStatic()) {
+         // Must have come from TargetSource.
+         targetSource.releaseTarget(target);
+      }
+      if (setProxyContext) {
+         // Restore old proxy.
+         AopContext.setCurrentProxy(oldProxy);
+      }
+   }
+}
+```
+
+​		上面的函数中最主要的工作就是创建了一个拦截器链，并使用ReflectiveMethodInvocation类进行了链的封装，而在ReflectiveMethodInvocation类的 proceed方法中实现了拦截器的逐一调用，那么我们继续来探究，在 proceed方法中是怎么实现前置增强在目标方法前调用后置增强在目标方法后调用的逻辑呢?
+
+ReflectiveMethodInvocation.java
+
+```java
+public Object proceed() throws Throwable {
+   // We start with an index of -1 and increment early.
+    //执行完所有增强后执行切点方法
+   if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
+      return invokeJoinpoint();
+   }
+	//获取下一个要执行的拦截器
+   Object interceptorOrInterceptionAdvice =
+         this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
+   if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {
+      // Evaluate dynamic method matcher here: static part will already have
+      // been evaluated and found to match.
+       //动态匹配
+      InterceptorAndDynamicMethodMatcher dm =
+            (InterceptorAndDynamicMethodMatcher) interceptorOrInterceptionAdvice;
+      Class<?> targetClass = (this.targetClass != null ? this.targetClass : this.method.getDeclaringClass());
+      if (dm.methodMatcher.matches(this.method, targetClass, this.arguments)) {
+         return dm.interceptor.invoke(this);
+      } else {
+         // Dynamic matching failed.
+         // Skip this interceptor and invoke the next in the chain.
+          //不匹配则不执行拦截器
+         return proceed();
+      }
+   } else {
+      // It's an interceptor, so we just invoke it: The pointcut will have
+      // been evaluated statically before this object was constructed.
+       /*普通拦截器,直接调用拦截器，比如:
+        ExposeInvocationInterceptor、
+        DelegatePerTarget0bjectIntroductionInterceptor,MethodBeforeAdviceInterceptor
+        AspectJAroundAdvice 、AspectJAfterAdvice
+        */
+        //将this作为参数传递以保证当前实例中调用链的执行
+      return ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this);
+   }
+}
+```
+
+​		在proceed方法中，或许代码逻辑并没有我们想象得那么复杂，ReflectiveMethodInvocation中的主要职责是维护了链接调用的计数器，记录着当前调用链接的位置，以便链可以有序地进行下去，那么在这个方法中并没有我们之前设想的维护各种增强的顺序，而是将此工作委托给了各个增强器，使各个增强器在内部进行逻辑实现。
+
+##### (2) CGLIB使用示例。
+
+​		CGLIB是一个强大的高性能的代码生成包。它广泛地被许多AOP的框架使用，例如SpringAOP和dynaop，为他们提供方法的Interception(拦截)。最流行的OR Mapping 工具 Hibernate也使用CGLIB来代理单端single-ended(多对一和一对一）关联(对集合的延迟抓取是采用其他机制实现的)。EasyMock 和 jMock是通过使用模仿(moke)对象来测试Java代码的包它们都通过使用CGLIB来为那些没有接口的类创建模仿（moke)对象。
+​		CGLIB包的底层通过使用一个小而快的字节码处理框架 ASM,来转换字节码并生成新的类。除了CGLIB包，脚本语言例如 Groovy 和 BeanShell，也是使用ASM来生成Java 的字节码。当然不鼓励直接使用ASM，因为它要求你必须对JVM内部结构包括class文件的格式和指令集都很熟悉。
+​		我们先快速地了解CGLIB 的使用示例。
+
+```java
+import java.lang.reflect.Method;
+import net.sf.cglib.proxy. Enhancer;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
+public class EnhancerDemo {
+   public static void main(String[] args) {
+      Enhancer enhancer = new Enhancer();
+      enhancer.setSuperclass(EnhancerDemo.class);
+      enhancer.setCallback(new MethodInterceptorImpl());
+      EnhancerDemo demo = (EnhancerDemo) enhancer.create();
+      demo.test();
+      System.out.println(demo);
+   }
+   public void test() {
+      System.out.println("EnhancerDemo test ()");
+   }
+   private static class MethodInterceptorImpl implements MethodInterceptor {
+      @Override
+      public Object intercept(Object obj,
+                        Method method,
+                        Object[] args,
+                        MethodProxy proxy) throws Throwable {
+         System.err.println("Before invoke " + method);
+         Object result = proxy.invokeSuper(obj, args);
+         System.err.println("After invoke" + method);
+         return result;
+      }
+   }
+}
+```
+
+运行结果如下:
+```note
+Before invoke public void EnhancerDemo.test()
+EnhancerDemo test()
+After invokepublic void EnhancerDemo.test()
+Before invoke public java.lang.string java.lang.0bject.tostring()
+Before invoke public native int java.lang.Object.hashcode()
+After invokepublic native int java.lang.object.hashcode()
+After invokepublic java.lang.string java.lang.0bject.toString()
+EnhancerDemo$$EnhancerByCGLIB$$bc9b206601621e42
+```
+
+​		可以看到System.out.printIn(demo)，demo首先调用了toString0方法，然后又调用了hashCode，生成的对象为 EnhancerDemo$$EnhancerByCGLIB$$bc9b2066的实例，这个类是运行时由CGLIB产生的。
+​		完成CGLIB代理的类是委托给Cglib2AopProxy类去实现的，我们进入这个类一探究竟。按照前面提供的示例，我们容易判断出来，Cglib2AopProxy 的入口应该是在getProxy，也就是说在Cglib2AopProxy类的getProxy方法中实现了Enhancer的创建及接口封装。
+
+CglibAopProxy.java
+
+```java
+public Object getProxy(@Nullable ClassLoader classLoader) {
+   if (logger.isTraceEnabled()) {
+      logger.trace("Creating CGLIB proxy: " + this.advised.getTargetSource());
+   }
+
+   try {
+      Class<?> rootClass = this.advised.getTargetClass();
+      Assert.state(rootClass != null, "Target class must be available for creating a CGLIB proxy");
+
+      Class<?> proxySuperClass = rootClass;
+      if (rootClass.getName().contains(ClassUtils.CGLIB_CLASS_SEPARATOR)) {
+         proxySuperClass = rootClass.getSuperclass();
+         Class<?>[] additionalInterfaces = rootClass.getInterfaces();
+         for (Class<?> additionalInterface : additionalInterfaces) {
+            this.advised.addInterface(additionalInterface);
+         }
+      }
+
+      // Validate the class, writing log messages as necessary.
+       //验证Class
+      validateClassIfNecessary(proxySuperClass, classLoader);
+
+      // Configure CGLIB Enhancer...
+       //创建及配置Enhancer
+      Enhancer enhancer = createEnhancer();
+      if (classLoader != null) {
+         enhancer.setClassLoader(classLoader);
+         if (classLoader instanceof SmartClassLoader &&
+               ((SmartClassLoader) classLoader).isClassReloadable(proxySuperClass)) {
+            enhancer.setUseCache(false);
+         }
+      }
+      enhancer.setSuperclass(proxySuperClass);
+      enhancer.setInterfaces(AopProxyUtils.completeProxiedInterfaces(this.advised));
+      enhancer.setNamingPolicy(SpringNamingPolicy.INSTANCE);
+      enhancer.setStrategy(new ClassLoaderAwareGeneratorStrategy(classLoader));
+		//设置拦截器
+      Callback[] callbacks = getCallbacks(rootClass);
+      Class<?>[] types = new Class<?>[callbacks.length];
+      for (int x = 0; x < types.length; x++) {
+         types[x] = callbacks[x].getClass();
+      }
+      // fixedInterceptorMap only populated at this point, after getCallbacks call above
+      enhancer.setCallbackFilter(new ProxyCallbackFilter(
+            this.advised.getConfigurationOnlyCopy(), this.fixedInterceptorMap, this.fixedInterceptorOffset));
+      enhancer.setCallbackTypes(types);
+
+      // Generate the proxy class and create a proxy instance.
+       //生成代理类以及创建代理
+      return createProxyClassAndInstance(enhancer, callbacks);
+   } catch (CodeGenerationException | IllegalArgumentException ex) {
+      throw new AopConfigException("Could not generate CGLIB subclass of " + this.advised.getTargetClass() +
+            ": Common causes of this problem include using a final class or a non-visible class", ex);
+   } catch (Throwable ex) {
+      // TargetSource.getTarget() failed
+      throw new AopConfigException("Unexpected AOP exception", ex);
+   }
+}
+//生成代理类以及创建代理
+protected Object createProxyClassAndInstance(Enhancer enhancer, Callback[] callbacks) {
+    enhancer.setInterceptDuringConstruction(false);
+    enhancer.setCallbacks(callbacks);
+    return (this.constructorArgs != null && this.constructorArgTypes != null ?
+            enhancer.create(this.constructorArgTypes, this.constructorArgs) :
+            enhancer.create());
+}
+```
+
+​		以上函数完整地阐述了一个创建Spring 中的 Enhancer的过程，读者可以参考Enhance的文档查看每个步骤的含义，这里最重要的是通过getCallbacks方法设置拦截器链。
+
+```java
+private Callback[] getCallbacks(Class<?> rootClass) throws Exception {
+   // Parameters used for optimization choices...
+    //对于expose-proxy属性的处理
+   boolean exposeProxy = this.advised.isExposeProxy();
+   boolean isFrozen = this.advised.isFrozen();
+   boolean isStatic = this.advised.getTargetSource().isStatic();
+
+   // Choose an "aop" interceptor (used for AOP calls).
+    //将拦截器封装在DynamicAdvisedInterceptor中
+   Callback aopInterceptor = new DynamicAdvisedInterceptor(this.advised);
+
+   // Choose a "straight to target" interceptor. (used for calls that are
+   // unadvised but can return this). May be required to expose the proxy.
+   Callback targetInterceptor;
+   if (exposeProxy) {
+      targetInterceptor = (isStatic ?
+            new StaticUnadvisedExposedInterceptor(this.advised.getTargetSource().getTarget()) :
+            new DynamicUnadvisedExposedInterceptor(this.advised.getTargetSource()));
+   } else {
+      targetInterceptor = (isStatic ?
+            new StaticUnadvisedInterceptor(this.advised.getTargetSource().getTarget()) :
+            new DynamicUnadvisedInterceptor(this.advised.getTargetSource()));
+   }
+
+   // Choose a "direct to target" dispatcher (used for
+   // unadvised calls to static targets that cannot return this).
+   Callback targetDispatcher = (isStatic ?
+         new StaticDispatcher(this.advised.getTargetSource().getTarget()) : new SerializableNoOp());
+
+   Callback[] mainCallbacks = new Callback[]{
+       //将拦截器链加入Callback中
+         aopInterceptor,  // for normal advice
+         targetInterceptor,  // invoke target without considering advice, if optimized
+         new SerializableNoOp(),  // no override for methods mapped to this
+         targetDispatcher, this.advisedDispatcher,
+         new EqualsInterceptor(this.advised),
+         new HashCodeInterceptor(this.advised)
+   };
+
+   Callback[] callbacks;
+
+   // If the target is a static one and the advice chain is frozen,
+   // then we can make some optimizations by sending the AOP calls
+   // direct to the target using the fixed chain for that method.
+   if (isStatic && isFrozen) {
+      Method[] methods = rootClass.getMethods();
+      Callback[] fixedCallbacks = new Callback[methods.length];
+      this.fixedInterceptorMap = new HashMap<>(methods.length);
+
+      // TODO: small memory optimization here (can skip creation for methods with no advice)
+      for (int x = 0; x < methods.length; x++) {
+         Method method = methods[x];
+         List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, rootClass);
+         fixedCallbacks[x] = new FixedChainStaticTargetInterceptor(
+               chain, this.advised.getTargetSource().getTarget(), this.advised.getTargetClass());
+         this.fixedInterceptorMap.put(method, x);
+      }
+
+      // Now copy both the callbacks from mainCallbacks
+      // and fixedCallbacks into the callbacks array.
+      callbacks = new Callback[mainCallbacks.length + fixedCallbacks.length];
+      System.arraycopy(mainCallbacks, 0, callbacks, 0, mainCallbacks.length);
+      System.arraycopy(fixedCallbacks, 0, callbacks, mainCallbacks.length, fixedCallbacks.length);
+      this.fixedInterceptorOffset = mainCallbacks.length;
+   } else {
+      callbacks = mainCallbacks;
+   }
+   return callbacks;
+}
+```
+
+​		在getCallback中 Spring考虑了很多情况，但是对于我们来说，只需要理解最常用的就可以了，比如将advised属性封装在DynamicAdvisedInterceptor 并加入在calIbacks中，这样做的目的是什么呢，如何调用呢?在前面的示例中，我们了解到CGLIB 中对于方法的拦截是通过将自定义的拦截器(实现MethodInterceptor接口)加人Callback 中并在调用代理时直接激活拦截器中的 intercept方法来实现的，那么在 getCallback中正是实现了这样一个目的,DynamicAdvisedInterceptor继承自MethodInterceptor，加入 Callback 中后，在再次调用代理时会直接调用代理时会直接调用DynamicAdvisedInterceptor 中的 intercept方法，由此推断，对于CGLIB方式实现的代理，其核心逻辑必然在DynamicAdvisedInterceptor 中的 intercept中。
+
+DynamicAdvisedInterceptor.java
+
+```java
+public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+   Object oldProxy = null;
+   boolean setProxyContext = false;
+   Object target = null;
+   TargetSource targetSource = this.advised.getTargetSource();
+   try {
+      if (this.advised.exposeProxy) {
+         // Make invocation available if necessary.
+         oldProxy = AopContext.setCurrentProxy(proxy);
+         setProxyContext = true;
+      }
+      // Get as late as possible to minimize the time we "own" the target, in case it comes from a pool...
+      target = targetSource.getTarget();
+      Class<?> targetClass = (target != null ? target.getClass():null);
+       //获取拦截器链
+      List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);
+      Object retVal;
+      // Check whether we only have one InvokerInterceptor: that is,
+      // no real advice, but just reflective invocation of the target.
+      if (chain.isEmpty() && CglibMethodInvocation.isMethodProxyCompatible(method)) {
+         // We can skip creating a MethodInvocation: just invoke the target directly.
+         // Note that the final invoker must be an InvokerInterceptor, so we know
+         // it does nothing but a reflective operation on the target, and no hot
+         // swapping or fancy proxying.
+         Object[] argsToUse = AopProxyUtils.adaptArgumentsIfNecessary(method, args);
+          //如果拦截器链为空则直接激活原方法
+         retVal = invokeMethod(target, method, argsToUse, methodProxy);
+      } else {
+         // We need to create a method invocation...
+          //进入链
+         retVal = new CglibMethodInvocation(proxy, target, method, args, targetClass, chain, methodProxy).proceed();
+      }
+      retVal = processReturnType(proxy, target, method, retVal);
+      return retVal;
+   } finally {
+      if (target != null && !targetSource.isStatic()) {
+         targetSource.releaseTarget(target);
+      }
+      if (setProxyContext) {
+         // Restore old proxy.
+         AopContext.setCurrentProxy(oldProxy);
+      }
+   }
+}
+```
+
+​		上述的实现与JDK方式实现代理中的 invoke方法大同小异，都是首先构造链，然后封装此链进行串联调用，稍有些区别就是在JDK中直接构造ReflectiveMethodInvocation，而在cglib中使用CglibMethodInvocation。CglibMethodInvocation继承自ReflectiveMethodInvocation，但是proceed方法并没有重写。
+
+## 7.4 静态AOP使用示例
+
+​		加载时织入( Load-Time Weaving，LTW)指的是在虚拟机载入字节码文件时动态织入AspectJ切面。Spring框架的值添加为AspectJ LTW在动态织人过程中提供了更细粒度的控制。使用Java (5+)的代理能使用一个叫“Vanilla”的AspectJ LTW，这需要在启动JVM的时候将某个JVM参数设置为开。这种JVM范围的设置在一些情况下或许不错，但通常情况下显得有些粗颗粒。而用Spring 的LTW能让你在per-ClassLoader 的基础上打开LTW,这显然更加细粒度并且对“单JVM多应用”的环境更具意义（例如在一个典型应用服务器环境中)。另外，在某些环境下，这能让你使用LTW而不对应用服务器的启动脚本做任何改动，不然则需要添加-javaagent:path/to/aspectjweaver.jar或者（以下将会提及的) -javaagent:path/tolSpring-agent.jaro开发人员只需简单修改应用上下文的一个或几个文件就能使用LTW,而不需依靠那些管理者部署配置,比如启动脚本的系统管理员。
+我们还是以之前的AOP示例为基础，如果想从动态代理的方式改成静态代理的方式需要做如下改动。
+(1) Spring全局配置文件的修改，加入LWT 开关。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans  xmlns="http://www.Springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:aop="http://www.Springframework.org/schema/aop"
+		xmlns:context="http://www.Springframework.org/schema/context"
+        xsi:schemaLocation="http://www.Springframework.org/schema/beans
+		http://www.Springframework.org/schema/beans/Spring-beans-3.0.xsd
+		http://www.Springframework.org/schema/aop
+		http://www.Springframework.org/schema/aop/Spring-aop-3.0.xsd
+        http://www.Springframework.org/schema/context
+		http://www.Springframework.org/schema/context/Spring-context-3.0.xsd"/>
+    <aop:aspectj-autoproxy/>
+    <bean id="test" class="test.TestBean"/><bean class="test.AspectJTest"/>
+    <context:load-time-weaver/>
+</ beans>
+```
+
+(2)加人 aop.xml。在class目录下的 META-INF(没有则自己建立)文件夹下建立 aop.xml,内容如下:
+```xml
+<!DOCTYPE aspectj POBLIC "-//AspectJ//DTD//EN" "http://www.eclipse.org/aspectj/dtd/aspectj.dtrd"/>
+<aspectj>
+    <weaver>
+        <!-- only weave classes in our application-specific packages -->
+        <include within="test.*"/>
+    </weaver>
+    <aspects>
+    <!-- weave in just this aspect -->
+        <aspect name="test.AspectJTest" />
+    </aspects>
+</aspectj>
+```
+
+主要是告诉AspectJ 需要对哪个包进行织入,并使用哪些增强器。
+(3) 加入启动参数。如果是在Eclipse中启动的话需要加上启动参数
+
+```note
+-javaagent:e:\org.springframework.instrument.jar
+```
+
+(4）测试。
+```java
+public static void main(string [] args) {
+	ApplicationContext bf = new ClassPathXmlApplicationContext("aspectTest.xml");
+    IITestBean bean=(IITestBean)bf.getBean("test");
+	bean.testBeanM();
+}
+```
+
+测试结果与动态AOP并无差别,打印出结果:
+
+beforeTest
+test
+afterTest
+
+## 7.5 创建AOP静态代理
+
+​		AOP的静态代理主要是在虚拟机启动时通过改变目标对象字节码的方式来完成对目标对象的增强，它与动态代理相比具有更高的效率，因为在动态代理调用的过程中，还需要一个动态创建代理类并代理目标对象的步骤，而静态代理则是在启动时便完成了字节码增强，当系统再次调用目标类时与调用正常的类并无差别，所以在效率上会相对高些。
+
+### 7.5.1 Instrumentation使用
+
+​		Java在1.5引入java.lang.instrument，你可以由此实现一个Java agent,通过此agent来修改类的字节码即改变一个类。本节会通过Java Instrument实现一个简单的profiler。当然 instrument并不限于profiler，instrument 它可以做很多事情，它类似一种更低级、更松耦合的AOP,从底层来改变一个类的行为。你可以由此产生无限的遐想。接下来要做的事情，就是计算方法所花的时间，通常我们会在代码中按以下方式编写。
+​		在方法开头加入long stime =System.nanoTime();在方法结尾通过System.nanoTime()-stime得出方法所花时间。你不得不在想监控的每个方法中写入重复的代码，好一点的情况，你可以用AOP 来干这事，但总是感觉有点别扭，这种 profiler 的代码还是要打包在你的项目中，Java Instrument使得这一切更干净。
+
+(1) 写ClassFileTransformer类
+
+```java
+import java.lang.instrument.ClassFileTransformer;
+import java.lang.instrument.IllegalClassFormatException;
+import java.security.ProtectionDomain;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtBehavior;
+import javassist.CtClass;
+import javassist.NotFoundException;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
+public class PerfMonXformer implements ClassFileTransformer {
+   public byte[] transform(ClassLoader loader,
+                     String className,
+                     Class<?> classBeingRedefined,
+                     ProtectionDomain protectionDomain,
+                     byte[] classfileBuffer) throws illegalClassFormatException {
+      byte[] transformed = null;
+      System.out.println("Transforming " + className);
+      ClassPool pool = ClassPool.getDefault();
+      Ctclass cl = null;
+      try {
+         cl = pool.makeClass(new ByteArrayInputstream(classfileBuffer));
+         if (cl.isInterface() == false) {
+            CtBehavior[] methods = cl.getDeclaredBehaviors();
+            for (int i = 0; i < methods.length; i++) {
+               if (methods[i].isEmpty() = false) {
+                  //修改method字节码
+                  doMethod(methods[i]);
+               }
+            }
+            transformed = cl.toBytecode();
+         }
+      } catch (Exception e) {
+         System.err.println("could not instrument " + className
+               + ",exception : " + e.getMessage());
+      } finally {
+         if (cl != null) {
+            cl.detach();
+         }
+      }
+      return transformed;
+   }
+
+   private void doMethod(CtBehavior method) throws NotFoundException,
+         CannotCompileException {
+      method.insertBefore("long stime = System.nanoTime();");
+      method.insertAfter("System.out.println (/"leave"+method.getName()+"and time : /"+(System.nanoTime ()-stime));");
+   }
+}
+```
+
+(2）编写agent类。
+
+```java
+import java. lang.instrument.Instrumentation;
+import java.lang.instrument.ClassFileTransformer;
+public class PerfMonAgent{
+	static private Instrumentation inst = null;
+    /**
+    *This method is called before the application's main-method is called,when this agent is specified to the Java VM.
+    **/
+    public static void premain(String agentArgs,Instrumentation _inst){
+    	system.out.println ( "PerfMonAgent.premain() was called.");
+    	//Initialize the static variables we use to track information.
+        inst = _inst;
+		// set up the class-file transformer.
+		classFileTransformer trans = new PerfMonXformer( );
+		System.out.println("Adding a PerfMonXformer instance to the JVM.");
+        inst.addTransformer(trans);
+    }
+}
+```
+
+​		上面两个类就是agent 的核心了,JVM启动时在应用加载前会调用PerfMonAgent.premain,然后PerfMonAgent.premain中实例化了一个定制的ClassFileTransforme，即 PerfMonXformer并通过inst.addTransformer(trans)把 PerfMonXformer 的实例加人Instrumentation 实例(由JVM传人)，这就使得应用中的类加载时，PerfMonXformer.transform都会被调用，你在此方法中可以改变加载的类。真的有点神奇，为了改变类的字节码，我使用了JBoss 的 Javassist，虽然你不一定要这么用，但JBoss的Javassist真的很强大，能让你很容易地改变类的字节码。在上面的方法中我通过改变类的字节码，在每个类的方法人口中加入了long stime =System.nanoTime()，在方法的出口加入了:
+
+System.out.println ( "methodclassName .methodName : "+(System.nanoTime ( ) -stime) ) ;
+
+(3) 打包agent。
+对于agent的打包，有点讲究。
+
+- JAR的META-INF/MANIFEST.MF加入 Premain-Class: xx，Xx 在此语境中就是我们的agent类，即org.toy.PerfMonAgent。
+- 如果你的agent类引入别的包，需使用Boot-Class-Path: xx,xx在此语境中就是上面提到的JBoss javassit,即/home/pwlazyl.m2/repositoryljavassist/javassist/3.8.0 .GA/ javassist-3.8.0.GA.jar。
+
+下面附上Maven的POM。
+
+```xml
+[xhtml]view plaincopyprint?
+<project xmIns="http: //maven.apache.org/POM/4.0.O" 
+         xmlns:xsi="http://www.w3.org/2001/xMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelversion>
+    <groupId>org.toy</ groupId>
+    <artifactId>toy-inst</artifactId>
+    <packaging>jar</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <name>toy-inst</name>
+    <url>http://maven.apache.org</url>
+    <dependencies>
+        <dependency>
+            <groupId>javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.8.0.GA</version>
+        </dependency>
+        <dependency>
+        	<groupId>junit</groupId>
+        	<artifactId>junit<lartifactId>
+            <version>3.8.1</version>
+        	<scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+    <plugins>
+    	<plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>2.2</ version>
+            <configuration>
+                <archive>
+                    <manifestEntries>
+                    	<Premain-class>org. toy. PerfMonAgent</Premin-class>
+                    	<Boot-Class-Path>/home/pwlazy/.m2/repository/javassist/javassist/3.8.0.GA/javassist-3.8.0.GA.jar</Boot-Class-Path>
+                    </manifestEntries>
+                </archive>
+            </configuration>
+            </plugin>
+        <plugin>
+        	<artifactId>maven-compiler-plugin </artifactId >
+        	<configuration>
+                <source>1.6</source >
+                <target>1.6</target>
+            </configuration>
+        </plugin>
+    </plugins>
+    </build>
+</project>
+
+```
+
+(4) 打包应用。
+
+```java
+package org.toy;
+public class App {
+    public static void main (string[] args) {
+	    new App().test();
+    }
+    public void test(){
+	    System.out.println("Hello world ! ! ");
+    }
+}
+```
+
+Java选项中有-javaagent:xx，其中xx就是你的agent JAR，Java通过此选项加载agent，由agent来监控 classpath 下的应用。
+最后的执行结果:
+
+```note
+PerfMonAgent.premain () was called.
+Adding a PerfMonXformer instance to the JVMTransforming org/toy /App
+Hello world! !
+java.io.PrintStream.println:314216
+org.toy.App.test:540082
+Transforming java/lang/ Shutdown
+Transforming java/lang/Shutdown$Lock
+java.lang.Shutdown.runHooks: 29124
+java.lang.Shutdown.sequence: 132768
+```
+
+​		由执行结果可以看出，执行顺序以及通过改变org.toy.App 的字节码加入监控代码确实生效了。你也可以发现，通过Instrment实现agent使得监控代码和应用代码完全隔离了。
+​		通过之前的两个小示例我们似乎已经有所傩云，Lp,g牡地计I以上面的例子来看，AspectJ提供的方法，而 AspectJ又是在Instrument基础上进行的封装。就以上面的例子来看,
+至少在 AspectJ中会有如下功能。
+(1) 读取 META-INF/aop.xml。
+(2) 将aop.xml中定义的增强器通过自定义的ClassFileTransformer织入对应的类中。
+​		当然这都是AspectJ所做的事情，并不在我们讨论的范畴，Spring是直接使用AspectJ，也就是将动态代理的任务直接委托给了AspectJ，那么，Spring 怎么嵌入 AspectJ的呢?同样我们还是从配置文件入手。
+
+### 7.5.2 自定义标签
+
+​		在Spring 中如果需要使用AspectJ的功能,首先要做的第一步就是在配置文件中加人配置:\<context:load-time-weaverl/>。我们根据之前介绍的自定义命名空间的知识便可以推断，引用AspectJ的人口便是这里，可以通过查找load-time-weaver 来找到对应的自定义命名处理类。
+​		通过 Eclipse提供的字符串搜索功能，我们找到了ContextNamespaceHandler，在其中有这样一段函数。
+
+ContextNamespaceHandler.java
+
+```java
+@Override
+public void init() {
+   registerBeanDefinitionParser("property-placeholder", new PropertyPlaceholderBeanDefinitionParser());
+   registerBeanDefinitionParser("property-override", new PropertyOverrideBeanDefinitionParser());
+   registerBeanDefinitionParser("annotation-config", new AnnotationConfigBeanDefinitionParser());
+   registerBeanDefinitionParser("component-scan", new ComponentScanBeanDefinitionParser());
+   registerBeanDefinitionParser("load-time-weaver", new LoadTimeWeaverBeanDefinitionParser());
+   registerBeanDefinitionParser("spring-configured", new SpringConfiguredBeanDefinitionParser());
+   registerBeanDefinitionParser("mbean-export", new MBeanExportBeanDefinitionParser());
+   registerBeanDefinitionParser("mbean-server", new MBeanServerBeanDefinitionParser());
+}
+```
+
+​		继续跟进LoadTimeWeaverBeanDefinitionParser，作为 BeanDefinitionParser接口的实现类,他的核心逻辑是从parse 函数开始的,而经过父类的封装,LoadTimeWeaverBeanDefinitionParser类的核心实现被转移到了doParse函数中，如下:
+
+LoadTimeWeaverBeanDefinitionParser.java
+
+```java
+@Override
+protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
+   builder.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+
+   if (isAspectJWeavingEnabled(element.getAttribute(ASPECTJ_WEAVING_ATTRIBUTE), parserContext)) {
+      if (!parserContext.getRegistry().containsBeanDefinition(ASPECTJ_WEAVING_ENABLER_BEAN_NAME)) {
+         RootBeanDefinition def = new RootBeanDefinition(ASPECTJ_WEAVING_ENABLER_CLASS_NAME);
+         parserContext.registerBeanComponent(
+               new BeanComponentDefinition(def, ASPECTJ_WEAVING_ENABLER_BEAN_NAME));
+      }
+
+      if (isBeanConfigurerAspectEnabled(parserContext.getReaderContext().getBeanClassLoader())) {
+         new SpringConfiguredBeanDefinitionParser().parse(element, parserContext);
+      }
+   }
+}
+```
+
+​		其实之前在分析动态AOP也就是在分析配置<aop:aspectj-autoproxy />中已经提到了自定义配置的解析流程，对于\<aop:aspectj-autoproxy/>的解析无非是以标签作为标志，进而进行相关处理类的注册，那么对于自定义标签\<context:load-time-weaver/>其实是起到了同样的作用。
+​		上面函数的核心作用其实就是注册一个对于ApectJ处理的类org.Springframework.context.weaving.AspectJWeavingEnabler，它的注册流程总结起来如下。
+(1) 是否开启AspectJ。
+​		之前虽然反复提到了在配置文件中加人了\<context:load-time-weaver/>便相当于加入了AspectJ开关。但是，并不是配置了这个标签就意味着开启了AspectJ功能，这个标签中还有一个属性aspectj-weaving，这个属性有3个备选值，on、off和 autodetect,默认为 autodetect，也就是说，如果我们只是使用了\<context:load-time-weaver/>,那么Spring 会帮助我们检测是否可以使用AspectJ功能，而检测的依据便是文件 META-INF/aop.xml 是否存在，看看在Spring中的实现方式。
+
+LoadTimeWeaverBeanDefinitionParser.java
+
+```java
+protected boolean isAspectJWeavingEnabled(String value, ParserContext parserContext) {
+   if ("on".equals(value)) {
+      return true;
+   }
+   else if ("off".equals(value)) {
+      return false;
+   }
+   else {
+      // Determine default...  自动检测
+      ClassLoader cl = parserContext.getReaderContext().getBeanClassLoader();
+      return (cl != null && cl.getResource(AspectJWeavingEnabler.ASPECTJ_AOP_XML_RESOURCE) != null);
+   }
+}
+```
+
+(2) 将org.Springframework.context.weaving.AspectJWeavingEnabler封装在 BeanDefinition中注册。
+
+​		当通过AspectJ功能验证后便可以进行AspectJWeavingEnabler的注册了，注册的方式很简单，无非是将类路径注册在新初始化的 RootBeanDefinition
+中,在RootBeanDefinition的获取时会转换成对应的class。
+​		尽管在init方法中注册了AspectJWeavingEnabler，但是对于标签本身Spring 也会以bean的形式保存,也就是当Spring解析到\<context:load-time-weaver/>标签的时候也会产生一个bean,而这个bean 中的信息是什么呢?
+​		在LoadTimeWeaverBeanDefinitionParser类中有这样的函数:
+
+```java
+protected String getBeanClassName(Element element) {
+   if (element.hasAttribute(WEAVER_CLASS_ATTRIBUTE)) {
+      return element.getAttribute(WEAVER_CLASS_ATTRIBUTE);
+   }
+   return DEFAULT_LOAD_TIME_WEAVER_CLASS_NAME;
+}
+
+@Override
+protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext) {
+    return ConfigurableApplicationContext.LOAD_TIME_WEAVER_BEAN_NAME;
+}
+```
+
+​		其中，可以看到:
+WEAVER CLASS ATTRIBUTE="weaver-class"
+
+DEFAULT LOAD TIME WEAVER CLASS NAME ="org.Springframework.context.weaving.DefaultContextLoadTimeWeaver";
+ConfigurableApplicationContext.LOAD_TIME WEAVER BEAN NAME=”loadTimeWeaver"
+
+​		单凭以上的信息我们至少可以推断，当Spring在读取到自定义标签\<context:load-time-weaver/>后会产生一个bean,而这个bean的id为loadTimeWeaver , class为org.Springframework.context.weaving.DefaultContextLoadTimeWeaver，也就是完成了DefaultContextLoadTimeWeaver类的注册。
+​		完成了以上的注册功能后，并不意味这在Spring 中就可以使用AspectJ了,因为我们还有一个很重要的步骤忽略了，就是LoadTimeWeaverAwareProcessor 的注册。在 AbstractApplicationContext中的prepareBeanFactory函数中有这样一段代码:
+
+```java
+//增加对AspectJ的支持
+if(beanFactory.containsBean (LOAD_ TIME_ WEAVEBEAN NAME)) {
+	beanFactory.addBeanPostProcessor(new LoadTimeWeaverAwareProcessor(beanFactory));
+	//Set a temporary ClassLoader for type matching.
+	beanFactory.setTempClassLoader(new ContextTypeMatchclassLoader (beanFactory.getBeanClassLoader ()));
+}
+```
+
+​		在AbstractApplicationContext 中的 prepareBeanFactory 函数是在容器初始化时候调用的,也就是说只有注册了LoadTimeWeaverAwareProcessor才会激活整个AspectJ的功能。
+
+### 7.5.3 织入
+
+​		当我们完成了所有的 AspectJ的准备工作后便可以进行织入分析了，首先还是从LoadTirneWeaverAwareProcessor开始。
+
+​		LoadTimeWeaverAwareProcessor实现 BeanPostProcessor方法，那么对于 BeanPostProcessor接口来讲, postProcessBeforeInitialization与 postProcessAfterInitialization有着其特殊意义，也就是说在所有bean的初始化之前与之后都会分别调用对应的方法，那么在LoadTimeWeaverAwareProcessor中的postProcessBeforeInitialization函数中完成了什么样的逻辑呢?
+
+LoadTimeWeaverAwareProcessor.java
+
+```java
+public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+   if (bean instanceof LoadTimeWeaverAware) {
+      LoadTimeWeaver ltw = this.loadTimeWeaver;
+      if (ltw == null) {
+         Assert.state(this.beanFactory != null,
+               "BeanFactory required if no LoadTimeWeaver explicitly specified");
+         ltw = this.beanFactory.getBean(
+               ConfigurableApplicationContext.LOAD_TIME_WEAVER_BEAN_NAME, LoadTimeWeaver.class);
+      }
+      ((LoadTimeWeaverAware) bean).setLoadTimeWeaver(ltw);
+   }
+   return bean;
+}
+```
+
+我们综合之前讲解的所有信息，将所有相关信息串联起来一起分析这个函数。
+		在LoadTimeWeaverAwareProcessor中的 postProcessBeforeInitialization函数中,因为最开始的if判断注定这个后处理器只对LoadTimeWeaverAware类型的 bean起作用，而纵观所有的bean，实现LoadTimeWeaver接口的类只有AspectJ WeavingEnabler。
+		当在Spring 中调用 AspectJWeavingEnabler时,this.loadTimeWeaver尚未被初始化,那么，会直接调用beanFactory.getBean方法获取对应的DefaultContextLoadTimeWeaver类型的 bean,并将其设置为AspectJWeavingEnabler类型 bean的 loadTimeWeaver属性中。当然 AspectJWeavingEnabler同样实现了BeanClassLoaderAware 以及Ordered接口,实现BeanClassLoaderAware接口保证了在bean初始化的时候调用AbstractAutowireCapableBeanFactory 的 invokeAwareMethods 的时候将beanClassLoader赋值给当前类。而实现Ordered接口则保证在实例化bean时当前bean会被最先初始化。
+		而 DefaultContextLoadTime Weaver类又同时实现了LoadTimeWeaver、 BeanClassLoaderAware以及 DisposableBean。其中 DisposableBean接口保证在 bean销毁时会调用destroy方法进行bean的清理，而 BeanClassLoaderAware接口则保证在 bean的初始化调用AbstractAutowireCapableBeanFactory 的invokeAwareMethods时调用setBeanClassLoader方法。
+
+DefaultContextLoadTimeWeaver.java
+
+```java
+@Override
+public void setBeanClassLoader(ClassLoader classLoader) {
+   LoadTimeWeaver serverSpecificLoadTimeWeaver = createServerSpecificLoadTimeWeaver(classLoader);
+   if (serverSpecificLoadTimeWeaver != null) {
+      if (logger.isDebugEnabled()) {
+         logger.debug("Determined server-specific load-time weaver: " +
+               serverSpecificLoadTimeWeaver.getClass().getName());
+      }
+      this.loadTimeWeaver = serverSpecificLoadTimeWeaver;
+   }
+   else if (InstrumentationLoadTimeWeaver.isInstrumentationAvailable()) {
+      logger.debug("Found Spring's JVM agent for instrumentation");
+      this.loadTimeWeaver = new InstrumentationLoadTimeWeaver(classLoader);
+   }
+   else {
+      try {
+          //检查当前虚拟机中的Instrumentation实例是否可用
+         this.loadTimeWeaver = new ReflectiveLoadTimeWeaver(classLoader);
+         if (logger.isDebugEnabled()) {
+            logger.debug("Using reflective load-time weaver for class loader: " +
+                  this.loadTimeWeaver.getInstrumentableClassLoader().getClass().getName());
+         }
+      }
+      catch (IllegalStateException ex) {
+         throw new IllegalStateException(ex.getMessage() + " Specify a custom LoadTimeWeaver or start your " +
+               "Java virtual machine with Spring's agent: -javaagent:spring-instrument-{version}.jar");
+      }
+   }
+}
+```
+
+上面的函数中有一句很容易被忽略但是很关键的代码:
+```java
+this.loadTimeweaver = new InstrumentationLoadTimeweaver(classLoader);
+```
+
+​		这句代码不仅仅是实例化了一个InstrumentationLoadTimeWeaver类型的实例，而且在实例化过程中还做了一些额外的操作。
+在实例化的过程中会对当前的this.instrumentation属性进行初始化，而初始化的代码如下:this.instrumentation = getInstrumentation(),也就是说在InstrumentationLoadTimeWeaver实例化后其属性Instrumentation已经被初始化为代表着当前虚拟机的实例了。综合我们讲过的例子，对于注册转换器，如 addTransformer函数等，便可以直接使用此属性进行操作了。
+​		也就是经过以上程序的处理后，在 Spring 中的bean之间的关系如下:
+
+- AspectJWeavingEnabler类型的 bean中的loadTimeWeaver 属性被初始化为DefaultContextLoadTimeWeaver类型的bean;
+- DefaultContextLoadTimeWeaver类型的 bean中的load Time Weaver属性被初始化为InstrumentationLoadTimeWeaver。
+
+因为AspectJWeavingEnabler类同样实现了BeanFactory.PostProcessor, 所以当所有bean解析结束后会调用其postProcessBeanFactory方法。
+
+AspectJWeavingEnabler.java
+
+```java
+@Override
+public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+   enableAspectJWeaving(this.loadTimeWeaver, this.beanClassLoader);
+}
+
+
+/**
+ * Enable AspectJ weaving with the given {@link LoadTimeWeaver}.
+ * @param weaverToUse the LoadTimeWeaver to apply to (or {@code null} for a default weaver)
+ * @param beanClassLoader the class loader to create a default weaver for (if necessary)
+ */
+public static void enableAspectJWeaving(
+      @Nullable LoadTimeWeaver weaverToUse, @Nullable ClassLoader beanClassLoader) {
+
+   if (weaverToUse == null) {
+       //此时已经被初始化为DefaultContextLoadTimeWeaver
+      if (InstrumentationLoadTimeWeaver.isInstrumentationAvailable()) {
+         weaverToUse = new InstrumentationLoadTimeWeaver(beanClassLoader);
+      }
+      else {
+         throw new IllegalStateException("No LoadTimeWeaver available");
+      }
+   }
+    //使用DefaultContextLoadTimeWeaver类型的bean 中的loadTimeWeaver属性注册转换器
+   weaverToUse.addTransformer(
+         new AspectJClassBypassingClassFileTransformer(new ClassPreProcessorAgentAdapter()));
+}
+
+/**
+ * ClassFileTransformer decorator that suppresses processing of AspectJ
+ * classes in order to avoid potential LinkageErrors.
+ * @see org.springframework.context.annotation.LoadTimeWeavingConfiguration
+ */
+private static class AspectJClassBypassingClassFileTransformer implements ClassFileTransformer {
+
+    private final ClassFileTransformer delegate;
+
+    public AspectJClassBypassingClassFileTransformer(ClassFileTransformer delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
+                            ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
+
+        if (className.startsWith("org.aspectj") || className.startsWith("org/aspectj")) {
+            return classfileBuffer;
+        }
+        //委托给AspectJ代理继续处理
+        return this.delegate.transform(loader, className, classBeingRedefined, protectionDomain, classfileBuffer);
+    }
+}
+```
+
+​		AspectJClassBypassingClassFileTransformer的作用仅仅是告诉AspectJ以 org.aspectj开头的或者org/aspectj开头的类不进行处理。
+
+
+
+# 第8章 数据库连接JDBC
+
+​		JDBC (Java Data Base Connectivity ,Java数据库连接)是-种用于执行SQL语句的 Java API,可以为多种关系数据库提供统一访问，它由一组用Java语言编写的类和接口组成。JDBC为数据库开发人员提供了一个标准的API，据此可以构建更高级的工具和接口,使数据库开发人员能够用纯Java API编写数据库应用程序，并且可跨平台运行，并且不受数据库供应商的限制。
+​		JDBC连接数据库的流程及其原理如下。
+(1) 在开发环境中加载指定数据库的驱动程序。接下来的实验中，使用的数据库是MySQL,所以需要去下载 MySQL 支持JDBC 的驱动程序(最新的版本是mysql-connector-java-5.1.18-bin.jar )，将下载得到的驱动程序加载进开发环境中(开发环境是 MyEclipse，具体示例时会讲解如何加载)。
+
+(2) 在Java程序中加载驱动程序。在Java程序中，可以通过“Class.forName("指定数据库的驱动程序")”的方式来加载添加到开发环境中的驱动程序例如加载MySQL的数据驱动程序的代码为Class.forName("com.mysql.jdbc.Driver"')。
+
+(3) 创建数据连接对象。通过DriverManager类创建数据库连接对象 Connection oDriverManager类作用于Java程序和JDBC驱动程序之间，用于检查所加载的驱动程序是否可以建立连接，然后通过它的getConnection方法根据数据库的URL、用户名和密码，创建一个JDBC Connection对象，例如:Connection connection = DriverManager.geiConnection("连接数据库的URL", "用户名", "密码”)。其中，URL-协议名+IP地址域名)+端口+数据库名称;用户名和密码是指登录数据库时所使用的用户名和密码。具体示例创建 MySQL 的数据库连接代码如下:
+```java
+Connection connectMysQL = DriverManager.getConnection ("jdbc:mysql://localhost:3306/myuser" , "root", "root" );
+```
+
+(4) 创建Statement对象。Statement类的主要是用于执行静态SQL 语句并返回它所生成结果的对象。通过Connection对象的createStatement()方法可以创建一个 Statement对象。例如:Statement statament = connection.createStatement()。具体示例创建Statement对象代码如下:
+```java
+Statement statamentMySQL = connectMySQL.createstatement();
+```
+
+(5) 调用Statement对象的相关方法执行相对应的SQL语句。通过 execuUpdate()方法来对数据更新,包括插入和删除等操作，例如向staff表中插入一条数据的代码:
+```java
+statement.excuteUpdate("INSERT INTOstaff (name,age,sex, address, depart,worklen,wage)" + "VALUES ('Tom1',321,'W','china','Personnel','3','3000')");
+```
+
+​		通过调用Statement对象的executeQuery()方法进行数据的查询,而查询结果会得到ResulSet对象，ResulSet 表示执行查询数据库后返回的数据的集合，ResulSet对象具有可以指向当前数据行的指针。通过该对象的next()方法，使得指针指向下一行，然后将数据以列号或者字段名取出。如果当next()方法返回null，则表示下一行中没有数据存在。使用示例代码如下:
+```java
+ResultSet resultSel = statement.executeQuery("select * from staff");
+```
+
+(6) 关闭数据库连接。使用完数据库或者不需要访问数据库时，通过Connection的close()方法及时关闭数据连接。
+
+
+
+
 
