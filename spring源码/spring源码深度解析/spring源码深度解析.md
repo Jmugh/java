@@ -8742,7 +8742,7 @@ public Object proceed() throws Throwable {
 
 ​		CGLIB是一个强大的高性能的代码生成包。它广泛地被许多AOP的框架使用，例如SpringAOP和dynaop，为他们提供方法的Interception(拦截)。最流行的OR Mapping 工具 Hibernate也使用CGLIB来代理单端single-ended(多对一和一对一）关联(对集合的延迟抓取是采用其他机制实现的)。EasyMock 和 jMock是通过使用模仿(moke)对象来测试Java代码的包它们都通过使用CGLIB来为那些没有接口的类创建模仿（moke)对象。
 ​		CGLIB包的底层通过使用一个小而快的字节码处理框架 ASM,来转换字节码并生成新的类。除了CGLIB包，脚本语言例如 Groovy 和 BeanShell，也是使用ASM来生成Java 的字节码。当然不鼓励直接使用ASM，因为它要求你必须对JVM内部结构包括class文件的格式和指令集都很熟悉。
-​		我们先快速地了解CGLIB 的使用示例。
+​		我们先快速地了解CGLIB 的使用示例
 
 ```java
 import java.lang.reflect.Method;
@@ -9493,7 +9493,7 @@ private static class AspectJClassBypassingClassFileTransformer implements ClassF
 
 (3) 创建数据连接对象。通过DriverManager类创建数据库连接对象 Connection oDriverManager类作用于Java程序和JDBC驱动程序之间，用于检查所加载的驱动程序是否可以建立连接，然后通过它的getConnection方法根据数据库的URL、用户名和密码，创建一个JDBC Connection对象，例如:Connection connection = DriverManager.geiConnection("连接数据库的URL", "用户名", "密码”)。其中，URL-协议名+IP地址域名)+端口+数据库名称;用户名和密码是指登录数据库时所使用的用户名和密码。具体示例创建 MySQL 的数据库连接代码如下:
 ```java
-Connection connectMysQL = DriverManager.getConnection ("jdbc:mysql://localhost:3306/myuser" , "root", "root" );
+Connection connectMysQL = DriverManager.getConnection ("jdbc:mysql://localhost:3306/myuser","root","root" );
 ```
 
 (4) 创建Statement对象。Statement类的主要是用于执行静态SQL 语句并返回它所生成结果的对象。通过Connection对象的createStatement()方法可以创建一个 Statement对象。例如:Statement statament = connection.createStatement()。具体示例创建Statement对象代码如下:
