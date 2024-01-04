@@ -6208,7 +6208,7 @@ bean.message=Hi, can you find me?
 
 #### 2. 使用自定义 BeanFactoryPostProcessor
 
-​		我们以实现一个 BeanFactoryPostProcessor，去除潜在的“流氓”属性值的功能来展示自定义BeanFactoryPostProcessor 的创建及使用，例如 bean定义中留下bollocks这样的字眼。
+​		我们以实现一个 BeanFactoryPostProcessor，去除潜在的“流氓”属性值的功能来展示自定义BeanFactoryPostProcessor 的创建及使用，例如 bean定义中留下bollocks这样的字眼。（这里是通过注册bean的方式，将后置处理器加到beanFactory中，也可以调用beanFactory.addBeanPostProcessor方法）
 
 BeanFactory.xml
 
@@ -6228,7 +6228,7 @@ BeanFactory.xml
             </set>
         </property>
     </bean>
-    <bean id="simpleBean" class="com.Spring.ch04.SimplePostProcesso">
+    <bean id="simpleBean" class="com.Spring.ch04.SimplePostProcessor">
         <property name="connectionstring" value="bollocks"/>
         <property name="password" value="imaginecup" />
         <property name="username" value="Microsoft"/>
@@ -6294,7 +6294,7 @@ SimplePostProcessor{connectionstring=\*\*\*\*\*,username=\*\*\*\*\*,password=ima
 
 ​		了解了BeanFactoryPostProcessor的用法后便可以深入研究 BeanFactoryPostProcessor的调过程了
 
-AbstractApplicationContext.java
+AbstractApplicationContext.java # refresh()
 
 ```java
 protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
@@ -6451,6 +6451,8 @@ public static void invokeBeanFactoryPostProcessors(
    beanFactory.clearMetadataCache();
 }
 ```
+
+​		<font color = 'red'>**beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class)极为重要，因为在invokeBeanFactoryPostProcessors（激活beanFactoryProcessor）之前，只读取了bean定义和做了些beanFactory的初始化工作（beanFactory也不是bean）,并没有实例化bean,这里getBean进行了bean的创建，得到了beanFactory的后置处理器bean实例, 所以才能调用该处理器的方法**</font>		
 
 ​		从上面的方法中我们看到，对于BeanFactoryPostProcessor 的处理主要分两种情况进行，一个是对于BeanDefinitionRegistry类的特殊处理，另一种是对普通的BeanFactoryPostProcessor进行处理。而对于每种情况都需要考虑硬编码注入注册的后处理器以及通过配置注入的后处理器。
 对于BeanDefinitionRegistry类型的处理类的处理主要包括以下内容。
@@ -6649,7 +6651,7 @@ Locale locale4 = Locale. CHINESE;
 Locale locale 5=Locale.getDefault();
 ```
 
-JDK 的java.util包中提供了几个支持本地化的格式化操作工具类:NumberFormat 、DateFormat、MessageFormat，而在Spring 中的国际化资源操作也无非是对于这些类的封装操作，我们仅仅介绍下MessageFormat 的用法以帮助大家回顾:
+​		JDK 的java.util包中提供了几个支持本地化的格式化操作工具类:NumberFormat 、DateFormat、MessageFormat，而在Spring 中的国际化资源操作也无非是对于这些类的封装操作，我们仅仅介绍下MessageFormat 的用法以帮助大家回顾:
 
 ```java
 //1. 信息格式化串
@@ -6666,11 +6668,11 @@ System.out.println(msg1);
 System.out.println(msg2);
 ```
 
-Spring定义了访问国际化信息的 MessageSource接口，并提供了几个易用的实现类。MessageSource分别被 HierarchicalMessageSource和ApplicationContext 接口扩展，这里我们主要看一下HierarchicalMessageSource接口的几个实现类，如图6-3所示。
+​		Spring定义了访问国际化信息的 MessageSource接口，并提供了几个易用的实现类。MessageSource分别被 HierarchicalMessageSource和ApplicationContext 接口扩展，这里我们主要看一下HierarchicalMessageSource接口的几个实现类，如图6-3所示。
 
 <img src="images/MessageSource.svg" alt="MessageSource" style="zoom:67%;" />
 
-HierarchicalMessageSource接口最重要的两个实现类是ResourceBundleMessageSource 和ReloadableResourceBundleMessageSource。它们基于Java的 ResourceBundle基础类实现，允许仅通过资源名加载国际化资源。ReloadableResourceBundleMessageSource提供了定时刷新功能,允许在不重启系统的情况下，更新资源的信息。StaticMessageSource主要用于程序测试，它允许通过编程的方式提供国际化信息。而DelegatingMessageSource是为方便操作父MessageSource而提供的代理类。仅仅举例ResourceBundleMessageSource的实现方式。
+​		HierarchicalMessageSource接口最重要的两个实现类是ResourceBundleMessageSource 和ReloadableResourceBundleMessageSource。它们基于Java的 ResourceBundle基础类实现，允许仅通过资源名加载国际化资源。ReloadableResourceBundleMessageSource提供了定时刷新功能,允许在不重启系统的情况下，更新资源的信息。StaticMessageSource主要用于程序测试，它允许通过编程的方式提供国际化信息。而DelegatingMessageSource是为方便操作父MessageSource而提供的代理类。仅仅举例ResourceBundleMessageSource的实现方式。
 
 (1）定义资源文件。
 
@@ -6705,9 +6707,9 @@ System.out.println(str1);
 System.out.println(str2);
 ```
 
-了解了Spring国际化的使用后便可以进行源码的分析了。
-		在 initMessageSource 中的方法主要功能是提取配置中定义的 messageSource，并将其记录在 Spring的容器中，也就是AbstractApplicationContext中。当然，如果用户未设置资源文件的话，Spring中也提供了默认的配置DelegatingMessageSource。
-		在initMessageSource中获取自定义资源文件的方式为beanFactory.getBean(MESSAGESOURCE_BEAN_NAME, MessageSource.class),在这里Spring使用了硬编码的方式硬性规定了子定义资源文件必须为message，否则便会获取不到自定义资源配置，这也是为什么之前提到Bean的 id如果部位message会抛出异常。
+​		了解了Spring国际化的使用后便可以进行源码的分析了。
+​		在 initMessageSource 中的方法主要功能是提取配置中定义的 messageSource，并将其记录在 Spring的容器中，也就是AbstractApplicationContext中。当然，如果用户未设置资源文件的话，Spring中也提供了默认的配置DelegatingMessageSource。
+​		在initMessageSource中获取自定义资源文件的方式为beanFactory.getBean(MESSAGESOURCE_BEAN_NAME, MessageSource.class),在这里Spring使用了硬编码的方式硬性规定了子定义资源文件必须为message，否则便会获取不到自定义资源配置，这也是为什么之前提到Bean的 id如果部位message会抛出异常。
 
 AbstractApplicationContext.java
 
@@ -6774,7 +6776,7 @@ public String getMessage(String code，Object args[]，Locale locale) throws NoS
 }
 ```
 
-(2）定义监听器。
+(2) 定义监听器。
 ```java
 public class TestListener implements ApplicationListener {
     public void onApplicationEvent (ApplicationEvent event) {
@@ -6786,12 +6788,12 @@ public class TestListener implements ApplicationListener {
 }
 ```
 
-(3）添加配置文件。
+(3) 添加配置文件。
 ```xml
 <bean id="testListener" class="com.test.event.TestListener"/>
 ```
 
-( 4）测试。
+(4) 测试。
 ```java
 public class Test{
     public static void main (string[] args) {
@@ -6852,11 +6854,11 @@ public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableTyp
 }
 ```
 
-可以推断，当产生 Spring 事件的时候会默认使用 SimpleApplicationEventMulticaster的multicastEvent 来广播事件，遍历所有监听器，并使用监听器中的onApplicationEvent方法来进行监听器的处理。而对于每个监听器来说其实都可以获取到产生的事件，但是是否进行处理则由事件监听器来决定。
+​		可以推断，当产生 Spring 事件的时候会默认使用 SimpleApplicationEventMulticaster的multicastEvent 来广播事件，遍历所有监听器，并使用监听器中的onApplicationEvent方法来进行监听器的处理。而对于每个监听器来说其实都可以获取到产生的事件，但是是否进行处理则由事件监听器来决定。
 
 ### 6.6.5 注册监听器
 
-之前在介绍Spring 的广播器时反复提到了事件监听器，那么在Spring 注册监听器的时候又做了哪些逻辑操作呢?
+​		之前在介绍Spring 的广播器时反复提到了事件监听器，那么在Spring 注册监听器的时候又做了哪些逻辑操作呢?
 
 AbstractApplicationContext.java
 
@@ -6889,7 +6891,7 @@ protected void registerListeners() {
 
 ## 6.7 初始化非延迟加载单例
 
-完成BeanFactory的初始化工作，其中包括ConversionService的设置、配置冻结以及非延迟加载的bean的初始化工作。
+​		完成BeanFactory的初始化工作，其中包括ConversionService的设置、配置冻结以及非延迟加载的bean的初始化工作。
 
 AbstractApplicationContext.java
 
@@ -6968,11 +6970,11 @@ public void testStringToPhoneNumberConvert() {
 }
 ```
 
-通过以上的功能我们看到了Converter 以及ConversionService提供的便利功能，其中的配置就是在当前函数中被初始化的。
+​		通过以上的功能我们看到了Converter 以及ConversionService提供的便利功能，其中的配置就是在当前函数中被初始化的。
 
 #### 2. 冻结配置
 
-冻结所有的 bean定义，说明注册的 bean定义将不被修改或进行任何进一步的处理。
+​		冻结所有的 bean定义，说明注册的 bean定义将不被修改或进行任何进一步的处理。
 
 DefaultListableBeanFactory.java
 
@@ -7072,7 +7074,7 @@ protected void finishRefresh() {
 
 #### 1. initLifecycleProcessor
 
-当ApplicationContext启动或停止时，它会通过LifecycleProcessor 来与所有声明的bean的周期做状态更新，而在LifecycleProcessor的使用前首先需要初始化。
+​		当ApplicationContext启动或停止时，它会通过LifecycleProcessor 来与所有声明的bean的周期做状态更新，而在LifecycleProcessor的使用前首先需要初始化。
 
 AbstractApplicationContext.java
 
@@ -7101,7 +7103,7 @@ protected void initLifecycleProcessor() {
 
 #### 2. onRefresh
 
-启动所有实现了Lifecycle接口的bean。
+​		启动所有实现了Lifecycle接口的bean。
 
 AbstractApplicationContext.java
 
@@ -7137,7 +7139,7 @@ private void startBeans(boolean autoStartupOnly) {
 
 #### 3. publishEvent
 
-当完成ApplicationContext初始化的时候,要通过Spring 中的事件发布机制来发出ContextRefreshedEvent事件，以保证对应的监听器可以做进一步的逻辑处理。
+​		当完成ApplicationContext初始化的时候,要通过Spring 中的事件发布机制来发出ContextRefreshedEvent事件，以保证对应的监听器可以做进一步的逻辑处理。
 
 ```java
 protected void publishEvent(Object event, @Nullable ResolvableType eventType) {
@@ -7206,19 +7208,19 @@ public class TestBean {
 ```java
 @Aspect
 public class AspectJTest {
-	Pointcut("execution (**.test (..) )")
+	Pointcut("execution (**.test (..))")
     public void test(){}
     @Before("test()")
     public void beforeTest(){
     	System.out.println("beforeTest");
     }
-    @After ( "test () ")
+    @After ("test()")
     public void afterTest(){
 		system.out.println("afterTest");
     }
 	@Around("test()")
 	public Object arountTest (ProceedingJoinPoint p){
-		System.out.println ( "before1");
+		System.out.println ("before1");
 		object o=null;
         try {
             o = p.proceed ();
