@@ -4,6 +4,16 @@
 
 ![image-20230518222224170](images/image-20230518222224170.png)
 
+18455730857@@139.com
+
+sz962464
+
+
+
+
+
+![image-20240518180648155](images/image-20240518180648155.png)
+
 # 接收邮件
 
 Hello 中 孙 (无), 
@@ -132,16 +142,14 @@ Username: vmuser120191
 
 Password: 9a94c429d5
 
+
+
 # 远程连接
 
-IP Address: 107.172.196.179
-
-Extra IP Address:
+IP Address: 107.175.111.42
 
 Username: root
-
-Root Password: QBR7t69U2mi2jYbV4d
-
+Root Password: 51dai5LTyH17nlJLR3
 SSH Port 22
 
 
@@ -152,11 +160,39 @@ SSH Port 22
 
 https://www.pinzixing.com/1160.html
 
-命令:bash <(curl -s -L https://git.io/v2ray.sh)
+```bash
+# 启动系统之后，执行下面两个命令
+# 1.安装curl
+apt-get update -y && apt-get install curl -y
+# 2.通过curl安装v2ray
+bash <(curl -s -L https://git.io/v2ray.sh)
+```
+
+安装完成即出现：
+
+```text
+-------------- VMess-TCP-21162.json -------------
+协议 (protocol)         = vmess
+地址 (address)          = 107.175.111.42
+端口 (port)             = 21162
+用户ID (id)             = 92c7c358-a443-4118-913b-b5b4f3f84c2b
+传输协议 (network)      = tcp
+伪装类型 (type)         = none
+vmess://eyJ2IjoyLCJwcyI6IjIzM2JveS10Y3AtMTA3LjE3NS4xMTEuNDIiLCJhZGQiOiIxMDcuMTc1LjExMS40MiIsInBvcnQiOiIyMTE2MiIsImlkIjoiOTJjN2MzNTgtYTQ0My00MTE4LTkxM2ItYjViNGYzZjg0YzJiIiwiYWlkIjoiMCIsIm5ldCI6InRjcCIsInR5cGUiOiJub25lIiwicGF0aCI6IiJ9
+```
+
+
+
+
 
 # 网速优化
 
+```bash
+# 直接执行
 v2ray bbr
+```
+
+
 
 
 
@@ -199,9 +235,51 @@ vmess://eyJ2IjoyLCJwcyI6IjIzM2JveS10Y3AtMTA3LjE3Mi4xOTYuMTc5IiwiYWRkIjoiMTA3LjE3
 
 
 
+ ```bash
+ # 直接执行
  v2ray add kcpd
+ ```
 
-vmess://eyJ2IjoyLCJwcyI6IjIzM2JveS1rY3AtMTA3LjE3Mi4xOTYuMTc5IiwiYWRkIjoiMTA3LjE3Mi4xOTYuMTc5IiwicG9ydCI6IjI1ODczIiwiaWQiOiJkODJhOWM5Zi1jZjliLTRhMjktOTRkNi0wNjNhZDYzZWQ5OTkiLCJuZXQiOiJrY3AiLCJ0eXBlIjoid2VjaGF0LXZpZGVvIiwicGF0aCI6ImQ4MmE5YzlmLWNmOWItNGEyOS05NGQ2LTA2M2FkNjNlZDk5OSJ9
 
 
+执行完出现
+
+```text
+-------------- VMess-mKCP-dynamic-port-12874.json -------------
+协议 (protocol)         = vmess
+地址 (address)          = 107.175.111.42
+端口 (port)             = 12874 & 动态端口: 14878-15955
+用户ID (id)             = 06166e91-b4a8-44e5-96e4-bf06b95b32f6
+传输协议 (network)      = kcp
+伪装类型 (type)         = wireguard
+mKCP seed               = 06166e91-b4a8-44e5-96e4-bf06b95b32f6
+------------- 链接 (URL) -------------
+vmess://eyJ2IjoyLCJwcyI6IjIzM2JveS1rY3AtMTA3LjE3NS4xMTEuNDIiLCJhZGQiOiIxMDcuMTc1LjExMS40MiIsInBvcnQiOiIxMjg3NCIsImlkIjoiMDYxNjZlOTEtYjRhOC00NGU1LTk2ZTQtYmYwNmI5NWIzMmY2IiwiYWlkIjoiMCIsIm5ldCI6ImtjcCIsInR5cGUiOiJ3aXJlZ3VhcmQiLCJwYXRoIjoiMDYxNjZlOTEtYjRhOC00NGU1LTk2ZTQtYmYwNmI5NWIzMmY2In0=
+```
+
+
+
+
+
+
+
+
+
+```text
+pw:C58fv7744YlkLyQIXk
+
+vmess:vmess://eyJ2IjoyLCJwcyI6IjIzM2JveS10Y3AtMTA3LjE3NC4zOS40OCIsImFkZCI6IjEwNy4xNzQuMzkuNDgiLCJwb3J0IjoiMzg2MDIiLCJpZCI6IjUwZTc0MDFkLTY2YjUtNDZjNC04ODY1LTkzNzc2M2IwY2FmZiIsImFpZCI6IjAiLCJuZXQiOiJ0Y3AiLCJ0eXBlIjoibm9uZSIsInBhdGgiOiIifQ==
+
+
+协议 (protocol)         = vmess
+地址 (address)          = 107.174.39.48
+端口 (port)             = 19988 & 动态端口: 20998-21784
+用户ID (id)             = e4bf05d0-0a8e-44d2-9102-689c52ab9d65
+传输协议 (network)      = kcp
+伪装类型 (type)         = wireguard
+mKCP seed               = e4bf05d0-0a8e-44d2-9102-689c52ab9d65
+------------- 链接 (URL) -------------
+vmess://eyJ2IjoyLCJwcyI6IjIzM2JveS1rY3AtMTA3LjE3NC4zOS40OCIsImFkZCI6IjEwNy4xNzQuMzkuNDgiLCJwb3J0IjoiMTk5ODgiLCJpZCI6ImU0YmYwNWQwLTBhOGUtNDRkMi05MTAyLTY4OWM1MmFiOWQ2NSIsImFpZCI6IjAiLCJuZXQiOiJrY3AiLCJ0eXBlIjoid2lyZWd1YXJkIiwicGF0aCI6ImU0YmYwNWQwLTBhOGUtNDRkMi05MTAyLTY4OWM1MmFiOWQ2NSJ9
+
+```
 

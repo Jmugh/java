@@ -24,6 +24,20 @@
 
 
 
+
+
+
+
+# maven
+
+找到了class文件，但是没法下载source 看不到对应的java文件
+
+```bash
+mvn dependency:resolve -Dclassifier=sources
+```
+
+
+
 # 函数式接口
 
 ## 怎么定义一个函数式接口
@@ -207,6 +221,7 @@ Collections.shuffle(collect, new Random(112));
 ## Arrays
 
 ```java
+//nums是int数组，boxed()方法用于将基本数据类型的流转换为对应的包装类对象的流。例如，如果nums是一个int类型的数组，那么boxed()方法将会把IntStream转换为Stream<Integer>。
 Arrays.sort(nums);
 Arrays.stream(nums).boxed().collect(Collectors.toList());
 Arrays.stream(nums).max();
@@ -217,6 +232,40 @@ Arrays.stream(nums).distinct();
 ```
 
 
+
+过滤array
+
+```java
+SimpleFilterVO[] newSimpleVOs = Arrays.stream(simpleVOs).filter(simpleFilterVO -> {
+	return !(simpleFilterVO.getField().equals("orgId") || simpleFilterVO.getField().equals("dealPsnId"));
+}).toArray(SimpleFilterVO[]::new);
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 其他工作相关
 
 ```linux
 java -verbose:class -jar  uscmpub-business-gscm-daily-RELEASE.jar

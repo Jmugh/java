@@ -1,0 +1,289 @@
+2024-09-07 18:11:39,333 [main] INFO  ? (?:?) - using logger: com.alibaba.dubbo.common.logger.log4j.Log4jLoggerAdapter
+2024-09-07 18:11:45,074 [localhost-startStop-1] INFO  com.alibaba.dubbo.config.ReferenceConfig (ReferenceConfig.java:425) -  [DUBBO] Refer dubbo service com.alibaba.dubbo.registry.RegistryService from url zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&pid=9876&refer=application%3Ddubbo-admin%26check%3Dfalse%26dubbo%3D2.6.2%26interface%3Dcom.alibaba.dubbo.registry.RegistryService%26methods%3Dlookup%2Cunsubscribe%2Csubscribe%2Cunregister%2Cregister%26pid%3D9876%26register.ip%3D192.168.130.1%26revision%3D2.6.2%26side%3Dconsumer%26timestamp%3D1725703900383&timestamp=1725703900406, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:11:45,089 [localhost-startStop-1] INFO  com.alibaba.dubboadmin.governance.sync.RegistryServerSync (RegistryServerSync.java:78) -  [DUBBO] Init Dubbo Admin Sync Cache..., dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:11:45,091 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:298) -  [DUBBO] Subscribe: admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:11:56,146 [localhost-startStop-1] ERROR com.alibaba.dubbo.registry.support.FailbackRegistry (FailbackRegistry.java:209) -  [DUBBO] Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, waiting for retry, cause: Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=* to zookeeper zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9876&timestamp=1725703900406, cause: KeeperErrorCode = ConnectionLoss, dubbo version: 2.6.2, current host: 192.168.130.1
+com.alibaba.dubbo.rpc.RpcException: Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=* to zookeeper zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9876&timestamp=1725703900406, cause: KeeperErrorCode = ConnectionLoss
+	at com.alibaba.dubbo.registry.zookeeper.ZookeeperRegistry.doSubscribe(ZookeeperRegistry.java:193)
+	at com.alibaba.dubbo.registry.support.FailbackRegistry.subscribe(FailbackRegistry.java:190)
+	at com.alibaba.dubbo.common.bytecode.Wrapper1.invokeMethod(Wrapper1.java)
+	at com.alibaba.dubbo.rpc.proxy.javassist.JavassistProxyFactory$1.doInvoke(JavassistProxyFactory.java:47)
+	at com.alibaba.dubbo.rpc.proxy.AbstractProxyInvoker.invoke(AbstractProxyInvoker.java:76)
+	at com.alibaba.dubbo.rpc.proxy.InvokerInvocationHandler.invoke(InvokerInvocationHandler.java:52)
+	at com.alibaba.dubbo.common.bytecode.proxy0.subscribe(proxy0.java)
+	at com.alibaba.dubboadmin.governance.sync.RegistryServerSync.afterPropertiesSet(RegistryServerSync.java:79)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1765)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1702)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:579)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:501)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:317)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:228)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:251)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1138)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1065)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.inject(AutowiredAnnotationBeanPostProcessor.java:584)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:91)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessPropertyValues(AutowiredAnnotationBeanPostProcessor.java:373)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1348)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:578)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:501)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:317)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:228)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:251)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1138)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1065)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.inject(AutowiredAnnotationBeanPostProcessor.java:584)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:91)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessPropertyValues(AutowiredAnnotationBeanPostProcessor.java:373)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1348)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:578)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:501)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:317)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:228)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:204)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.getOrderedBeansOfType(ServletContextInitializerBeans.java:225)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:181)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:176)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAdaptableBeans(ServletContextInitializerBeans.java:158)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.<init>(ServletContextInitializerBeans.java:80)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.getServletContextInitializerBeans(ServletWebServerApplicationContext.java:250)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.selfInitialize(ServletWebServerApplicationContext.java:237)
+	at org.springframework.boot.web.embedded.tomcat.TomcatStarter.onStartup(TomcatStarter.java:54)
+	at org.apache.catalina.core.StandardContext.startInternal(StandardContext.java:5245)
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:150)
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1421)
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1411)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.IllegalStateException: KeeperErrorCode = ConnectionLoss
+	at com.alibaba.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.createPersistent(CuratorZookeeperClient.java:79)
+	at com.alibaba.dubbo.remoting.zookeeper.support.AbstractZookeeperClient.create(AbstractZookeeperClient.java:65)
+	at com.alibaba.dubbo.registry.zookeeper.ZookeeperRegistry.doSubscribe(ZookeeperRegistry.java:156)
+	... 57 more
+Caused by: org.apache.curator.CuratorConnectionLossException: KeeperErrorCode = ConnectionLoss
+	at org.apache.curator.ConnectionState.checkTimeouts(ConnectionState.java:225)
+	at org.apache.curator.ConnectionState.getZooKeeper(ConnectionState.java:94)
+	at org.apache.curator.CuratorZookeeperClient.getZooKeeper(CuratorZookeeperClient.java:117)
+	at org.apache.curator.framework.imps.CuratorFrameworkImpl.getZooKeeper(CuratorFrameworkImpl.java:489)
+	at org.apache.curator.framework.imps.CreateBuilderImpl$11.call(CreateBuilderImpl.java:740)
+	at org.apache.curator.framework.imps.CreateBuilderImpl$11.call(CreateBuilderImpl.java:723)
+	at org.apache.curator.RetryLoop.callWithRetry(RetryLoop.java:109)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.pathInForeground(CreateBuilderImpl.java:720)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.protectedPathInForeground(CreateBuilderImpl.java:484)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:474)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:454)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:44)
+	at com.alibaba.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.createPersistent(CuratorZookeeperClient.java:76)
+	... 59 more
+2024-09-07 18:11:57,048 [main] INFO  com.alibaba.dubboadmin.SpringUtil (SpringUtil.java:33) -  [DUBBO] set applicationcontext, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:12:00,429 [DubboRegistryFailedRetryTimer-thread-1] INFO  com.alibaba.dubbo.registry.support.FailbackRegistry (FailbackRegistry.java:355) -  [DUBBO] Retry subscribe {admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*=[com.alibaba.dubboadmin.governance.sync.RegistryServerSync@4d8c23a9]}, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:12:11,141 [DubboShutdownHook] INFO  com.alibaba.dubbo.config.AbstractConfig$1 (AbstractConfig.java:81) -  [DUBBO] Run shutdown hook now., dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:12:11,144 [DubboShutdownHook] INFO  com.alibaba.dubbo.registry.support.AbstractRegistryFactory (AbstractRegistryFactory.java:64) -  [DUBBO] Close all registries [zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9876&timestamp=1725703900406], dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:12:11,144 [DubboShutdownHook] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:451) -  [DUBBO] Destroy registry:zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9876&timestamp=1725703900406, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:12:11,145 [DubboShutdownHook] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:317) -  [DUBBO] Unsubscribe: admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:12:11,147 [DubboShutdownHook] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:476) -  [DUBBO] Destroy unsubscribe url admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:12:11,148 [DubboRegistryFailedRetryTimer-thread-1] WARN  com.alibaba.dubbo.registry.support.FailbackRegistry (FailbackRegistry.java:366) -  [DUBBO] Failed to retry subscribe {admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*=[]}, waiting for again, cause: Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=* to zookeeper zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9876&timestamp=1725703900406, cause: null, dubbo version: 2.6.2, current host: 192.168.130.1
+com.alibaba.dubbo.rpc.RpcException: Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=* to zookeeper zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9876&timestamp=1725703900406, cause: null
+	at com.alibaba.dubbo.registry.zookeeper.ZookeeperRegistry.doSubscribe(ZookeeperRegistry.java:193)
+	at com.alibaba.dubbo.registry.support.FailbackRegistry.retry(FailbackRegistry.java:363)
+	at com.alibaba.dubbo.registry.support.FailbackRegistry$1.run(FailbackRegistry.java:68)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.runAndReset(FutureTask.java:308)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$301(ScheduledThreadPoolExecutor.java:180)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:294)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.IllegalStateException
+	at com.alibaba.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.createPersistent(CuratorZookeeperClient.java:79)
+	at com.alibaba.dubbo.remoting.zookeeper.support.AbstractZookeeperClient.create(AbstractZookeeperClient.java:65)
+	at com.alibaba.dubbo.registry.zookeeper.ZookeeperRegistry.doSubscribe(ZookeeperRegistry.java:156)
+	... 9 more
+Caused by: java.lang.InterruptedException
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.doAcquireSharedNanos(AbstractQueuedSynchronizer.java:1039)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.tryAcquireSharedNanos(AbstractQueuedSynchronizer.java:1328)
+	at java.util.concurrent.CountDownLatch.await(CountDownLatch.java:277)
+	at org.apache.curator.CuratorZookeeperClient.internalBlockUntilConnectedOrTimedOut(CuratorZookeeperClient.java:336)
+	at org.apache.curator.RetryLoop.callWithRetry(RetryLoop.java:107)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.pathInForeground(CreateBuilderImpl.java:720)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.protectedPathInForeground(CreateBuilderImpl.java:484)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:474)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:454)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:44)
+	at com.alibaba.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.createPersistent(CuratorZookeeperClient.java:76)
+	... 11 more
+2024-09-07 18:12:11,149 [Thread-4] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:317) -  [DUBBO] Unsubscribe: admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:02,438 [main] INFO  ? (?:?) - using logger: com.alibaba.dubbo.common.logger.log4j.Log4jLoggerAdapter
+2024-09-07 18:13:08,186 [localhost-startStop-1] INFO  com.alibaba.dubbo.config.ReferenceConfig (ReferenceConfig.java:425) -  [DUBBO] Refer dubbo service com.alibaba.dubbo.registry.RegistryService from url zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&pid=9804&refer=application%3Ddubbo-admin%26check%3Dfalse%26dubbo%3D2.6.2%26interface%3Dcom.alibaba.dubbo.registry.RegistryService%26methods%3Dlookup%2Csubscribe%2Cunsubscribe%2Cunregister%2Cregister%26pid%3D9804%26register.ip%3D192.168.130.1%26revision%3D2.6.2%26side%3Dconsumer%26timestamp%3D1725703983499&timestamp=1725703983524, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:08,198 [localhost-startStop-1] INFO  com.alibaba.dubboadmin.governance.sync.RegistryServerSync (RegistryServerSync.java:78) -  [DUBBO] Init Dubbo Admin Sync Cache..., dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:08,199 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:298) -  [DUBBO] Subscribe: admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:19,251 [localhost-startStop-1] ERROR com.alibaba.dubbo.registry.support.FailbackRegistry (FailbackRegistry.java:209) -  [DUBBO] Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, waiting for retry, cause: Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=* to zookeeper zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9804&timestamp=1725703983524, cause: KeeperErrorCode = ConnectionLoss, dubbo version: 2.6.2, current host: 192.168.130.1
+com.alibaba.dubbo.rpc.RpcException: Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=* to zookeeper zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9804&timestamp=1725703983524, cause: KeeperErrorCode = ConnectionLoss
+	at com.alibaba.dubbo.registry.zookeeper.ZookeeperRegistry.doSubscribe(ZookeeperRegistry.java:193)
+	at com.alibaba.dubbo.registry.support.FailbackRegistry.subscribe(FailbackRegistry.java:190)
+	at com.alibaba.dubbo.common.bytecode.Wrapper1.invokeMethod(Wrapper1.java)
+	at com.alibaba.dubbo.rpc.proxy.javassist.JavassistProxyFactory$1.doInvoke(JavassistProxyFactory.java:47)
+	at com.alibaba.dubbo.rpc.proxy.AbstractProxyInvoker.invoke(AbstractProxyInvoker.java:76)
+	at com.alibaba.dubbo.rpc.proxy.InvokerInvocationHandler.invoke(InvokerInvocationHandler.java:52)
+	at com.alibaba.dubbo.common.bytecode.proxy0.subscribe(proxy0.java)
+	at com.alibaba.dubboadmin.governance.sync.RegistryServerSync.afterPropertiesSet(RegistryServerSync.java:79)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1765)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1702)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:579)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:501)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:317)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:228)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:251)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1138)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1065)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.inject(AutowiredAnnotationBeanPostProcessor.java:584)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:91)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessPropertyValues(AutowiredAnnotationBeanPostProcessor.java:373)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1348)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:578)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:501)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:317)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:228)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199)
+	at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:251)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1138)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1065)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.inject(AutowiredAnnotationBeanPostProcessor.java:584)
+	at org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:91)
+	at org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessPropertyValues(AutowiredAnnotationBeanPostProcessor.java:373)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1348)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:578)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:501)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:317)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:228)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:315)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:204)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.getOrderedBeansOfType(ServletContextInitializerBeans.java:225)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:181)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAsRegistrationBean(ServletContextInitializerBeans.java:176)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.addAdaptableBeans(ServletContextInitializerBeans.java:158)
+	at org.springframework.boot.web.servlet.ServletContextInitializerBeans.<init>(ServletContextInitializerBeans.java:80)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.getServletContextInitializerBeans(ServletWebServerApplicationContext.java:250)
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.selfInitialize(ServletWebServerApplicationContext.java:237)
+	at org.springframework.boot.web.embedded.tomcat.TomcatStarter.onStartup(TomcatStarter.java:54)
+	at org.apache.catalina.core.StandardContext.startInternal(StandardContext.java:5245)
+	at org.apache.catalina.util.LifecycleBase.start(LifecycleBase.java:150)
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1421)
+	at org.apache.catalina.core.ContainerBase$StartChild.call(ContainerBase.java:1411)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.IllegalStateException: KeeperErrorCode = ConnectionLoss
+	at com.alibaba.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.createPersistent(CuratorZookeeperClient.java:79)
+	at com.alibaba.dubbo.remoting.zookeeper.support.AbstractZookeeperClient.create(AbstractZookeeperClient.java:65)
+	at com.alibaba.dubbo.registry.zookeeper.ZookeeperRegistry.doSubscribe(ZookeeperRegistry.java:156)
+	... 57 more
+Caused by: org.apache.curator.CuratorConnectionLossException: KeeperErrorCode = ConnectionLoss
+	at org.apache.curator.ConnectionState.checkTimeouts(ConnectionState.java:225)
+	at org.apache.curator.ConnectionState.getZooKeeper(ConnectionState.java:94)
+	at org.apache.curator.CuratorZookeeperClient.getZooKeeper(CuratorZookeeperClient.java:117)
+	at org.apache.curator.framework.imps.CuratorFrameworkImpl.getZooKeeper(CuratorFrameworkImpl.java:489)
+	at org.apache.curator.framework.imps.CreateBuilderImpl$11.call(CreateBuilderImpl.java:740)
+	at org.apache.curator.framework.imps.CreateBuilderImpl$11.call(CreateBuilderImpl.java:723)
+	at org.apache.curator.RetryLoop.callWithRetry(RetryLoop.java:109)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.pathInForeground(CreateBuilderImpl.java:720)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.protectedPathInForeground(CreateBuilderImpl.java:484)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:474)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:454)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:44)
+	at com.alibaba.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.createPersistent(CuratorZookeeperClient.java:76)
+	... 59 more
+2024-09-07 18:13:20,140 [main] INFO  com.alibaba.dubboadmin.SpringUtil (SpringUtil.java:33) -  [DUBBO] set applicationcontext, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:23,548 [DubboRegistryFailedRetryTimer-thread-1] INFO  com.alibaba.dubbo.registry.support.FailbackRegistry (FailbackRegistry.java:355) -  [DUBBO] Retry subscribe {admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*=[com.alibaba.dubboadmin.governance.sync.RegistryServerSync@7ebee699]}, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:30,995 [DubboShutdownHook] INFO  com.alibaba.dubbo.config.AbstractConfig$1 (AbstractConfig.java:81) -  [DUBBO] Run shutdown hook now., dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:30,996 [DubboShutdownHook] INFO  com.alibaba.dubbo.registry.support.AbstractRegistryFactory (AbstractRegistryFactory.java:64) -  [DUBBO] Close all registries [zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9804&timestamp=1725703983524], dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:31,000 [DubboShutdownHook] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:451) -  [DUBBO] Destroy registry:zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9804&timestamp=1725703983524, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:31,002 [DubboShutdownHook] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:317) -  [DUBBO] Unsubscribe: admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:31,003 [DubboShutdownHook] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:476) -  [DUBBO] Destroy unsubscribe url admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:13:31,003 [DubboRegistryFailedRetryTimer-thread-1] WARN  com.alibaba.dubbo.registry.support.FailbackRegistry (FailbackRegistry.java:366) -  [DUBBO] Failed to retry subscribe {admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*=[]}, waiting for again, cause: Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=* to zookeeper zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9804&timestamp=1725703983524, cause: null, dubbo version: 2.6.2, current host: 192.168.130.1
+com.alibaba.dubbo.rpc.RpcException: Failed to subscribe admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=* to zookeeper zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&interface=com.alibaba.dubbo.registry.RegistryService&pid=9804&timestamp=1725703983524, cause: null
+	at com.alibaba.dubbo.registry.zookeeper.ZookeeperRegistry.doSubscribe(ZookeeperRegistry.java:193)
+	at com.alibaba.dubbo.registry.support.FailbackRegistry.retry(FailbackRegistry.java:363)
+	at com.alibaba.dubbo.registry.support.FailbackRegistry$1.run(FailbackRegistry.java:68)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+	at java.util.concurrent.FutureTask.runAndReset(FutureTask.java:308)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$301(ScheduledThreadPoolExecutor.java:180)
+	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:294)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+	at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.IllegalStateException
+	at com.alibaba.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.createPersistent(CuratorZookeeperClient.java:79)
+	at com.alibaba.dubbo.remoting.zookeeper.support.AbstractZookeeperClient.create(AbstractZookeeperClient.java:65)
+	at com.alibaba.dubbo.registry.zookeeper.ZookeeperRegistry.doSubscribe(ZookeeperRegistry.java:156)
+	... 9 more
+Caused by: java.lang.InterruptedException
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.doAcquireSharedNanos(AbstractQueuedSynchronizer.java:1039)
+	at java.util.concurrent.locks.AbstractQueuedSynchronizer.tryAcquireSharedNanos(AbstractQueuedSynchronizer.java:1328)
+	at java.util.concurrent.CountDownLatch.await(CountDownLatch.java:277)
+	at org.apache.curator.CuratorZookeeperClient.internalBlockUntilConnectedOrTimedOut(CuratorZookeeperClient.java:336)
+	at org.apache.curator.RetryLoop.callWithRetry(RetryLoop.java:107)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.pathInForeground(CreateBuilderImpl.java:720)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.protectedPathInForeground(CreateBuilderImpl.java:484)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:474)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:454)
+	at org.apache.curator.framework.imps.CreateBuilderImpl.forPath(CreateBuilderImpl.java:44)
+	at com.alibaba.dubbo.remoting.zookeeper.curator.CuratorZookeeperClient.createPersistent(CuratorZookeeperClient.java:76)
+	... 11 more
+2024-09-07 18:13:31,004 [Thread-4] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:317) -  [DUBBO] Unsubscribe: admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:14:01,459 [main] INFO  ? (?:?) - using logger: com.alibaba.dubbo.common.logger.log4j.Log4jLoggerAdapter
+2024-09-07 18:14:07,226 [localhost-startStop-1] INFO  com.alibaba.dubbo.config.ReferenceConfig (ReferenceConfig.java:425) -  [DUBBO] Refer dubbo service com.alibaba.dubbo.registry.RegistryService from url zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&pid=2176&refer=application%3Ddubbo-admin%26check%3Dfalse%26dubbo%3D2.6.2%26interface%3Dcom.alibaba.dubbo.registry.RegistryService%26methods%3Dlookup%2Csubscribe%2Cunsubscribe%2Cunregister%2Cregister%26pid%3D2176%26register.ip%3D192.168.130.1%26revision%3D2.6.2%26side%3Dconsumer%26timestamp%3D1725704042541&timestamp=1725704042564, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:14:07,242 [localhost-startStop-1] INFO  com.alibaba.dubboadmin.governance.sync.RegistryServerSync (RegistryServerSync.java:78) -  [DUBBO] Init Dubbo Admin Sync Cache..., dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:14:07,244 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:298) -  [DUBBO] Subscribe: admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:14:07,281 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:298) -  [DUBBO] Subscribe: admin://192.168.130.1/com.atguigu.gmall.service.UserService?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:14:07,298 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:387) -  [DUBBO] Notify urls for subscribe url admin://192.168.130.1/com.atguigu.gmall.service.UserService?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, urls: [empty://192.168.130.1/com.atguigu.gmall.service.UserService?category=providers&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, empty://192.168.130.1/com.atguigu.gmall.service.UserService?category=consumers&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, empty://192.168.130.1/com.atguigu.gmall.service.UserService?category=routers&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, empty://192.168.130.1/com.atguigu.gmall.service.UserService?category=configurators&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*], dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:14:07,300 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:298) -  [DUBBO] Subscribe: admin://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:14:07,315 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:387) -  [DUBBO] Notify urls for subscribe url admin://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, urls: [empty://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=providers&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, empty://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=consumers&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, empty://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=routers&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, empty://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=configurators&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*], dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:14:08,179 [main] INFO  com.alibaba.dubboadmin.SpringUtil (SpringUtil.java:33) -  [DUBBO] set applicationcontext, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:23,599 [main] INFO  ? (?:?) - using logger: com.alibaba.dubbo.common.logger.log4j.Log4jLoggerAdapter
+2024-09-07 18:37:29,524 [localhost-startStop-1] INFO  com.alibaba.dubbo.config.ReferenceConfig (ReferenceConfig.java:425) -  [DUBBO] Refer dubbo service com.alibaba.dubbo.registry.RegistryService from url zookeeper://127.0.0.1:2181/com.alibaba.dubbo.registry.RegistryService?application=dubbo-admin&dubbo=2.6.2&pid=6736&refer=application%3Ddubbo-admin%26check%3Dfalse%26dubbo%3D2.6.2%26interface%3Dcom.alibaba.dubbo.registry.RegistryService%26methods%3Dlookup%2Cunsubscribe%2Csubscribe%2Cunregister%2Cregister%26pid%3D6736%26register.ip%3D192.168.130.1%26revision%3D2.6.2%26side%3Dconsumer%26timestamp%3D1725705444749&timestamp=1725705444774, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:29,542 [localhost-startStop-1] INFO  com.alibaba.dubboadmin.governance.sync.RegistryServerSync (RegistryServerSync.java:78) -  [DUBBO] Init Dubbo Admin Sync Cache..., dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:29,544 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:298) -  [DUBBO] Subscribe: admin://192.168.130.1?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=*&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:29,605 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:298) -  [DUBBO] Subscribe: admin://192.168.130.1/com.atguigu.gmall.service.UserService?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:29,661 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:387) -  [DUBBO] Notify urls for subscribe url admin://192.168.130.1/com.atguigu.gmall.service.UserService?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, urls: [empty://192.168.130.1/com.atguigu.gmall.service.UserService?category=providers&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, empty://192.168.130.1/com.atguigu.gmall.service.UserService?category=consumers&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, empty://192.168.130.1/com.atguigu.gmall.service.UserService?category=routers&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*, empty://192.168.130.1/com.atguigu.gmall.service.UserService?category=configurators&check=false&classifier=*&enabled=*&group=*&interface=com.atguigu.gmall.service.UserService&version=*], dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:29,664 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:298) -  [DUBBO] Subscribe: admin://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:29,706 [localhost-startStop-1] INFO  com.alibaba.dubbo.registry.support.AbstractRegistry (AbstractRegistry.java:387) -  [DUBBO] Notify urls for subscribe url admin://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=providers,consumers,routers,configurators&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, urls: [empty://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=providers&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, empty://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=consumers&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, empty://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=routers&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*, empty://192.168.130.1/com.alibaba.dubbo.monitor.MonitorService?category=configurators&check=false&classifier=*&enabled=*&group=*&interface=com.alibaba.dubbo.monitor.MonitorService&version=*], dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:30,624 [main] INFO  com.alibaba.dubboadmin.SpringUtil (SpringUtil.java:33) -  [DUBBO] set applicationcontext, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:32,538 [http-nio-7001-exec-1] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,473 [http-nio-7001-exec-2] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,577 [http-nio-7001-exec-4] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /css/skin.css, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,577 [http-nio-7001-exec-5] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /css/dubbo.css, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,577 [http-nio-7001-exec-6] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /js/ajax.js, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,577 [http-nio-7001-exec-7] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /js/box.js, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,577 [http-nio-7001-exec-3] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /css/common.css, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,577 [http-nio-7001-exec-8] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /js/trcolor.js, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,609 [http-nio-7001-exec-9] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /js/jquery-1.4.2.min.js, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,609 [http-nio-7001-exec-1] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /js/dubbo.js, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,609 [http-nio-7001-exec-10] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /js/jquery.simplemodal-1.4.js, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,612 [http-nio-7001-exec-2] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/logo.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,623 [http-nio-7001-exec-8] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/pop_close.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,627 [http-nio-7001-exec-4] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/ico_show.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,632 [http-nio-7001-exec-5] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/ico_user.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,633 [http-nio-7001-exec-6] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/ico_help.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,633 [http-nio-7001-exec-3] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/exit.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,633 [http-nio-7001-exec-7] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/search_btn.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,641 [http-nio-7001-exec-1] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/head_bg.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,641 [http-nio-7001-exec-9] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/nav_bg.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,649 [http-nio-7001-exec-10] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/nav_btn_bg44.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,651 [http-nio-7001-exec-2] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/nav_btn_bg22.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,653 [http-nio-7001-exec-8] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/main_bg.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,656 [http-nio-7001-exec-4] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/search_active.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,658 [http-nio-7001-exec-5] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/search_input.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,659 [http-nio-7001-exec-6] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /images/input.png, dubbo version: 2.6.2, current host: 192.168.130.1
+2024-09-07 18:37:36,728 [http-nio-7001-exec-3] INFO  com.alibaba.dubboadmin.filter.LoginFilter (LoginFilter.java:93) -  [DUBBO] AuthorizationValve of uri: /favicon.ico, dubbo version: 2.6.2, current host: 192.168.130.1

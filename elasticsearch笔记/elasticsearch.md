@@ -66,9 +66,9 @@ localhost:9200/shopping
 
 ```xml
 {
-	 “name”:”sz”,
-	 “sex”:”man”,
-     “age”:26
+	 "name":"sz",
+	 "sex":"man",
+     "age":26
 }
 ```
 

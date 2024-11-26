@@ -1,0 +1,4 @@
+com\atguigu\gmall\MainApplication.class
+com\atguigu\gmall\service\impl\UserServiceImpl.class
+com\atguigu\gmall\service\impl\UserServiceImpl2.class
+com\atguigu\gmall\service\impl\UserServiceStub.class
