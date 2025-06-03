@@ -18,6 +18,25 @@ docker run -itd --name=mysql -v mysql-config:/etc/mysql/conf.d  -v mysql-log:/lo
 
 ![image-20250531204828382](./images/image-20250531204828382.png)
 
+## docker安装nacos
+
+nacos自带数据库，这种安装不用指定数据库
+
+```bash
+docker pull nacos/nacos-server:v2.4.2
+docker run -d   --name nacos-standalone   
+-e MODE=standalone  
+-e NACOS_AUTH_ENABLE=true 
+-e NACOS_CORE_AUTH_ENABLE_USERAGENTAUTHWHITE=true # 没有这个参数，就得设置key  value
+-e NACOS_AUTH_TOKEN=YWFhYmJiY2NjZGRkZWVlZmZmMDAwMDEyMzQ1Njc4OTA=    # 没有这个参数，无法启动
+-e NACOS_APPLICATION_PORT=8848  
+-v nacos-data:/home/nacos/data  
+-p 8848:8848  
+nacos/nacos-server:v2.4.2
+```
+
+
+
 ## 修改配置
 
 application.properties
