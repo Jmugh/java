@@ -277,9 +277,6 @@
         <mxCell id="vjyDVhU03r6_w_wYMPCh-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="vjyDVhU03r6_w_wYMPCh-3" target="vjyDVhU03r6_w_wYMPCh-13">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="vjyDVhU03r6_w_wYMPCh-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="vjyDVhU03r6_w_wYMPCh-3" target="vjyDVhU03r6_w_wYMPCh-14">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="vjyDVhU03r6_w_wYMPCh-3" value="&lt;span style=&quot;white-space-collapse: preserve;&quot;&gt;AbstractApplicationContext::refresh()&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="600" y="240" width="200" height="40" as="geometry" />
         </mxCell>

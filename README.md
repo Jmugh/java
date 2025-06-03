@@ -1,4 +1,20 @@
+# TODO
 
+- [ ] springboot自动装配
+- [ ] dubbo
+- [ ] nacos
+- [ ] **JVM**
+- [ ] **elastic search**:查询语法、原理、源码
+- [ ] Netty
+- [ ] Kafka
+
+
+
+
+
+
+
+# 面试题
 
 ### 反射为什么效率更低
 
@@ -24,5 +40,3 @@
 ### ConcurrentHashMap jdk1.7
 
 简而言之，ConcurrentHashMap在对象中保存了一个Segment数组，即将整个Hash表划分为多个分段；而每个Segment元素，即每个分段则类似于一个Hashtable；这样，在执行put操作时首先根据hash算法定位到元素属于哪个Segment，然后对该Segment加锁即可。因此，ConcurrentHashMap在多线程并发编程中可是实现多线程put操作。
-
-![image-20240905142043997](images/image-20240905142043997.png)
