@@ -32,8 +32,6 @@ Sentinel实现限流、隔离、降级、熔断等功能，本质要做的就是
 
 ## 1.2.Node
 
-
-
 Sentinel中的簇点链路是由一个个的Node组成的，Node是一个接口，包括下面的实现：
 
 ![image-20210925103029924](./images/image-20210925103029924.png)
@@ -60,13 +58,11 @@ DefaultNode记录的是资源在当前链路中的访问数据，用来实现基
 
 ## 1.3.Entry
 
-
-
 默认情况下，Sentinel会将controller中的方法作为被保护资源，那么问题来了，我们该如何将自己的一段代码标记为一个Sentinel的资源呢？
 
 Sentinel中的资源用Entry来表示。声明Entry的API示例：
 
-```
+```java
 // 资源名可使用任意有业务语义的字符串，比如方法名、接口名或其它可唯一标识的字符串。
 try (Entry entry = SphU.entry("resourceName")) {
   // 被保护的业务逻辑
@@ -77,25 +73,19 @@ try (Entry entry = SphU.entry("resourceName")) {
 }
 ```
 
-
-
 ### 1.3.1.自定义资源
-
-
 
 例如，我们在order-service服务中，将`OrderService`的`queryOrderById()`方法标记为一个资源。
 
 1）首先在order-service中引入sentinel依赖
 
-```
+```xml
 <!--sentinel-->
 <dependency>
     <groupId>com.alibaba.cloud</groupId>
     <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
 </dependency>
 ```
-
-
 
 2）然后配置Sentinel地址
 
@@ -106,8 +96,6 @@ spring:
       transport:
         dashboard: localhost:8089 # 这里我的sentinel用了8089的端口
 ```
-
-
 
 3）修改OrderService类的queryOrderById方法
 
@@ -132,11 +120,9 @@ public Order queryOrderById(Long orderId) {
 }
 ```
 
-
-
 4）访问
 
-打开浏览器，访问order服务：http://localhost:8080/order/101
+打开浏览器，访问order服务：`http://localhost:8080/order/101`
 
 然后打开sentinel控制台，查看簇点链路
 
@@ -144,17 +130,11 @@ public Order queryOrderById(Long orderId) {
 
 ### 1.3.2.基于注解标记资源
 
-
-
-在之前学习Sentinel的时候，我们知道可以通过给方法添加@SentinelResource注解的形式来标记资源。
+在之前学习Sentinel的时候，我们知道可以通过给方法添加@SentinelResource注解的形式来标记资源。这个是怎么实现的呢？
 
 ![image-20210925141507603](./images/image-20210925141507603.png)
 
-
-
-这个是怎么实现的呢？
-
-来看下我们引入的Sentinel依赖包，其中的spring.factories声明需要就是自动装配的配置类，扩展部分在spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports，内容如下：
+来看下我们引入的Sentinel依赖包，其中的spring.factories声明需要就是自动装配的配置类，扩展部分在`spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`，内容如下：
 
 ![image-20250621151854291](./images/image-20250621151854291.png)
 
@@ -202,17 +182,9 @@ public class SentinelResourceAspect extends AbstractSentinelAspectSupport {
 
 ## 1.4.Context
 
-
-
-上一节，我们发现簇点链路中除了controller方法、service方法两个资源外，还多了一个默认的入口节点：
-
-sentinel_spring_web_context，是一个EntranceNode类型的节点
-
-这个节点是在初始化Context的时候由Sentinel帮我们创建的。
+上一节，我们发现簇点链路中除了controller方法、service方法两个资源外，还多了一个默认的入口节点：`sentinel_spring_web_context`，是一个EntranceNode类型的节点,这个节点是在初始化Context的时候由Sentinel帮我们创建的。
 
 ### 1.4.1.什么是Context
-
-
 
 那么，什么是Context呢？
 
@@ -227,8 +199,6 @@ sentinel_spring_web_context，是一个EntranceNode类型的节点
 // 创建context，包含两个参数：context名称、 来源名称
 ContextUtil.enter("contextName", "originName");
 ```
-
-
 
 ### 1.4.2.Context的初始化
 
@@ -246,7 +216,7 @@ ContextUtil.enter("contextName", "originName");
 
 ![image-20250621160749392](./images/image-20250621160749392.png)
 
-这个类中创建了Bean:SentinelWebMvcConfigurer实现了WebMvcConfigurer，我们知道这个是SpringMVC自定义配置用到的类，可以配置HandlerInterceptor：
+这个类中创建了Bean:SentinelWebMvcConfigurer实现了WebMvcConfigurer，我们知道这个是SpringMVC自定义配置用到的类，可以配HandlerInterceptor：
 
 ```java
 public class SentinelWebMvcConfigurer implements WebMvcConfigurer {
@@ -383,13 +353,9 @@ protected static Context trueEnter(String name, String origin) {
 
 # 2.ProcessorSlotChain执行流程
 
-
-
 接下来我们跟踪源码，验证下ProcessorSlotChain的执行流程。
 
 ## 2.1.入口
-
-
 
 首先，回到一切的入口，`AbstractSentinelInterceptor`类的`preHandle`方法：
 
@@ -452,19 +418,35 @@ private Entry entryWithPriority(ResourceWrapper resourceWrapper, int count, bool
 }
 ```
 
-在这段代码中，会获取`ProcessorSlotChain`对象，然后基于chain.entry()开始执行slotChain中的每一个Slot. 而这里创建的是其实现类：DefaultProcessorSlotChain.
+在这段代码中，会获取`ProcessorSlotChain`对象，然后基于chain.entry()开始执行slotChain中的每一个Slot. 而这里创建的是其实现类：`DefaultProcessorSlotChain`. 具体创建时候，会build一个chain，就是`DefaultProcessorSlotChain`
 
-获取ProcessorSlotChain以后会保存到一个Map中，key是ResourceWrapper，值是ProcessorSlotChain.
+```java
+ProcessorSlot<Object> chain = lookProcessChain(resourceWrapper); //跟进去 会直行道下面
+public class DefaultSlotChainBuilder implements SlotChainBuilder {
+    @Override
+    public ProcessorSlotChain build() {
+        ProcessorSlotChain chain = new DefaultProcessorSlotChain();
+      	//这里比较关键的地方是：list是排序好的，会按照顺序加进去。loadInstanceListSorted->load排序跟进去会发现是按照AbstractLinkedProcessorSlot实现类上的Spi注解进行排序的，这个决定了执行链的顺序。 其中DefaultProcessorSlotChain 不带顺序，获取的first就是selectNode槽
+        List<ProcessorSlot> sortedSlotList = SpiLoader.of(ProcessorSlot.class).loadInstanceListSorted();
+        for (ProcessorSlot slot : sortedSlotList) {
+            if (!(slot instanceof AbstractLinkedProcessorSlot)) {
+                RecordLog.warn("The ProcessorSlot(" + slot.getClass().getCanonicalName() + ") is not an instance of AbstractLinkedProcessorSlot, can't be added into ProcessorSlotChain");
+                continue;
+            }
+            chain.addLast((AbstractLinkedProcessorSlot<?>) slot);
+        }
+        return chain;
+    }
+}
+```
 
-所以，**一个资源只会有一个ProcessorSlotChain**.
+然后会将获取的ProcessorSlotChain以后保存到一个Map中，key是ResourceWrapper，value是ProcessorSlotChain.  其中：ResourceWrapper的hashCode方法进行了重写，是**name.hashCode()**. 所以，**一个资源只会有一个ProcessorSlotChain**.
 
 ## 2.2.DefaultProcessorSlotChain
 
+然后我们进入DefaultProcessorSlotChain的entry方法开始执行：
 
-
-我们进入DefaultProcessorSlotChain的entry方法：
-
-```
+```java
 @Override
 public void entry(Context context, ResourceWrapper resourceWrapper, Object t, int count, boolean prioritized, Object... args)
     throws Throwable {
@@ -472,8 +454,6 @@ public void entry(Context context, ResourceWrapper resourceWrapper, Object t, in
     first.transformEntry(context, resourceWrapper, t, count, prioritized, args);
 }
 ```
-
-
 
 这里的first，类型是AbstractLinkedProcessorSlot：
 
@@ -498,8 +478,6 @@ next确实是NodeSelectSlot类型。
 责任链就建立起来了。
 
 ## 2.3.NodeSelectorSlot
-
-
 
 NodeSelectorSlot负责构建簇点链路中的节点（DefaultNode），将这些节点形成链路树。
 
