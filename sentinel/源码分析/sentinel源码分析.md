@@ -461,6 +461,8 @@ public void entry(Context context, ResourceWrapper resourceWrapper, Object t, in
 
 看下继承关系：
 
+![DefaultProcessorSlotChain](./images/DefaultProcessorSlotChain.png)
+
 ![image-20250621171540752](./images/image-20250621171540752.png)
 
 因此，first一定是这些实现类中的一个，按照最早讲的责任链顺序，first应该就是 `NodeSelectorSlot`。
@@ -479,9 +481,7 @@ next确实是NodeSelectSlot类型。
 
 ## 2.3.NodeSelectorSlot
 
-NodeSelectorSlot负责构建簇点链路中的节点（DefaultNode），将这些节点形成链路树。
-
-核心代码：
+NodeSelectorSlot负责构建簇点链路中的节点（DefaultNode），将这些节点形成链路树。核心代码：
 
 ```java
 @Override
@@ -514,8 +514,6 @@ public void entry(Context context, ResourceWrapper resourceWrapper, Object obj, 
 }
 ```
 
-
-
 这个Slot完成了这么几件事情：
 
 - 为当前资源创建 DefaultNode
@@ -526,8 +524,6 @@ public void entry(Context context, ResourceWrapper resourceWrapper, Object obj, 
 下一个slot，就是ClusterBuilderSlot
 
 ## 2.4.ClusterBuilderSlot
-
-
 
 ClusterBuilderSlot负责构建某个资源的ClusterNode，核心代码：
 
@@ -562,11 +558,7 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
 }
 ```
 
-
-
 ## 2.5.StatisticSlot
-
-
 
 StatisticSlot负责统计实时调用数据，包括运行信息（访问次数、线程数）、来源信息等。
 
@@ -616,7 +608,7 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
 
 另外，需要注意的是，所有的计数+1动作都包括两部分，以` node.addPassRequest(count);`为例：
 
-```
+```java
 @Override
 public void addPassRequest(int count) {
     // DefaultNode的计数器，代表当前链路的 计数器
@@ -734,8 +726,6 @@ static boolean passCheck(AuthorityRule rule, Context context) {
 
 ## 2.7.SystemSlot
 
-
-
 SystemSlot是对系统保护的规则校验：
 
 ![image-20210925153228036](./images/image-20210925153228036.png)
@@ -752,8 +742,6 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
     fireEntry(context, resourceWrapper, node, count, prioritized, args);
 }
 ```
-
-
 
 来看下`SystemRuleManager.checkSystem(resourceWrapper);`的代码：
 
@@ -803,11 +791,7 @@ public static void checkSystem(ResourceWrapper resourceWrapper) throws BlockExce
 }
 ```
 
-
-
 ## 2.8.ParamFlowSlot
-
-
 
 ParamFlowSlot就是热点参数限流，如图：
 
@@ -838,11 +822,7 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
 }
 ```
 
-
-
 ### 2.8.1.令牌桶
-
-
 
 热点规则判断采用了令牌桶算法来实现参数限流，为每一个不同参数值设置令牌桶，Sentinel的令牌桶有两部分组成：
 
@@ -858,8 +838,6 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
 ![sentinel](./images/sentinel.jpg)
 
 ## 2.9.FlowSlot
-
-
 
 FlowSlot是负责限流规则的判断，如图：
 
@@ -882,8 +860,6 @@ FlowSlot是负责限流规则的判断，如图：
 
 ### 2.9.1.核心流程
 
-
-
 核心API如下：
 
 ```java
@@ -897,8 +873,6 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
 }
 ```
 
-
-
 checkFlow方法：
 
 ```java
@@ -909,28 +883,26 @@ void checkFlow(ResourceWrapper resource, Context context, DefaultNode node, int 
 }
 ```
 
-
-
 跟入FlowRuleChecker：
 
 ```java
 public void checkFlow(Function<String, Collection<FlowRule>> ruleProvider, 
                       ResourceWrapper resource,Context context, DefaultNode node,
                       int count, boolean prioritized) throws BlockException {
-        if (ruleProvider == null || resource == null) {
-            return;
-        }
-        // 获取当前资源的所有限流规则
-        Collection<FlowRule> rules = ruleProvider.apply(resource.getName());
-        if (rules != null) {
-            for (FlowRule rule : rules) {
-                // 遍历，逐个规则做校验
-                if (!canPassCheck(rule, context, node, count, prioritized)) {
-                    throw new FlowException(rule.getLimitApp(), rule);
-                }
-            }
-        }
-    }
+      if (ruleProvider == null || resource == null) {
+          return;
+      }
+      // 获取当前资源的所有限流规则
+      Collection<FlowRule> rules = ruleProvider.apply(resource.getName());
+      if (rules != null) {
+          for (FlowRule rule : rules) {
+              // 遍历，逐个规则做校验
+              if (!canPassCheck(rule, context, node, count, prioritized)) {
+                  throw new FlowException(rule.getLimitApp(), rule);
+              }
+          }
+      }
+  }
 ```
 
 
@@ -974,8 +946,6 @@ public class FlowRule extends AbstractRule {
 }
 ```
 
-
-
 校验的逻辑定义在`FlowRuleChecker`的`canPassCheck`方法中：
 
 ```java
@@ -990,8 +960,6 @@ public boolean canPassCheck(/*@NonNull*/ FlowRule rule, Context context, Default
     return passLocalCheck(rule, context, node, acquireCount, prioritized);
 }
 ```
-
-
 
 进入`passLocalCheck()`：
 
@@ -1009,8 +977,6 @@ private static boolean passLocalCheck(FlowRule rule, Context context, DefaultNod
 }
 ```
 
-
-
 这里对规则的判断先要通过`FlowRule#getRater()`获取流量控制器`TrafficShapingController`，然后再做限流。
 
 而`TrafficShapingController`有3种实现：
@@ -1025,8 +991,6 @@ private static boolean passLocalCheck(FlowRule rule, Context context, DefaultNod
 
 ### 2.9.2.滑动时间窗口
 
-
-
 滑动时间窗口的功能分两部分来看：
 
 - 一是时间区间窗口的QPS计数功能，这个是在StatisticSlot中调用的
@@ -1035,8 +999,6 @@ private static boolean passLocalCheck(FlowRule rule, Context context, DefaultNod
 先来看时间区间窗口的QPS计数功能。
 
 #### 2.9.2.1.时间窗口请求量统计
-
-
 
 回顾2.5章节中的StatisticSlot部分，有这样一段代码：
 
@@ -1066,8 +1028,6 @@ public ArrayMetric(int sampleCount, int intervalInMs) {
 }
 ```
 
-
-
 如图：
 
 ![image-20210925181359203](./images/image-20210925181359203.png)
@@ -1084,8 +1044,6 @@ public void addPass(int count) {
 }
 ```
 
-
-
 那么，计数器如何知道当前所在的窗口是哪个呢？
 
 这里的data是一个LeapArray：
@@ -1094,7 +1052,7 @@ public void addPass(int count) {
 
 LeapArray的四个属性：
 
-```
+```java
 public abstract class LeapArray<T> {
     // 小窗口的时间长度，默认是500ms ，值 = intervalInMs / sampleCount
     protected int windowLengthInMs;
@@ -1106,8 +1064,6 @@ public abstract class LeapArray<T> {
     private double intervalInSecond;
 }
 ```
-
-
 
 LeapArray是一个环形数组，因为时间是无限的，数组长度不可能无限，因此数组中每一个格子放入一个时间窗（window），当数组放满后，角标归0，覆盖最初的window。
 
@@ -1170,15 +1126,11 @@ public WindowWrap<T> currentWindow(long timeMillis) {
 }
 ```
 
-
-
 找到当前时间所在窗口（WindowWrap）后，只要调用WindowWrap对象中的add方法，计数器+1即可。
 
 这里只负责统计每个窗口的请求量，不负责拦截。限流拦截要看FlowSlot中的逻辑。
 
 #### 2.9.2.2.滑动窗口QPS计算
-
-
 
 在2.9.1小节我们讲过，FlowSlot的限流判断最终都由`TrafficShapingController`接口中的`canPass`方法来实现。该接口有三个实现类：
 
@@ -1217,8 +1169,6 @@ public boolean canPass(Node node, int acquireCount, boolean prioritized) {
 }
 ```
 
-
-
 因此，判断的关键就是`int curCount = avgUsedTokens(node);`
 
 ```java
@@ -1230,8 +1180,6 @@ private int avgUsedTokens(Node node) {
 }
 ```
 
-
-
 因为我们采用的是限流，走`node.passQps()`逻辑：
 
 ```java
@@ -1242,8 +1190,6 @@ public double passQps() {
     return rollingCounterInSecond.pass() / rollingCounterInSecond.getWindowIntervalInSec();
 }
 ```
-
-
 
 那么`rollingCounterInSecond.pass()`是如何得到请求量的呢？
 
@@ -1265,8 +1211,6 @@ public long pass() {
     return pass;
 }
 ```
-
-
 
 来看看`data.values()`如何获取 滑动窗口范围内 的所有小窗口：
 
@@ -1297,8 +1241,6 @@ public List<T> values(long timeMillis) {
 }
 ```
 
-
-
 那么，`isWindowDeprecated(timeMillis, windowWrap)`又是如何判断窗口是否符合要求呢？
 
 ```java
@@ -1309,11 +1251,7 @@ public boolean isWindowDeprecated(long time, WindowWrap<T> windowWrap) {
 }
 ```
 
-
-
 ### 2.9.3.漏桶
-
-
 
 上一节我们讲过，FlowSlot的限流判断最终都由`TrafficShapingController`接口中的`canPass`方法来实现。该接口有三个实现类：
 
@@ -1379,15 +1317,11 @@ public boolean canPass(Node node, int acquireCount, boolean prioritized) {
 }
 ```
 
-
-
 与我们之前分析的漏桶算法基本一致：
 
 ![image-20210925210716675](./images/image-20210925210716675.png)
 
 ## 2.10.DegradeSlot
-
-
 
 最后一关，就是降级规则判断了。
 
@@ -1408,8 +1342,6 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
 }
 ```
 
-
-
 继续进入`performChecking`方法：
 
 ```java
@@ -1428,11 +1360,7 @@ void performChecking(Context context, ResourceWrapper r) throws BlockException {
 }
 ```
 
-
-
 ### 2.10.1.CircuitBreaker
-
-
 
 我们进入CircuitBreaker的tryPass方法中：
 
@@ -1454,8 +1382,6 @@ public boolean tryPass(Context context) {
 }
 ```
 
-
-
 有关时间窗的判断在`retryTimeoutArrived()`方法：
 
 ```java
@@ -1464,8 +1390,6 @@ protected boolean retryTimeoutArrived() {
     return TimeUtil.currentTimeMillis() >= nextRetryTimestamp;
 }
 ```
-
-
 
 OPEN到HALF_OPEN切换在`fromOpenToHalfOpen(context)`方法：
 
@@ -1495,16 +1419,12 @@ protected boolean fromOpenToHalfOpen(Context context) {
 }
 ```
 
-
-
 这里出现了从OPEN到HALF_OPEN、从HALF_OPEN到OPEN的变化，但是还有几个没有：
 
 - 从CLOSED到OPEN
 - 从HALF_OPEN到CLOSED
 
 ### 2.10.2.触发断路器
-
-
 
 请求经过所有插槽 后，一定会执行exit方法，而在DegradeSlot的exit方法中：
 
@@ -1538,8 +1458,6 @@ public void onRequestComplete(Context context) {
     handleStateChangeWhenThresholdExceeded(error);
 }
 ```
-
-
 
 来看阈值判断的方法：
 
