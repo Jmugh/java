@@ -421,7 +421,7 @@ private Entry entryWithPriority(ResourceWrapper resourceWrapper, int count, bool
 在这段代码中，会获取`ProcessorSlotChain`对象，然后基于chain.entry()开始执行slotChain中的每一个Slot. 而这里创建的是其实现类：`DefaultProcessorSlotChain`. 具体创建时候，会build一个chain，就是`DefaultProcessorSlotChain`
 
 ```java
-ProcessorSlot<Object> chain = lookProcessChain(resourceWrapper); //跟进去 会直行道下面
+ProcessorSlot<Object> chain = lookProcessChain(resourceWrapper); //跟进去 会进入到下面
 public class DefaultSlotChainBuilder implements SlotChainBuilder {
     @Override
     public ProcessorSlotChain build() {
